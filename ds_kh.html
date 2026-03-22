@@ -1,0 +1,295 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TravelTour - Hướng dẫn viên - Khách hàng</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+    <style>
+        :root {
+            --primary: #00b87c; 
+            --primary-bg: #e6f7f0;
+            --primary-light: #f4fbf8;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --bg-body: #f8fafc;
+            --border: #e5e7eb;
+            --sidebar-width: 250px;
+            --table-header-bg: #ebf7f3; /* Màu xanh siêu nhạt cho header bảng */
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-main); display: flex; }
+
+        /* Sidebar */
+        .sidebar {
+            width: var(--sidebar-width);
+            background: #fff;
+            height: 100vh;
+            position: fixed;
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            z-index: 10;
+        }
+        .logo-box { padding: 25px 20px; border-bottom: 1px solid var(--border); margin-bottom: 15px;}
+        .logo-box h1 { color: var(--primary); font-size: 22px; font-weight: 700; }
+        .logo-box p { color: var(--text-muted); font-size: 13px; margin-top: 5px; }
+        
+        .nav-menu { list-style: none; flex: 1; display: flex; flex-direction: column; }
+        .nav-item {
+            display: flex; align-items: center; padding: 14px 20px;
+            color: var(--text-main); text-decoration: none;
+            font-size: 14px; font-weight: 500; cursor: pointer; transition: 0.2s;
+        }
+        .nav-item i { width: 25px; color: var(--text-muted); font-size: 16px; }
+        .nav-item:hover { background: #f1f5f9; }
+        .nav-item.active { background: var(--primary-bg); color: var(--primary); border-right: 4px solid var(--primary); font-weight: 600;}
+        .nav-item.active i { color: var(--primary); }
+
+        .sidebar-footer { padding: 20px; border-top: 1px solid var(--border); }
+        .logout-btn { display: flex; align-items: center; gap: 10px; color: var(--text-main); font-size: 14px; font-weight: 500; text-decoration: none; margin-bottom: 15px; cursor: pointer; transition: 0.2s; }
+        .logout-btn i { color: var(--text-muted); }
+        .logout-btn:hover { color: var(--primary); }
+        .copyright { font-size: 11px; color: var(--text-muted); }
+
+        /* Main Content */
+        .main-content { margin-left: var(--sidebar-width); flex: 1; padding: 0 30px 30px 30px; }
+        
+        /* Header */
+        .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 0; border-bottom: 1px solid var(--border); margin-bottom: 25px;}
+        .page-title { font-size: 20px; font-weight: 700; color: var(--text-main); }
+        
+        .user-area { display: flex; align-items: center; gap: 20px; }
+        .bell { position: relative; color: var(--text-muted); font-size: 20px; cursor: pointer; }
+        .bell .dot { position: absolute; top: -2px; right: -2px; width: 8px; height: 8px; background: #ef4444; border-radius: 50%; border: 2px solid #fff; }
+        .profile { display: flex; align-items: center; gap: 10px; border-left: 1px solid var(--border); padding-left: 20px; }
+        .profile-info { text-align: right; }
+        .profile-info .name { font-size: 14px; font-weight: 600; }
+        .profile-info .role { font-size: 12px; color: var(--text-muted); }
+        .avatar { width: 35px; height: 35px; background: var(--primary); color: #fff; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 12px; }
+
+        /* List Container */
+        .list-container { background: #fff; border-radius: 12px; border: 1px solid var(--border); overflow: hidden; }
+        
+        /* List Header (Search & Filter) */
+        .list-header { display: flex; justify-content: space-between; align-items: center; padding: 20px 25px; border-bottom: 1px solid var(--border); }
+        .list-title h3 { font-size: 16px; font-weight: 600; margin-bottom: 4px; }
+        .list-title p { font-size: 13px; color: var(--text-muted); }
+        
+        .list-actions { display: flex; gap: 15px; }
+        .search-box { background: #fff; border-radius: 8px; padding: 10px 15px; display: flex; align-items: center; width: 280px; border: 1px solid var(--border); transition: 0.2s;}
+        .search-box:focus-within { border-color: var(--primary); }
+        .search-box i { color: var(--text-muted); margin-right: 10px; font-size: 14px;}
+        .search-box input { border: none; background: transparent; outline: none; width: 100%; font-size: 13px; }
+        .filter-box { width: 120px; border: 1px solid var(--border); border-radius: 8px; background: #fff; } /* Hộp trống cạnh ô tìm kiếm */
+
+        /* Table */
+        table { width: 100%; border-collapse: collapse; text-align: left; }
+        th { background: var(--table-header-bg); padding: 15px 25px; font-size: 13px; font-weight: 600; color: var(--text-main); }
+        td { padding: 18px 25px; font-size: 13px; border-bottom: 1px solid var(--border); color: var(--text-main); vertical-align: middle; }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: #fcfcfc; }
+
+        /* Table Cell Styles */
+        .td-customer { display: flex; align-items: center; gap: 12px; font-weight: 600; font-size: 14px;}
+        .avatar-initial { width: 32px; height: 32px; border-radius: 50%; background: var(--primary-bg); color: var(--primary); display: flex; align-items: center; justify-content: center; font-weight: 700; font-size: 13px; flex-shrink: 0;}
+        
+        .icon-green { color: var(--primary); margin-right: 6px; font-size: 12px; width: 14px; text-align: center;}
+        
+        .td-tour { line-height: 1.5; color: var(--text-muted); }
+        .td-contact { color: var(--text-muted); }
+        
+        .btn-contact { background: var(--primary); color: #fff; border: none; border-radius: 6px; padding: 8px 16px; font-size: 13px; font-weight: 500; cursor: pointer; transition: 0.2s; }
+        .btn-contact:hover { opacity: 0.9; }
+
+    </style>
+</head>
+<body>
+
+    <aside class="sidebar">
+        <div class="logo-box">
+            <h1>TravelTour</h1>
+            <p>Hướng dẫn viên</p>
+        </div>
+        <ul class="nav-menu">
+            <li class="nav-item"><i class="fa-solid fa-border-all"></i> Tổng quan</li>
+            <li class="nav-item"><i class="fa-regular fa-calendar-days"></i> Lịch trình của tôi</li>
+            <li class="nav-item"><i class="fa-solid fa-location-dot"></i> Tour đang dẫn</li>
+            <li class="nav-item active"><i class="fa-solid fa-users"></i> Khách hàng</li>
+            <li class="nav-item"><i class="fa-solid fa-dollar-sign"></i> Thu nhập</li>
+            <li class="nav-item"><i class="fa-regular fa-user"></i> Hồ sơ cá nhân</li>
+        </ul>
+        <div class="sidebar-footer">
+            <a href="#" class="logout-btn"><i class="fa-solid fa-arrow-right-from-bracket"></i> Đăng xuất</a>
+            <p class="copyright">© 2026 TravelTour</p>
+        </div>
+    </aside>
+
+    <main class="main-content">
+        <header class="header">
+            <div class="page-title">Khách hàng</div>
+            
+            <div class="user-area">
+                <div class="bell">
+                    <i class="fa-regular fa-bell"></i>
+                    <span class="dot"></span>
+                </div>
+                <div class="profile">
+                    <div class="profile-info">
+                        <div class="name">Nguyễn Văn An</div>
+                        <div class="role">Hướng dẫn viên</div>
+                    </div>
+                    <div class="avatar">HDV</div>
+                </div>
+            </div>
+        </header>
+
+        <div class="list-container">
+            
+            <div class="list-header">
+                <div class="list-title">
+                    <h3>Danh sách khách hàng</h3>
+                    <p>Tổng số 8 khách hàng</p>
+                </div>
+                <div class="list-actions">
+                    <div class="search-box">
+                        <i class="fa-solid fa-search"></i>
+                        <input type="text" placeholder="Tìm kiếm khách hàng...">
+                    </div>
+                    <div class="filter-box"></div>
+                </div>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>Tên khách hàng</th>
+                        <th>Số điện thoại</th>
+                        <th>Email</th>
+                        <th>Tour tham gia</th>
+                        <th>Ngày khởi hành</th>
+                        <th>Thao tác</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>
+                            <div class="td-customer">
+                                <div class="avatar-initial">N</div>
+                                Nguyễn Thị Hương
+                            </div>
+                        </td>
+                        <td class="td-contact"><i class="fa-solid fa-phone icon-green"></i> 0901234567</td>
+                        <td class="td-contact"><i class="fa-regular fa-envelope icon-green"></i> huong.nguyen@email.com</td>
+                        <td class="td-tour"><i class="fa-solid fa-location-dot icon-green"></i> Tour Hạ Long 3N2Đ</td>
+                        <td>25/03/2026</td>
+                        <td><button class="btn-contact">Liên hệ</button></td>
+                    </tr>
+                    
+                    <tr>
+                        <td>
+                            <div class="td-customer">
+                                <div class="avatar-initial">T</div>
+                                Trần Văn Minh
+                            </div>
+                        </td>
+                        <td class="td-contact"><i class="fa-solid fa-phone icon-green"></i> 0912345678</td>
+                        <td class="td-contact"><i class="fa-regular fa-envelope icon-green"></i> minh.tran@email.com</td>
+                        <td class="td-tour"><i class="fa-solid fa-location-dot icon-green"></i> Tour Sapa - Fansipan</td>
+                        <td>28/03/2026</td>
+                        <td><button class="btn-contact">Liên hệ</button></td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="td-customer">
+                                <div class="avatar-initial" style="background: #ecfdf5; color: #10b981;">L</div>
+                                Lê Thị Mai
+                            </div>
+                        </td>
+                        <td class="td-contact"><i class="fa-solid fa-phone icon-green"></i> 0923456789</td>
+                        <td class="td-contact"><i class="fa-regular fa-envelope icon-green"></i> mai.le@email.com</td>
+                        <td class="td-tour"><i class="fa-solid fa-location-dot icon-green"></i> Tour Phú Quốc 4N3Đ</td>
+                        <td>01/04/2026</td>
+                        <td><button class="btn-contact">Liên hệ</button></td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="td-customer">
+                                <div class="avatar-initial" style="background: #ecfdf5; color: #10b981;">P</div>
+                                Phạm Hoàng Long
+                            </div>
+                        </td>
+                        <td class="td-contact"><i class="fa-solid fa-phone icon-green"></i> 0934567890</td>
+                        <td class="td-contact"><i class="fa-regular fa-envelope icon-green"></i> long.pham@email.com</td>
+                        <td class="td-tour"><i class="fa-solid fa-location-dot icon-green"></i> Tour Đà Nẵng - Hội An</td>
+                        <td>20/03/2026</td>
+                        <td><button class="btn-contact">Liên hệ</button></td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="td-customer">
+                                <div class="avatar-initial" style="background: #ecfdf5; color: #10b981;">V</div>
+                                Võ Thị Lan
+                            </div>
+                        </td>
+                        <td class="td-contact"><i class="fa-solid fa-phone icon-green"></i> 0945678901</td>
+                        <td class="td-contact"><i class="fa-regular fa-envelope icon-green"></i> lan.vo@email.com</td>
+                        <td class="td-tour"><i class="fa-solid fa-location-dot icon-green"></i> Tour Nha Trang 3N2Đ</td>
+                        <td>15/03/2026</td>
+                        <td><button class="btn-contact">Liên hệ</button></td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="td-customer">
+                                <div class="avatar-initial" style="background: #ecfdf5; color: #10b981;">Đ</div>
+                                Đặng Văn Tùng
+                            </div>
+                        </td>
+                        <td class="td-contact"><i class="fa-solid fa-phone icon-green"></i> 0956789012</td>
+                        <td class="td-contact"><i class="fa-regular fa-envelope icon-green"></i> tung.dang@email.com</td>
+                        <td class="td-tour"><i class="fa-solid fa-location-dot icon-green"></i> Tour Hạ Long 3N2Đ</td>
+                        <td>25/03/2026</td>
+                        <td><button class="btn-contact">Liên hệ</button></td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="td-customer">
+                                <div class="avatar-initial" style="background: #ecfdf5; color: #10b981;">B</div>
+                                Bùi Thị Nga
+                            </div>
+                        </td>
+                        <td class="td-contact"><i class="fa-solid fa-phone icon-green"></i> 0967890123</td>
+                        <td class="td-contact"><i class="fa-regular fa-envelope icon-green"></i> nga.bui@email.com</td>
+                        <td class="td-tour"><i class="fa-solid fa-location-dot icon-green"></i> Tour Sapa - Fansipan</td>
+                        <td>28/03/2026</td>
+                        <td><button class="btn-contact">Liên hệ</button></td>
+                    </tr>
+
+                    <tr>
+                        <td>
+                            <div class="td-customer">
+                                <div class="avatar-initial" style="background: #ecfdf5; color: #10b981;">H</div>
+                                Hoàng Văn Hải
+                            </div>
+                        </td>
+                        <td class="td-contact"><i class="fa-solid fa-phone icon-green"></i> 0978901234</td>
+                        <td class="td-contact"><i class="fa-regular fa-envelope icon-green"></i> hai.hoang@email.com</td>
+                        <td class="td-tour"><i class="fa-solid fa-location-dot icon-green"></i> Tour Phú Quốc 4N3Đ</td>
+                        <td>01/04/2026</td>
+                        <td><button class="btn-contact">Liên hệ</button></td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+</body>
+</html>
