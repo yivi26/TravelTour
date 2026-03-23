@@ -1,0 +1,21 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap&subset=latin,vietnamese');
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: 'Inter', 'Segoe UI', system-ui, -apple-system, sans-serif;
+  color: #1e2939;
+  background: #f9fafb;
+  line-height: 1.5;
+}
+
+.lock-icon {
+  color: #ef4444 !important;
+}
+
+.btn-lock i {
+  color: #ef4444;
+}
