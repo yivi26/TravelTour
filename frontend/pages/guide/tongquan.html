@@ -1,0 +1,93 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Dashboard hướng dẫn viên - TravelTour</title>
+    <link rel="stylesheet" href="../../assets/css/guide/tongquan.css" />
+  </head>
+  <body>
+    <div class="dashboard">
+      <!-- Top Navigation: GIỐNG CUSTOMER -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <a href="tongquan.html" class="logo">TravelTour</a>
+        </div>
+
+        <div class="topbar-right">
+          <div class="user-info">
+            <p class="user-name">Nguyễn Văn An</p>
+            <p class="user-role">Hướng dẫn viên</p>
+          </div>
+          <img
+            class="user-avatar"
+            src="https://images.unsplash.com/photo-1768933294181-82778103e501?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYXBweSUyMGFzaWFuJTIwd29tYW4lMjB0cmF2ZWxlciUyMHBvcnRyYWl0fGVufDF8fHx8MTc3MzY3MjYxNXww&ixlib=rb-4.1.0&q=80&w=1080"
+            alt="Guide Avatar"
+          />
+        </div>
+      </header>
+
+      <div class="dashboard-body">
+        <aside class="sidebar">
+          <nav class="sidebar-menu">
+            <a href="tongquan.html" class="menu-item active">
+              <span class="menu-icon">📊</span>
+              <span>Dashboard</span>
+            </a>
+
+            <a href="lichtrinh.html" class="menu-item">
+              <span class="menu-icon">🕘</span>
+              <span>Lịch trình của tôi</span>
+            </a>
+
+            <a href="tourdangdan.html" class="menu-item">
+              <span class="menu-icon">📅</span>
+              <span>Tour đang dẫn</span>
+            </a>
+
+            <a href="khachhang.html" class="menu-item">
+              <span class="menu-icon">👥</span>
+              <span>Khách hàng</span>
+            </a>
+
+            <a href="thunhap.html" class="menu-item">
+              <span class="menu-icon">💰</span>
+              <span>Thu nhập</span>
+            </a>
+
+            <a href="hoso.html" class="menu-item">
+              <span class="menu-icon">👤</span>
+              <span>Hồ sơ cá nhân</span>
+            </a>
+
+            <button class="menu-item logout-btn" type="button" id="logoutBtn">
+              <span class="menu-icon">🚪</span>
+              <span>Đăng xuất</span>
+            </button>
+          </nav>
+        </aside>
+
+        <!-- Main Content: GIỮ NGUYÊN -->
+        <main class="main-content">
+          <div class="page-container guide-dashboard-page">
+            <section class="page-header">
+              <h1>Dashboard</h1>
+              <p>Tổng quan hoạt động của hướng dẫn viên</p>
+            </section>
+
+            <section class="stats-grid" id="statsGrid"></section>
+
+            <section class="card section-card">
+              <h3 class="section-title">Tour sắp diễn ra</h3>
+              <div class="upcoming-list" id="upcomingToursList"></div>
+            </section>
+
+            <section class="actions-grid" id="quickActionsGrid"></section>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script src="../../assets/js/guide/tongquan.js"></script>
+  </body>
+</html>

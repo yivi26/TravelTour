@@ -3,15 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Đăng ký - TravelTour</title>
-    <link rel="stylesheet" href="../assets/css/register.css" />
+    <title>Đăng nhập - TravelTour</title>
+    <link rel="stylesheet" href="../../assets/css/dangnhap/login.css" />
   </head>
   <body>
-    <div class="register-page">
+    <div class="login-page">
       <!-- Left Side -->
-      <div class="register-left">
-        <div class="register-left-overlay"></div>
-        <div class="register-left-content">
+      <div class="login-left">
+        <div class="login-left-overlay"></div>
+        <div class="login-left-content">
           <h1>TravelTour</h1>
           <p class="left-subtitle">Khám phá thế giới cùng TravelTour</p>
           <p class="left-description">
@@ -21,35 +21,22 @@
       </div>
 
       <!-- Right Side -->
-      <div class="register-right">
-        <div class="register-wrapper">
-          <!-- Mobile logo -->
+      <div class="login-right">
+        <div class="login-wrapper">
+          <!-- Mobile Logo -->
           <div class="mobile-logo">
             <h1>TravelTour</h1>
             <p>Khám phá thế giới cùng chúng tôi</p>
           </div>
 
-          <div class="register-card">
-            <div class="register-heading">
-              <h2>Đăng ký</h2>
-              <p>Tạo tài khoản để bắt đầu hành trình của bạn</p>
+          <!-- Form Card -->
+          <div class="login-card">
+            <div class="login-heading">
+              <h2>Đăng nhập</h2>
+              <p>Chào mừng trở lại! Vui lòng đăng nhập để tiếp tục</p>
             </div>
 
-            <form id="registerForm" class="register-form">
-              <!-- Họ và tên -->
-              <div class="form-group">
-                <label for="fullname">Họ và tên</label>
-                <div class="input-wrap">
-                  <span class="input-icon">👤</span>
-                  <input
-                    id="fullname"
-                    name="fullname"
-                    type="text"
-                    placeholder="Nguyễn Văn A"
-                  />
-                </div>
-              </div>
-
+            <form id="loginForm" class="login-form">
               <!-- Email -->
               <div class="form-group">
                 <label for="email">Email</label>
@@ -64,21 +51,7 @@
                 </div>
               </div>
 
-              <!-- Số điện thoại -->
-              <div class="form-group">
-                <label for="phone">Số điện thoại</label>
-                <div class="input-wrap">
-                  <span class="input-icon">📞</span>
-                  <input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    placeholder="0912 345 678"
-                  />
-                </div>
-              </div>
-
-              <!-- Mật khẩu -->
+              <!-- Password -->
               <div class="form-group">
                 <label for="password">Mật khẩu</label>
                 <div class="input-wrap password-wrap">
@@ -100,53 +73,28 @@
                 </div>
               </div>
 
-              <!-- Xác nhận mật khẩu -->
-              <div class="form-group">
-                <label for="confirm-password">Xác nhận mật khẩu</label>
-                <div class="input-wrap password-wrap">
-                  <span class="input-icon">🔒</span>
-                  <input
-                    id="confirm-password"
-                    name="confirm-password"
-                    type="password"
-                    placeholder="••••••••"
-                  />
-                  <button
-                    type="button"
-                    class="toggle-password"
-                    data-target="confirm-password"
-                    aria-label="Hiện mật khẩu"
-                  >
-                    👁️
-                  </button>
-                </div>
-              </div>
-
-              <!-- Terms -->
-              <div class="terms-group">
-                <label class="terms-label">
-                  <input type="checkbox" id="terms" />
-                  <span>
-                    Tôi đồng ý với
-                    <a href="#">Điều khoản dịch vụ</a>
-                    và
-                    <a href="#">Chính sách bảo mật</a>
-                  </span>
+              <!-- Remember & Forgot -->
+              <div class="login-options">
+                <label class="remember-label">
+                  <input type="checkbox" id="remember" />
+                  <span>Ghi nhớ đăng nhập</span>
                 </label>
+
+                <a href="#" class="forgot-link">Quên mật khẩu?</a>
               </div>
 
               <!-- Message -->
               <p id="formMessage" class="form-message"></p>
 
               <!-- Submit -->
-              <button type="submit" class="btn-submit">Đăng ký</button>
+              <button type="submit" class="btn-submit">Đăng nhập</button>
 
               <!-- Divider -->
               <div class="divider">
                 <span>Hoặc</span>
               </div>
 
-              <!-- Google button -->
+              <!-- Google Login -->
               <button type="button" class="btn-google">
                 <span class="google-icon">
                   <svg viewBox="0 0 24 24" aria-hidden="true">
@@ -168,19 +116,26 @@
                     />
                   </svg>
                 </span>
-                <span>Đăng ký với Google</span>
+                <span>Đăng nhập với Google</span>
               </button>
             </form>
 
-            <p class="login-link">
-              Đã có tài khoản?
-              <a href="./login.html">Đăng nhập</a>
+            <p class="signup-link">
+              Chưa có tài khoản?
+              <a href="./register.html">Đăng ký ngay</a>
             </p>
           </div>
+
+          <p class="login-footer">
+            Bằng việc đăng nhập, bạn đồng ý với
+            <a href="#">Điều khoản dịch vụ</a>
+            và
+            <a href="#">Chính sách bảo mật</a>
+          </p>
         </div>
       </div>
     </div>
 
-    <script src="../assets/js/register.js"></script>
+    <script src="../../assets/js/dangnhap/login.js"></script>
   </body>
 </html>
