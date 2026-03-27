@@ -75,8 +75,11 @@ button {
 
 .logo {
   font-size: 28px;
+  font-weight: 700;
   color: var(--primary);
-  font-weight: 500;
+  border: none;
+  outline: none;
+  box-shadow: none;
 }
 
 .topbar-right {
