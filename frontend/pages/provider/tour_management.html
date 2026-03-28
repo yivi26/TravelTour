@@ -15,138 +15,147 @@
       rel="stylesheet"
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
+
+    <!-- Dùng CSS khung giống dashboard -->
+    <link rel="stylesheet" href="../../assets/css/provider/dashboard.css" />
+
+    <!-- CSS riêng của trang quản lý tour -->
     <link
       rel="stylesheet"
       href="../../assets/css/provider/tour_management.css"
     />
   </head>
   <body>
-    <aside class="sidebar">
-      <div class="logo-box">
-        <h1>TravelTour</h1>
-        <p>Nhà cung cấp tour</p>
-      </div>
-
-      <ul class="nav-menu">
-        <li>
-          <a href="./dashboard.html" class="nav-item">
-            <i class="fa-solid fa-border-all"></i>
-            Tổng quan
-          </a>
-        </li>
-
-        <li>
-          <a href="./tour_management.html" class="nav-item active">
-            <i class="fa-solid fa-map"></i>
-            Quản lý tour
-          </a>
-        </li>
-
-        <li>
-          <a href="./booking_management.html" class="nav-item">
-            <i class="fa-solid fa-calendar-check"></i>
-            Quản lý booking
-          </a>
-        </li>
-
-        <li>
-          <a href="./guide_assignment.html" class="nav-item">
-            <i class="fa-solid fa-users"></i>
-            Phân công hướng dẫn viên
-          </a>
-        </li>
-
-        <li>
-          <a href="./report.html" class="nav-item">
-            <i class="fa-solid fa-chart-line"></i>
-            Báo cáo doanh thu
-          </a>
-        </li>
-
-        <li>
-          <a href="./profile.html" class="nav-item">
-            <i class="fa-solid fa-building"></i>
-            Hồ sơ nhà cung cấp
-          </a>
-        </li>
-      </ul>
-    </aside>
-
-    <main class="main-content">
-      <header class="header">
-        <div class="search-bar">
-          <i class="fa-solid fa-search"></i>
-          <input id="searchInput" type="text" placeholder="Tìm kiếm..." />
+    <div class="dashboard">
+      <!-- TOPBAR: giống dashboard -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <button class="menu-toggle" id="menuToggle">☰</button>
+          <a href="./dashboard.html" class="logo">TravelTour</a>
         </div>
 
-        <div class="user-area">
-          <div class="bell">
-            <i class="fa-regular fa-bell"></i>
-            <span class="dot"></span>
+        <div class="topbar-right">
+          <div class="user-info">
+            <p class="user-name">Provider</p>
+            <p class="user-role">Nhà cung cấp tour</p>
           </div>
-
-          <div class="profile">
-            <div class="profile-info">
-              <div class="name">Provider</div>
-              <div class="email">provider@traveltour.vn</div>
-            </div>
-            <div class="avatar"><i class="fa-regular fa-user"></i></div>
+          <div class="user-avatar">
+            <i class="fa-regular fa-user"></i>
           </div>
         </div>
       </header>
 
-      <div class="page-header">
-        <div>
-          <h2>Quản lý tour</h2>
-          <p>Quản lý danh sách tour du lịch</p>
-        </div>
+      <div class="dashboard-body">
+        <!-- SIDEBAR: giống dashboard -->
+        <aside class="sidebar" id="sidebar">
+          <nav class="sidebar-menu">
+            <a href="./dashboard.html" class="menu-item">
+              <span class="menu-icon">
+                <i class="fa-solid fa-border-all"></i>
+              </span>
+              <span>Tổng quan</span>
+            </a>
 
-        <button class="btn-primary" id="createTourBtn">
-          <i class="fa-solid fa-plus"></i>
-          <span>Tạo tour mới</span>
-        </button>
+            <a href="./tour_management.html" class="menu-item active">
+              <span class="menu-icon">
+                <i class="fa-solid fa-map"></i>
+              </span>
+              <span>Quản lý tour</span>
+            </a>
+
+            <a href="./booking_management.html" class="menu-item">
+              <span class="menu-icon">
+                <i class="fa-solid fa-calendar-check"></i>
+              </span>
+              <span>Quản lý booking</span>
+            </a>
+
+            <a href="./guide_assignment.html" class="menu-item">
+              <span class="menu-icon">
+                <i class="fa-solid fa-users"></i>
+              </span>
+              <span>Phân công hướng dẫn viên</span>
+            </a>
+
+            <a href="./report.html" class="menu-item">
+              <span class="menu-icon">
+                <i class="fa-solid fa-chart-line"></i>
+              </span>
+              <span>Báo cáo doanh thu</span>
+            </a>
+
+            <a href="./profile.html" class="menu-item">
+              <span class="menu-icon">
+                <i class="fa-solid fa-building"></i>
+              </span>
+              <span>Hồ sơ nhà cung cấp</span>
+            </a>
+
+            <button class="menu-item logout-btn" type="button">
+              <span class="menu-icon">🚪</span>
+              <span>Đăng xuất</span>
+            </button>
+          </nav>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="main-content">
+          <div class="page-container tour-page">
+            <section class="tour-page-header">
+              <div>
+                <h1>Quản lý tour</h1>
+                <p>Quản lý danh sách tour du lịch</p>
+              </div>
+
+              <button class="btn-primary" id="createTourBtn">
+                <i class="fa-solid fa-plus"></i>
+                <span>Tạo tour mới</span>
+              </button>
+            </section>
+
+            <section class="tour-stats-grid">
+              <div class="tour-stat-card">
+                <div class="title">Tổng tour</div>
+                <div class="value val-dark" id="totalTours">0</div>
+              </div>
+
+              <div class="tour-stat-card">
+                <div class="title">Đang hoạt động</div>
+                <div class="value val-green" id="activeTours">0</div>
+              </div>
+
+              <div class="tour-stat-card">
+                <div class="title">Đã đầy chỗ</div>
+                <div class="value val-orange" id="fullTours">0</div>
+              </div>
+
+              <div class="tour-stat-card">
+                <div class="title">Ngưng hoạt động</div>
+                <div class="value val-dark" id="stoppedTours">0</div>
+              </div>
+            </section>
+
+            <section class="tour-table-container">
+              <div class="tour-table-wrap">
+                <table class="tour-table">
+                  <thead>
+                    <tr>
+                      <th>Tên tour</th>
+                      <th>Điểm đến</th>
+                      <th>Giá</th>
+                      <th>Số chỗ</th>
+                      <th>Trạng thái</th>
+                      <th>Hành động</th>
+                    </tr>
+                  </thead>
+                  <tbody id="tourTableBody"></tbody>
+                </table>
+              </div>
+            </section>
+          </div>
+        </main>
       </div>
-
-      <section class="stats-grid">
-        <div class="stat-card">
-          <div class="title">Tổng tour</div>
-          <div class="value val-dark" id="totalTours">0</div>
-        </div>
-
-        <div class="stat-card">
-          <div class="title">Đang hoạt động</div>
-          <div class="value val-green" id="activeTours">0</div>
-        </div>
-
-        <div class="stat-card">
-          <div class="title">Đã đầy chỗ</div>
-          <div class="value val-orange" id="fullTours">0</div>
-        </div>
-
-        <div class="stat-card">
-          <div class="title">Ngưng hoạt động</div>
-          <div class="value val-dark" id="stoppedTours">0</div>
-        </div>
-      </section>
-
-      <section class="table-container">
-        <div class="table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th>Tên tour</th>
-                <th>Điểm đến</th>
-                <th>Giá</th>
-                <th>Số chỗ</th>
-                <th>Trạng thái</th>
-                <th>Hành động</th>
-              </tr>
-            </thead>
-            <tbody id="tourTableBody"></tbody>
-          </table>
-        </div>
-      </section>
-    </main>
+    </div>
 
     <script src="../../assets/js/provider/tour_management.js"></script>
   </body>

@@ -22,6 +22,7 @@
       <!-- TOPBAR -->
       <header class="topbar">
         <div class="topbar-left">
+          <button class="menu-toggle" id="menuToggle">☰</button>
           <a href="./dashboard.html" class="logo">TravelTour</a>
         </div>
 
@@ -38,9 +39,7 @@
 
       <div class="dashboard-body">
         <!-- SIDEBAR -->
-        <aside class="sidebar">
-          <!-- <div class="sidebar-subtitle">Nhà cung cấp tour</div> -->
-
+        <aside class="sidebar" id="sidebar">
           <nav class="sidebar-menu">
             <a href="./dashboard.html" class="menu-item active">
               <span class="menu-icon"
@@ -79,38 +78,20 @@
               ></span>
               <span>Hồ sơ nhà cung cấp</span>
             </a>
+            <button class="menu-item logout-btn" type="button">
+              <span class="menu-icon">🚪</span>
+              <span>Đăng xuất</span>
+            </button>
           </nav>
         </aside>
 
         <!-- MAIN -->
         <main class="main-content">
           <div class="page-container">
-            <div class="header">
-              <div class="search-bar">
-                <i class="fa-solid fa-search"></i>
-                <input type="text" placeholder="Tìm kiếm..." />
-              </div>
-
-              <div class="user-area">
-                <div class="bell">
-                  <i class="fa-regular fa-bell"></i>
-                  <span class="dot"></span>
-                </div>
-
-                <div class="profile">
-                  <div class="profile-info">
-                    <div class="name">Provider</div>
-                    <div class="email">provider@traveltour.vn</div>
-                  </div>
-                  <div class="avatar"><i class="fa-regular fa-user"></i></div>
-                </div>
-              </div>
-            </div>
-
-            <div class="page-header">
-              <h2>Tổng quan</h2>
+            <section class="page-header">
+              <h1>Tổng quan</h1>
               <p>Tổng quan hoạt động kinh doanh</p>
-            </div>
+            </section>
 
             <section class="stats-grid">
               <div class="card stat-card">
