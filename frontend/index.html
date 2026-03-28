@@ -1,0 +1,155 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TravelTour</title>
+    <link rel="stylesheet" href="./assets/css/style.css" />
+  </head>
+  <body>
+    <!-- Navbar -->
+    <nav class="navbar">
+      <div class="container nav-container">
+        <div class="logo">TravelTour</div>
+
+        <ul class="nav-menu">
+          <li><a href="#">Trang chủ</a></li>
+          <li><a href="#">Giới thiệu</a></li>
+          <li><a href="#">Điểm đến</a></li>
+        </ul>
+
+        <div class="nav-actions">
+          <button class="btn btn-primary">Đặt tour</button>
+          <a href="#" class="user-icon">👤</a>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero -->
+    <section class="hero">
+      <div class="hero-overlay"></div>
+      <div class="container hero-content">
+        <h1>Khám phá thế giới cùng TravelTour</h1>
+        <p>Trải nghiệm du lịch sinh thái bền vững, thân thiện với môi trường</p>
+
+        <div class="search-box">
+          <div class="search-item">
+            <label>Điểm đến</label>
+            <input type="text" placeholder="Chọn điểm đến" />
+          </div>
+
+          <div class="search-item">
+            <label>Thời gian</label>
+            <input type="date" />
+          </div>
+
+          <div class="search-item">
+            <label>Hành khách</label>
+            <select>
+              <option>1 người</option>
+              <option>2 người</option>
+              <option>3 người</option>
+              <option>4 người</option>
+              <option>5+ người</option>
+            </select>
+          </div>
+
+          <div class="search-btn-wrap">
+            <button class="btn btn-primary btn-search">Tìm kiếm</button>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Điểm đến phổ biến -->
+    <section class="section bg-light">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Điểm đến phổ biến</h2>
+          <p>Khám phá những địa điểm được yêu thích nhất</p>
+        </div>
+        <div id="destinations-list" class="grid grid-4"></div>
+      </div>
+    </section>
+
+    <!-- Tour nổi bật -->
+    <section class="section">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Tour nổi bật</h2>
+          <p>Những tour du lịch được đánh giá cao nhất</p>
+        </div>
+        <div id="featured-tours-list" class="grid grid-3"></div>
+      </div>
+    </section>
+
+    <!-- Tại sao chọn TravelTour -->
+    <section class="section why-section">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Tại sao chọn TravelTour?</h2>
+          <p>Những lý do khiến bạn tin tưởng lựa chọn chúng tôi</p>
+        </div>
+        <div id="features-list" class="grid grid-4"></div>
+      </div>
+    </section>
+
+    <!-- Ưu đãi đặc biệt -->
+    <section class="section">
+      <div class="container">
+        <div class="section-heading">
+          <h2>Ưu đãi đặc biệt</h2>
+          <p>Đừng bỏ lỡ những chương trình khuyến mãi hấp dẫn</p>
+        </div>
+        <div id="promotions-list" class="grid grid-2"></div>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container footer-grid">
+        <div>
+          <h3>TravelTour</h3>
+          <p>
+            Đồng hành cùng bạn khám phá thế giới với những trải nghiệm du lịch
+            sinh thái bền vững.
+          </p>
+        </div>
+
+        <div>
+          <h4>Liên kết</h4>
+          <ul>
+            <li><a href="#">Trang chủ</a></li>
+            <li><a href="#">Giới thiệu</a></li>
+            <li><a href="#">Điểm đến</a></li>
+            <li><a href="#">Tour du lịch</a></li>
+          </ul>
+        </div>
+
+        <div>
+          <h4>Liên hệ</h4>
+          <ul>
+            <li>1900 xxxx</li>
+            <li>info@traveltour.vn</li>
+            <li>Hà Nội, Việt Nam</li>
+          </ul>
+        </div>
+
+        <div>
+          <h4>Theo dõi chúng tôi</h4>
+          <div class="socials">
+            <a href="#">Facebook</a>
+            <a href="#">Instagram</a>
+            <a href="#">Twitter</a>
+          </div>
+        </div>
+      </div>
+
+      <div class="footer-bottom">
+        <p>&copy; 2026 TravelTour. All rights reserved.</p>
+      </div>
+    </footer>
+
+    <script src="./assets/js/main.js"></script>
+  </body>
+</html>

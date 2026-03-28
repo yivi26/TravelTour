@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>TravelTour - Đặt tour - Thanh toán</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="../../assets/css/tours/thanhtoan.css" />
+  </head>
+  <body class="booking-page">
+    <header class="booking-header">
+      <div class="booking-header__inner">
+        <a class="booking-header__brand" href="../../index.html">TravelTour</a>
+        <div class="booking-header__support">
+          Hỗ trợ: <strong>1900 1234</strong>
+        </div>
+      </div>
+    </header>
+
+    <main class="booking-main">
+      <div class="booking-shell">
+        <nav class="booking-breadcrumb" aria-label="Breadcrumb">
+          <a href="../../index.html">Trang chủ</a>
+          <span>&gt;</span>
+          <a href="./dstour.html">Tour du lịch</a>
+          <span>&gt;</span>
+          <a href="./chitiet.html">Chi tiết tour</a>
+          <span>&gt;</span>
+          <span>Đặt tour</span>
+        </nav>
+
+        <section class="booking-steps" aria-label="Quy trình đặt tour">
+          <article class="booking-step booking-step--completed">
+            <span class="booking-step__bubble">✓</span>
+            <span class="booking-step__label">Thông tin khách hàng</span>
+          </article>
+          <span
+            class="booking-step__line booking-step__line--done"
+            aria-hidden="true"
+          ></span>
+          <article class="booking-step booking-step--completed">
+            <span class="booking-step__bubble">✓</span>
+            <span class="booking-step__label">Tùy chọn tour</span>
+          </article>
+          <span
+            class="booking-step__line booking-step__line--done"
+            aria-hidden="true"
+          ></span>
+          <article class="booking-step booking-step--active">
+            <span class="booking-step__bubble">3</span>
+            <span class="booking-step__label">Thanh toán</span>
+          </article>
+        </section>
+
+        <div class="booking-layout">
+          <div class="booking-content">
+            <section class="tour-card">
+              <div class="tour-card__media">
+                <img
+                  src="../../assets/images/tours/chitiet/hero-vinh-ha-long.png"
+                  alt="Tour Vịnh Hạ Long"
+                />
+              </div>
+              <div class="tour-card__body">
+                <h1>
+                  Tour Vịnh Hạ Long - Khám phá di sản thiên nhiên thế giới
+                </h1>
+                <ul class="tour-card__meta">
+                  <li>
+                    <span class="meta-icon meta-icon--pin"></span
+                    ><span>Quảng Ninh, Việt Nam</span>
+                  </li>
+                  <li>
+                    <span class="meta-icon meta-icon--calendar"></span
+                    ><span>25/03/2026</span>
+                  </li>
+                  <li>
+                    <span class="meta-icon meta-icon--guest"></span
+                    ><span>1 khách</span>
+                  </li>
+                </ul>
+                <div class="tour-card__pricing">
+                  <div class="tour-card__pricing-row">
+                    <span>Giá mỗi người:</span>
+                    <strong>8.500.000 ₫</strong>
+                  </div>
+                  <div
+                    class="tour-card__pricing-row tour-card__pricing-row--total"
+                  >
+                    <span>Tổng cộng:</span>
+                    <strong>8.500.000 ₫</strong>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <section class="booking-panel payment-panel">
+              <h2>Phương thức thanh toán</h2>
+
+              <form class="payment-form" id="payment-form">
+                <div class="payment-methods">
+                  <label class="payment-method is-selected">
+                    <input
+                      type="radio"
+                      name="payment-method"
+                      value="card"
+                      checked
+                    />
+                    <span class="payment-method__dot"></span>
+                    <span
+                      class="payment-method__icon payment-method__icon--card"
+                    ></span>
+                    <span
+                      class="payment-method__content payment-method__content--wide"
+                    >
+                      <span class="payment-method__title"
+                        >Thẻ tín dụng /<br />Ghi nợ</span
+                      >
+                      <span class="payment-method__desc"
+                        >Thanh toán an toàn với<br />Visa, Mastercard, JCB</span
+                      >
+                    </span>
+                  </label>
+
+                  <label class="payment-method">
+                    <input type="radio" name="payment-method" value="wallet" />
+                    <span class="payment-method__dot"></span>
+                    <span
+                      class="payment-method__icon payment-method__icon--wallet"
+                    ></span>
+                    <span class="payment-method__content">
+                      <span class="payment-method__title">Ví điện tử</span>
+                      <span class="payment-method__desc"
+                        >MoMo, ZaloPay, VNPay, ShopeePay</span
+                      >
+                    </span>
+                  </label>
+
+                  <label class="payment-method">
+                    <input type="radio" name="payment-method" value="later" />
+                    <span class="payment-method__dot"></span>
+                    <span
+                      class="payment-method__icon payment-method__icon--later"
+                    ></span>
+                    <span
+                      class="payment-method__content payment-method__content--wide"
+                    >
+                      <span class="payment-method__title"
+                        >Thanh<br />toán sau</span
+                      >
+                      <span class="payment-method__desc"
+                        >Đặt trước, thanh toán khi nhận dịch vụ<br />(áp dụng
+                        phí 5%)</span
+                      >
+                    </span>
+                  </label>
+                </div>
+
+                <div class="card-form" id="card-form">
+                  <div class="form-field">
+                    <label for="card-number">Số thẻ</label>
+                    <input
+                      id="card-number"
+                      name="card-number"
+                      type="text"
+                      inputmode="numeric"
+                      placeholder="1234 5678 9012 3456"
+                    />
+                  </div>
+
+                  <div class="form-grid">
+                    <div class="form-field">
+                      <label for="card-expiry">Ngày hết hạn</label>
+                      <input
+                        id="card-expiry"
+                        name="card-expiry"
+                        type="text"
+                        placeholder="MM/YY"
+                      />
+                    </div>
+                    <div class="form-field">
+                      <label for="card-cvv">CVV</label>
+                      <input
+                        id="card-cvv"
+                        name="card-cvv"
+                        type="text"
+                        inputmode="numeric"
+                        placeholder="123"
+                      />
+                    </div>
+                  </div>
+
+                  <div class="form-field">
+                    <label for="card-name">Tên chủ thẻ</label>
+                    <input
+                      id="card-name"
+                      name="card-name"
+                      type="text"
+                      placeholder="NGUYEN VAN A"
+                    />
+                  </div>
+                </div>
+              </form>
+            </section>
+
+            <div class="payment-confirm">
+              <label class="terms-check">
+                <input id="agree-terms" type="checkbox" />
+                <span class="terms-check__box"></span>
+                <span
+                  >Tôi đồng ý với <a href="#">điều khoản và điều kiện</a> của
+                  TravelTour</span
+                >
+              </label>
+            </div>
+
+            <div class="booking-actions">
+              <button
+                class="action-button action-button--ghost js-go-back"
+                type="button"
+              >
+                <span>&larr;</span>
+                <span>Quay lại</span>
+              </button>
+              <button
+                class="action-button action-button--primary action-button--disabled js-confirm-booking"
+                type="submit"
+                form="payment-form"
+                disabled
+              >
+                <span>✓</span>
+                <span>Xác nhận đặt tour</span>
+              </button>
+            </div>
+
+            <a class="back-link" href="./chitiet.html">Quay lại trang tour</a>
+          </div>
+
+          <aside class="summary-card">
+            <h2>Tổng kết đặt tour</h2>
+            <div class="summary-card__rows">
+              <div class="summary-card__row">
+                <span>Giá tour ×<br />1 khách</span>
+                <strong>8.500.<br />000 ₫</strong>
+              </div>
+              <div class="summary-card__row">
+                <span>Phí dịch vụ</span>
+                <strong id="service-fee">500.000 ₫</strong>
+              </div>
+            </div>
+            <div class="summary-card__total">
+              <span>Tổng<br />thanh toán</span>
+              <strong id="pay-total">9.000.<br />000 ₫</strong>
+            </div>
+            <div class="summary-card__note">
+              <span class="summary-card__note-icon">i</span>
+              <p>
+                Lưu ý: Bạn sẽ nhận được email xác nhận ngay sau khi hoàn tất đặt
+                tour.
+              </p>
+            </div>
+          </aside>
+        </div>
+      </div>
+    </main>
+
+    <footer class="booking-footer">
+      <div class="booking-footer__inner">
+        <div class="booking-footer__column">
+          <h3>Về TravelTour</h3>
+          <a href="#">Giới thiệu</a>
+          <a href="#">Liên hệ</a>
+          <a href="#">Tuyển dụng</a>
+        </div>
+        <div class="booking-footer__column">
+          <h3>Hỗ trợ</h3>
+          <a href="#">Câu hỏi thường gặp</a>
+          <a href="#">Chính sách hoàn tiền</a>
+          <a href="#">Hướng dẫn đặt tour</a>
+        </div>
+        <div class="booking-footer__column">
+          <h3>Điều khoản</h3>
+          <a href="#">Điều khoản sử dụng</a>
+          <a href="#">Chính sách bảo mật</a>
+          <a href="#">Quy định chung</a>
+        </div>
+        <div class="booking-footer__column">
+          <h3>Kết nối với chúng tôi</h3>
+          <p>Email: info@traveltour.vn</p>
+          <p>Hotline: 1900 1234</p>
+          <p>Giờ làm việc: 8:00 - 20:00</p>
+        </div>
+      </div>
+      <div class="booking-footer__bottom">
+        © 2026 TravelTour. Bản quyền thuộc về TravelTour Vietnam.
+      </div>
+    </footer>
+
+    <script src="../../assets/js/tours/thanhtoan.js"></script>
+  </body>
+</html>
