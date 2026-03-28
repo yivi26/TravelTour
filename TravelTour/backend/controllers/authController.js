@@ -66,6 +66,12 @@ export async function login(req, res) {
       });
     }
 
+    if (!user.password_hash) {
+      return res.status(401).json({
+        message: "Tài khoản này không hỗ trợ đăng nhập bằng mật khẩu"
+      });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password_hash);
 
     if (!isMatch) {
@@ -98,11 +104,25 @@ export async function login(req, res) {
   }
 }
 
+export function getGoogleClientId(req, res) {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+
+  if (!clientId) {
+    return res.status(503).json({
+      message: "Chưa cấu hình GOOGLE_CLIENT_ID"
+    });
+  }
+
+  return res.status(200).json({ clientId });
+}
+
 export async function googleLogin(req, res) {
   const { token } = req.body;
 
   if (!token) {
-    return res.status(400).json({ message: "Thiếu token Google" });
+    return res.status(400).json({
+      message: "Thiếu token Google"
+    });
   }
 
   try {
@@ -130,6 +150,8 @@ export async function googleLogin(req, res) {
     } else {
       user = await updateGoogleUser(user.id, fullName, avatarUrl);
     }
+
+    await updateLastLogin(user.id);
 
     return res.status(200).json({
       message: "Google login thành công",

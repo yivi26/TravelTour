@@ -18,6 +18,7 @@
 
     <link rel="stylesheet" href="../../assets/css/provider/dashboard.css" />
     <link rel="stylesheet" href="../../assets/css/provider/taotour.css" />
+    <link rel="stylesheet" href="../../assets/css/provider/provider-logout.css" />
   </head>
   <body>
     <aside class="sidebar">
@@ -64,6 +65,16 @@
           </a>
         </li>
       </ul>
+
+      <div class="sidebar-logout">
+        <button
+          type="button"
+          class="sidebar-logout-btn provider-logout-action"
+        >
+          <i class="fa-solid fa-right-from-bracket"></i>
+          Đăng xuất
+        </button>
+      </div>
     </aside>
 
     <main class="main-content">
@@ -108,8 +119,10 @@
 
             <div class="form-grid">
               <div class="form-group full-width">
-                <label>Tên tour <span>*</span></label>
+                <label for="tourTitle">Tên tour <span>*</span></label>
                 <input
+                  id="tourTitle"
+                  name="tourTitle"
                   type="text"
                   placeholder="Ví dụ: Tour Hạ Long 3 ngày 2 đêm"
                 />
@@ -117,69 +130,94 @@
               </div>
 
               <div class="form-group">
-                <label>Mã tour <span>*</span></label>
-                <input type="text" placeholder="VD: HL-001" />
+                <label for="tourCode">Mã tour <span>*</span></label>
+                <input id="tourCode" name="tourCode" type="text" placeholder="VD: HL-001" />
               </div>
 
               <div class="form-group">
-                <label>Danh mục <span>*</span></label>
-                <select id="categorySelect"></select>
+                <label for="categorySelect">Danh mục <span>*</span></label>
+                <select id="categorySelect" name="categorySelect"></select>
               </div>
 
               <div class="form-group">
-                <label>Điểm đến <span>*</span></label>
+                <label for="tourLocation">Điểm đến <span>*</span></label>
                 <div class="input-icon-box">
                   <i class="fa-solid fa-location-dot"></i>
-                  <input type="text" placeholder="Vịnh Hạ Long, Quảng Ninh" />
+                  <input
+                    id="tourLocation"
+                    name="tourLocation"
+                    type="text"
+                    placeholder="Vịnh Hạ Long, Quảng Ninh"
+                  />
                 </div>
               </div>
 
               <div class="form-group">
-                <label>Thời gian <span>*</span></label>
+                <label for="tourDurationText">Thời gian <span>*</span></label>
                 <div class="input-icon-box">
                   <i class="fa-regular fa-clock"></i>
-                  <input type="text" placeholder="3 ngày 2 đêm" />
+                  <input
+                    id="tourDurationText"
+                    name="tourDurationText"
+                    type="text"
+                    placeholder="3 ngày 2 đêm"
+                  />
                 </div>
               </div>
 
               <div class="form-group">
-                <label>Ngày bắt đầu</label>
+                <label for="tourStartDate">Ngày bắt đầu</label>
                 <div class="input-icon-box">
                   <i class="fa-regular fa-calendar"></i>
-                  <input type="date" />
+                  <input id="tourStartDate" name="tourStartDate" type="date" />
                 </div>
               </div>
 
               <div class="form-group">
-                <label>Ngày kết thúc</label>
+                <label for="tourEndDate">Ngày kết thúc</label>
                 <div class="input-icon-box">
                   <i class="fa-regular fa-calendar"></i>
-                  <input type="date" />
+                  <input id="tourEndDate" name="tourEndDate" type="date" />
                 </div>
               </div>
 
               <div class="form-group">
-                <label>Số người tối đa <span>*</span></label>
+                <label for="tourMaxCapacity">Số người tối đa <span>*</span></label>
                 <div class="input-icon-box">
                   <i class="fa-solid fa-users"></i>
-                  <input type="number" placeholder="20" />
+                  <input
+                    id="tourMaxCapacity"
+                    name="tourMaxCapacity"
+                    type="number"
+                    placeholder="20"
+                  />
                 </div>
               </div>
 
               <div class="form-group">
-                <label>Giá tour <span>*</span></label>
+                <label for="tourBasePrice">Giá tour <span>*</span></label>
                 <div class="input-icon-box">
                   <i class="fa-solid fa-dollar-sign"></i>
-                  <input type="number" placeholder="5000000" />
+                  <input
+                    id="tourBasePrice"
+                    name="tourBasePrice"
+                    type="number"
+                    placeholder="5000000"
+                  />
                 </div>
                 <small>Giá bằng VNĐ</small>
               </div>
 
               <div class="form-group">
-                <label>Giá khuyến mãi</label>
+                <label for="tourSalePrice">Giá khuyến mãi</label>
                 <div class="input-icon-box">
                   <i class="fa-solid fa-tag"></i>
-                  <input type="number" placeholder="4500000" />
+                  <input
+                    id="tourSalePrice"
+                    name="tourSalePrice"
+                    type="number"
+                    placeholder="4500000"
+                  />
                 </div>
               </div>
             </div>
@@ -202,6 +240,8 @@
                 <p>Kéo thả ảnh vào đây hoặc click để chọn</p>
                 <small>PNG, JPG up to 10MB</small>
               </div>
+              <input id="coverImageInput" type="file" accept="image/*" hidden />
+              <div id="coverPreview" class="upload-preview"></div>
             </div>
 
             <div class="form-group">
@@ -211,6 +251,7 @@
                   <i class="fa-solid fa-plus"></i>
                 </div>
               </div>
+              <input id="galleryImageInput" type="file" accept="image/*" multiple hidden />
               <small>Tối đa 10 ảnh, mỗi ảnh tối đa 5MB</small>
             </div>
           </section>
@@ -224,8 +265,10 @@
             </div>
 
             <div class="form-group">
-              <label>Mô tả ngắn <span>*</span></label>
+              <label for="tourShortDescription">Mô tả ngắn <span>*</span></label>
               <textarea
+                id="tourShortDescription"
+                name="tourShortDescription"
                 rows="4"
                 placeholder="Giới thiệu ngắn gọn về tour du lịch..."
               ></textarea>
@@ -276,8 +319,10 @@
             </div>
 
             <div class="form-group">
-              <label>Điểm tập trung</label>
+              <label for="meetingPoint">Điểm tập trung</label>
               <input
+                id="meetingPoint"
+                name="meetingPoint"
                 type="text"
                 placeholder="Số 123 Đường ABC, Quận 1, TP.HCM"
               />
@@ -292,16 +337,20 @@
             </div>
 
             <div class="form-group">
-              <label>Thông tin khách sạn</label>
+              <label for="hotelInfo">Thông tin khách sạn</label>
               <textarea
+                id="hotelInfo"
+                name="hotelInfo"
                 rows="3"
                 placeholder="Tên khách sạn, địa chỉ, tiện nghi..."
               ></textarea>
             </div>
 
             <div class="form-group">
-              <label>Phương tiện di chuyển</label>
+              <label for="transportInfo">Phương tiện di chuyển</label>
               <input
+                id="transportInfo"
+                name="transportInfo"
                 type="text"
                 placeholder="Máy bay / Xe khách / Tàu hỏa..."
               />
@@ -317,24 +366,33 @@
             </div>
 
             <div class="form-group">
-              <label>Chính sách hủy tour</label>
+              <label for="cancelPolicy">Chính sách hủy tour</label>
               <textarea
+                id="cancelPolicy"
+                name="cancelPolicy"
                 rows="4"
                 placeholder="Nhập chính sách hủy tour..."
               ></textarea>
             </div>
 
             <div class="form-group">
-              <label>Điều khoản & Điều kiện</label>
+              <label for="termsConditions">Điều khoản & Điều kiện</label>
               <textarea
+                id="termsConditions"
+                name="termsConditions"
                 rows="4"
                 placeholder="Nhập điều khoản & điều kiện..."
               ></textarea>
             </div>
 
             <div class="form-group">
-              <label>Ghi chú</label>
-              <textarea rows="3" placeholder="Các lưu ý khác..."></textarea>
+              <label for="otherNotes">Ghi chú</label>
+              <textarea
+                id="otherNotes"
+                name="otherNotes"
+                rows="3"
+                placeholder="Các lưu ý khác..."
+              ></textarea>
             </div>
           </section>
         </div>
@@ -344,9 +402,9 @@
             <h3>Hành động</h3>
 
             <div class="action-btn-group">
-              <button class="full-btn primary-btn">Xuất bản tour</button>
-              <button class="full-btn secondary-btn">Lưu nháp</button>
-              <button class="full-btn outline-btn">Hủy</button>
+              <button class="full-btn primary-btn" id="publishTourBtn">Xuất bản tour</button>
+              <button class="full-btn secondary-btn" id="saveDraftBtn">Lưu nháp</button>
+              <button class="full-btn outline-btn" id="cancelCreateTourBtn">Hủy</button>
             </div>
 
             <div class="side-divider"></div>
@@ -355,10 +413,10 @@
               <h4>Trạng thái</h4>
               <div class="progress-row">
                 <span>Tiến độ</span>
-                <strong>45%</strong>
+                <strong id="formProgressText">0%</strong>
               </div>
               <div class="progress-bar">
-                <div class="progress-bar-fill"></div>
+                <div class="progress-bar-fill" id="formProgressBar" style="width: 0%"></div>
               </div>
             </div>
 
@@ -366,19 +424,19 @@
 
             <div class="side-block">
               <h4>Thông tin bắt buộc</h4>
-              <div class="required-item done">
+              <div class="required-item" id="requiredBasicInfo">
                 <span class="required-dot"></span>
                 <span>Thông tin cơ bản</span>
               </div>
-              <div class="required-item">
+              <div class="required-item" id="requiredCoverImage">
                 <span class="required-dot"></span>
                 <span>Hình ảnh tour</span>
               </div>
-              <div class="required-item">
+              <div class="required-item" id="requiredDescription">
                 <span class="required-dot"></span>
                 <span>Mô tả tour</span>
               </div>
-              <div class="required-item">
+              <div class="required-item" id="requiredItinerary">
                 <span class="required-dot"></span>
                 <span>Lịch trình</span>
               </div>
@@ -398,6 +456,7 @@
       </div>
 
       <script src="../../assets/js/provider/taotour.js"></script>
+      <script src="../../assets/js/provider/provider-logout.js"></script>
     </main>
   </body>
 </html>

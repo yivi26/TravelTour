@@ -19,6 +19,7 @@
       rel="stylesheet"
       href="../../assets/css/provider/guide_assignment.css"
     />
+    <link rel="stylesheet" href="../../assets/css/provider/provider-logout.css" />
   </head>
   <body>
     <aside class="sidebar">
@@ -70,6 +71,16 @@
           </a>
         </li>
       </ul>
+
+      <div class="sidebar-logout">
+        <button
+          type="button"
+          class="sidebar-logout-btn provider-logout-action"
+        >
+          <i class="fa-solid fa-right-from-bracket"></i>
+          Đăng xuất
+        </button>
+      </div>
     </aside>
 
     <main class="main-content">
@@ -101,7 +112,6 @@
       </div>
 
       <div class="content-grid">
-        <!-- Guide list -->
         <section class="col-card">
           <div class="col-title">
             <i class="fa-regular fa-user"></i>
@@ -111,7 +121,6 @@
           <div id="guideList" class="guide-list"></div>
         </section>
 
-        <!-- Upcoming tours -->
         <section class="col-card">
           <div class="col-title">
             <i class="fa-regular fa-calendar-check"></i>
@@ -124,5 +133,6 @@
     </main>
 
     <script src="../../assets/js/provider/guide_assignment.js"></script>
+    <script src="../../assets/js/provider/provider-logout.js"></script>
   </body>
 </html>
