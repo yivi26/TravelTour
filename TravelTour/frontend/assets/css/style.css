@@ -107,6 +107,17 @@ img {
   background: var(--primary-dark);
 }
 
+.btn-outline {
+  background: transparent;
+  color: var(--text);
+  border: 2px solid var(--border);
+}
+
+.btn-outline:hover {
+  border-color: var(--primary);
+  color: var(--primary);
+}
+
 /* Hero */
 .hero {
   position: relative;

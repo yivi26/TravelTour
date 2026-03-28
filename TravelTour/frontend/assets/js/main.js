@@ -228,4 +228,13 @@ document.addEventListener("DOMContentLoaded", function () {
   renderTours();
   renderFeatures();
   renderPromotions();
+
+  const btnLogout = document.getElementById("btnLogout");
+  if (btnLogout) {
+    btnLogout.addEventListener("click", function () {
+      localStorage.removeItem("traveltour_user");
+      localStorage.removeItem("traveltour_remember");
+      window.location.href = "/login";
+    });
+  }
 });
