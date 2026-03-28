@@ -3,13 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>TravelTour - Du lịch Vịnh Hạ Long 3 ngày 2 đêm</title>
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <title>Chi tiết tour - TravelTour</title>
     <link rel="stylesheet" href="../../assets/css/tours/chitiet.css" />
   </head>
   <body class="tour-detail-page">
@@ -19,24 +13,12 @@
           <a class="brand" href="../../index.html">TravelTour</a>
           <nav class="site-nav" aria-label="Điều hướng chính">
             <a class="site-nav__link" href="../../index.html">Trang chủ</a>
-            <a
-              class="site-nav__link site-nav__link--active"
-              href="./dstour.html"
-              >Tours</a
-            >
-            <a class="site-nav__link" href="#">Khám phá</a>
-            <a class="site-nav__link" href="#site-footer">Liên hệ</a>
+            <a class="site-nav__link site-nav__link--active" href="./dstour.html">Tours</a>
           </nav>
         </div>
+
         <div class="site-header__actions">
-          <button class="icon-button" type="button" aria-label="Tìm kiếm">
-            <span class="ui-icon ui-icon--search"></span>
-          </button>
-          <button class="icon-button" type="button" aria-label="Tin nhắn">
-            <span class="ui-icon ui-icon--message"></span>
-          </button>
           <a class="login-button" href="/login">
-            <span class="ui-icon ui-icon--user"></span>
             <span>Đăng nhập</span>
           </a>
         </div>
@@ -50,76 +32,36 @@
           <span>/</span>
           <a href="./dstour.html">Tours</a>
           <span>/</span>
-          <span>Du lịch Vịnh Hạ Long 3 ngày 2 đêm</span>
+          <span id="breadcrumb-title">Chi tiết tour</span>
         </nav>
 
         <section class="hero-card">
           <div class="hero-card__intro">
-            <h1>Du lịch Vịnh Hạ Long 3 ngày 2 đêm</h1>
+            <h1 id="tour-title">Đang tải dữ liệu tour...</h1>
+
             <div class="hero-meta">
-              <div class="hero-meta__item hero-meta__item--rating">
-                <span class="ui-icon ui-icon--star"></span>
-                <strong>4.9</strong>
-                <span>(287 đánh giá)</span>
+              <div class="hero-meta__item">
+                <span>📍</span>
+                <span id="tour-location">Đang cập nhật</span>
               </div>
               <div class="hero-meta__item">
-                <span class="ui-icon ui-icon--pin"></span>
-                <span>Vịnh Hạ Long, Quảng Ninh, Việt Nam</span>
+                <span>🏢</span>
+                <span id="tour-provider">Đang cập nhật</span>
               </div>
             </div>
-            <p class="hero-card__subtitle">
-              Khám phá kỳ quan thiên nhiên thế giới với những trải nghiệm độc
-              đáo.
+
+            <p class="hero-card__subtitle" id="tour-description">
+              Đang tải mô tả tour...
             </p>
-            <div class="hero-actions">
-              <button class="outline-button js-share-button" type="button">
-                <span class="ui-icon ui-icon--share"></span>
-                <span>Chia sẻ</span>
-              </button>
-              <button
-                class="outline-button js-favorite-button"
-                type="button"
-                aria-pressed="false"
-              >
-                <span class="ui-icon ui-icon--heart"></span>
-                <span>Yêu thích</span>
-              </button>
-            </div>
           </div>
 
           <div class="hero-gallery" id="tour-gallery">
             <figure class="hero-gallery__item hero-gallery__item--main">
               <img
-                src="../../assets/images/tours/chitiet/hero-vinh-ha-long.png"
-                alt="Toàn cảnh Vịnh Hạ Long"
+                id="tour-main-image"
+                src="https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80"
+                alt="Ảnh tour"
               />
-            </figure>
-            <figure class="hero-gallery__item">
-              <img
-                src="../../assets/images/tours/chitiet/gallery-beach.png"
-                alt="Bãi biển xanh ngọc"
-              />
-            </figure>
-            <figure class="hero-gallery__item">
-              <img
-                src="../../assets/images/tours/chitiet/gallery-hotel.png"
-                alt="Phòng nghỉ view biển"
-              />
-            </figure>
-            <figure class="hero-gallery__item">
-              <img
-                src="../../assets/images/tours/chitiet/gallery-boat.png"
-                alt="Chèo thuyền kayak"
-              />
-            </figure>
-            <figure class="hero-gallery__item hero-gallery__item--overlay">
-              <img
-                src="../../assets/images/tours/chitiet/gallery-food.png"
-                alt="Hải sản trên tàu"
-              />
-              <button class="gallery-button js-gallery-button" type="button">
-                Xem tất cả ảnh
-              </button>
             </figure>
           </div>
         </section>
@@ -127,512 +69,59 @@
         <div class="detail-sections">
           <section class="section-card">
             <h2>Tổng quan về tour</h2>
+
             <div class="overview-stats">
               <article class="overview-stat">
-                <span class="overview-stat__icon ui-icon ui-icon--clock"></span>
                 <div>
                   <span class="overview-stat__label">Thời gian</span>
-                  <strong>3 ngày 2 đêm</strong>
+                  <strong id="tour-duration">--</strong>
                 </div>
               </article>
+
               <article class="overview-stat">
-                <span class="overview-stat__icon ui-icon ui-icon--group"></span>
                 <div>
-                  <span class="overview-stat__label">Số người</span>
-                  <strong>2-15 khách</strong>
+                  <span class="overview-stat__label">Số người tối đa</span>
+                  <strong id="tour-capacity">--</strong>
                 </div>
               </article>
+
               <article class="overview-stat">
-                <span
-                  class="overview-stat__icon ui-icon ui-icon--calendar"
-                ></span>
                 <div>
-                  <span class="overview-stat__label">Khởi hành</span>
-                  <strong>Hàng ngày</strong>
+                  <span class="overview-stat__label">Giá tour</span>
+                  <strong id="tour-price">--</strong>
                 </div>
               </article>
             </div>
+
             <div class="section-copy">
-              <p>
-                Chào mừng bạn đến với chuyến du lịch Vịnh Hạ Long, một trong bảy
-                kỳ quan thiên nhiên thế giới. Trong hành trình 3 ngày 2 đêm này,
-                bạn sẽ được trải nghiệm vẻ đẹp hùng vĩ của hàng nghìn hòn đảo đá
-                vôi nổi lên giữa mặt nước biển xanh ngọc bích.
+              <p id="tour-description-full">
+                Đang tải nội dung chi tiết...
               </p>
-              <p>
-                Tour được thiết kế đặc biệt để mang đến cho bạn những trải
-                nghiệm độc đáo nhất: thư giãn trên du thuyền sang trọng, khám
-                phá các hang động kỳ vĩ, chèo kayak, bơi lội và thưởng thức hải
-                sản tươi sống. Đây là cơ hội tuyệt vời để kết nối với thiên
-                nhiên và tạo nên những kỷ niệm khó quên.
-              </p>
-            </div>
-            <div class="highlights">
-              <h3>Điểm nổi bật của chuyến đi</h3>
-              <ul class="check-list">
-                <li>Tham quan Vịnh Hạ Long, Di sản thiên nhiên thế giới.</li>
-                <li>Khám phá hang Sửng Sốt và làng chài cổ Cửa Vạn.</li>
-                <li>Thưởng thức hải sản tươi sống trên du thuyền 5 sao.</li>
-                <li>Chèo kayak qua các hang động đẹp kỳ vĩ.</li>
-                <li>Tham gia lớp học nấu ăn truyền thống Việt Nam.</li>
-                <li>Nghỉ dưỡng tại du thuyền cao cấp với view biển.</li>
-              </ul>
-            </div>
-          </section>
-
-          <section class="section-card">
-            <h2>Lịch trình chi tiết</h2>
-            <div class="timeline">
-              <article class="timeline-day">
-                <span class="timeline-day__badge">1</span>
-                <div class="timeline-day__content">
-                  <div class="timeline-day__header">
-                    <span
-                      class="timeline-day__icon ui-icon ui-icon--calendar"
-                    ></span>
-                    <div>
-                      <h3>Ngày 1</h3>
-                      <p>Hà Nội - Hạ Long - Đón tàu</p>
-                    </div>
-                  </div>
-                  <ul class="timeline-steps">
-                    <li>07:00 - Xe đón tại điểm hẹn ở Hà Nội.</li>
-                    <li>12:00 - Đến bến tàu Hạ Long, làm thủ tục lên tàu.</li>
-                    <li>
-                      13:00 - Thưởng thức bữa trưa buffet hải sản trên tàu.
-                    </li>
-                    <li>
-                      14:30 - Tham quan hang Sửng Sốt, hang động đẹp nhất vịnh.
-                    </li>
-                    <li>
-                      16:00 - Chèo kayak hoặc bơi tại khu vực nước trong xanh.
-                    </li>
-                    <li>
-                      18:30 - Tham gia lớp học nấu ăn truyền thống trên tàu.
-                    </li>
-                    <li>
-                      19:30 - Dùng bữa tối trên boong tàu với view hoàng hôn.
-                    </li>
-                    <li>21:00 - Câu mực đêm hoặc thư giãn tại quầy bar.</li>
-                  </ul>
-                </div>
-              </article>
-
-              <article class="timeline-day">
-                <span class="timeline-day__badge">2</span>
-                <div class="timeline-day__content">
-                  <div class="timeline-day__header">
-                    <span
-                      class="timeline-day__icon ui-icon ui-icon--calendar"
-                    ></span>
-                    <div>
-                      <h3>Ngày 2</h3>
-                      <p>Khám phá làng chài và hang động</p>
-                    </div>
-                  </div>
-                  <ul class="timeline-steps">
-                    <li>06:30 - Tập Thái Cực Quyền trên boong tàu.</li>
-                    <li>07:00 - Bữa sáng nhẹ với trà, cà phê và bánh ngọt.</li>
-                    <li>08:00 - Thuyền đưa đón đến làng chài Cửa Vạn.</li>
-                    <li>09:30 - Khám phá cuộc sống của người dân làng chài.</li>
-                    <li>11:00 - Quay về tàu, tắm biển hoặc nghỉ ngơi.</li>
-                    <li>12:30 - Bữa trưa BBQ trên tàu.</li>
-                    <li>
-                      14:00 - Chuyển sang du thuyền nhỏ khám phá hang Thiên
-                      Cung.
-                    </li>
-                    <li>16:00 - Tắm nắng trên boong tàu.</li>
-                    <li>19:00 - Bữa tối thịnh soạn với các món đặc sản.</li>
-                    <li>21:00 - Đêm tiệc cocktail và âm nhạc.</li>
-                  </ul>
-                </div>
-              </article>
-
-              <article class="timeline-day">
-                <span class="timeline-day__badge">3</span>
-                <div class="timeline-day__content">
-                  <div class="timeline-day__header">
-                    <span
-                      class="timeline-day__icon ui-icon ui-icon--calendar"
-                    ></span>
-                    <div>
-                      <h3>Ngày 3</h3>
-                      <p>Về đất liền - Quay về Hà Nội</p>
-                    </div>
-                  </div>
-                  <ul class="timeline-steps">
-                    <li>06:00 - Ngắm bình minh trên Vịnh Hạ Long.</li>
-                    <li>07:00 - Bữa sáng tự chọn tại nhà hàng trên tàu.</li>
-                    <li>08:00 - Làm thủ tục trả phòng.</li>
-                    <li>
-                      09:00 - Tham quan đảo Titop, leo lên đỉnh ngắm toàn cảnh.
-                    </li>
-                    <li>11:00 - Thưởng thức brunch cuối hành trình.</li>
-                    <li>12:00 - Tàu cập bến, xe đón quý khách.</li>
-                    <li>17:00 - Về đến Hà Nội, kết thúc chuyến đi.</li>
-                  </ul>
-                </div>
-              </article>
             </div>
           </section>
 
           <section class="section-card">
             <h2>Dịch vụ bao gồm</h2>
-            <div class="included-grid">
-              <article class="included-card">
-                <span class="included-card__icon ui-icon ui-icon--boat"></span>
-                <div>
-                  <h3>Phương tiện</h3>
-                  <ul class="bullet-list">
-                    <li>Xe ô tô đời mới đưa đón Hà Nội - Hạ Long - Hà Nội.</li>
-                    <li>Du thuyền 5 sao sang trọng 2 ngày 1 đêm.</li>
-                    <li>Thuyền kayak và đầy đủ thiết bị an toàn.</li>
-                    <li>Thuyền đưa đón tham quan các điểm trong vịnh.</li>
-                  </ul>
-                </div>
-              </article>
-
-              <article class="included-card">
-                <span class="included-card__icon ui-icon ui-icon--hotel"></span>
-                <div>
-                  <h3>Lưu trú</h3>
-                  <ul class="bullet-list">
-                    <li>Phòng Superior trên du thuyền 5 sao.</li>
-                    <li>Phòng có ban công riêng, view biển.</li>
-                    <li>Điều hòa, nước nóng và wifi miễn phí.</li>
-                    <li>Dọn phòng hằng ngày.</li>
-                  </ul>
-                </div>
-              </article>
-
-              <article class="included-card">
-                <span class="included-card__icon ui-icon ui-icon--meal"></span>
-                <div>
-                  <h3>Bữa ăn</h3>
-                  <ul class="bullet-list">
-                    <li>2 bữa sáng buffet quốc tế.</li>
-                    <li>3 bữa trưa gồm buffet hải sản và BBQ.</li>
-                    <li>2 bữa tối theo set menu và buffet.</li>
-                    <li>Nước uống, trái cây phục vụ trong hành trình.</li>
-                  </ul>
-                </div>
-              </article>
-
-              <article class="included-card">
-                <span class="included-card__icon ui-icon ui-icon--guide"></span>
-                <div>
-                  <h3>Hướng dẫn viên</h3>
-                  <ul class="bullet-list">
-                    <li>Hướng dẫn viên tiếng Việt nhiệt tình, kinh nghiệm.</li>
-                    <li>Hỗ trợ xuyên suốt chuyến đi.</li>
-                    <li>Chia sẻ kiến thức về văn hóa địa phương.</li>
-                    <li>Chăm sóc chu đáo từng thành viên.</li>
-                  </ul>
-                </div>
-              </article>
-            </div>
-
-            <div class="exclude-box">
-              <h3>Không bao gồm</h3>
-              <ul class="exclude-list">
-                <li>Chi phí cá nhân ngoài chương trình.</li>
-                <li>Đồ uống có cồn tại quầy bar.</li>
-                <li>Tiền tip cho hướng dẫn viên và lái xe.</li>
-                <li>Thuế VAT nếu cần xuất hóa đơn đỏ.</li>
-              </ul>
-            </div>
+            <ul class="check-list" id="tour-includes-list">
+              <li>Đang tải...</li>
+            </ul>
           </section>
 
           <section class="section-card">
-            <h2>Địa điểm và bản đồ</h2>
-            <div class="map-card">
-              <div class="map-card__media">
-                <img
-                  src="../../assets/images/tours/chitiet/map-vinh-ha-long.png"
-                  alt="Bản đồ Vịnh Hạ Long"
-                />
-                <button class="map-button js-map-button" type="button">
-                  Xem bản đồ lớn
-                </button>
-                <span class="map-pin" aria-hidden="true"></span>
-              </div>
-              <div class="map-card__info">
-                <span class="map-card__icon ui-icon ui-icon--pin"></span>
-                <div class="map-card__copy">
-                  <h3>Vịnh Hạ Long, Quảng Ninh</h3>
-                  <p>
-                    Vịnh Hạ Long nằm ở phía Đông Bắc Việt Nam, cách Hà Nội
-                    khoảng 165 km. Điểm tập trung của tour là bến tàu Tuần Châu,
-                    thành phố Hạ Long.
-                  </p>
-                  <div class="map-card__actions">
-                    <button
-                      class="outline-button js-directions-button"
-                      type="button"
-                    >
-                      Hướng dẫn đường đi
-                    </button>
-                    <button
-                      class="outline-button js-save-location-button"
-                      type="button"
-                    >
-                      Lưu địa điểm
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </section>
-
-          <section class="section-card">
-            <h2>Đánh giá từ khách hàng</h2>
-            <div class="reviews-summary">
-              <article class="score-card">
-                <strong class="score-card__value">4.9</strong>
-                <div class="score-card__stars">
-                  &#9733;&#9733;&#9733;&#9733;&#9733;
-                </div>
-                <span>287 đánh giá</span>
-              </article>
-              <article class="rating-breakdown">
-                <div class="rating-row">
-                  <span>5 sao</span>
-                  <div class="rating-row__bar">
-                    <span style="width: 100%"></span>
-                  </div>
-                  <span>224</span>
-                </div>
-                <div class="rating-row">
-                  <span>4 sao</span>
-                  <div class="rating-row__bar">
-                    <span style="width: 19%"></span>
-                  </div>
-                  <span>43</span>
-                </div>
-                <div class="rating-row">
-                  <span>3 sao</span>
-                  <div class="rating-row__bar">
-                    <span style="width: 6%"></span>
-                  </div>
-                  <span>14</span>
-                </div>
-                <div class="rating-row">
-                  <span>2 sao</span>
-                  <div class="rating-row__bar">
-                    <span style="width: 2%"></span>
-                  </div>
-                  <span>3</span>
-                </div>
-                <div class="rating-row">
-                  <span>1 sao</span>
-                  <div class="rating-row__bar">
-                    <span style="width: 2%"></span>
-                  </div>
-                  <span>3</span>
-                </div>
-              </article>
-            </div>
-
-            <div class="reviews-list">
-              <article class="review-card">
-                <div class="review-card__avatar">NA</div>
-                <div class="review-card__content">
-                  <div class="review-card__header">
-                    <div>
-                      <h3>Nguyễn Minh Anh</h3>
-                      <time datetime="2026-03-15">15/03/2026</time>
-                    </div>
-                    <div class="review-card__stars">
-                      &#9733;&#9733;&#9733;&#9733;&#9733;
-                    </div>
-                  </div>
-                  <p>
-                    Tour tuyệt vời. Cảnh sắc Hạ Long đẹp hơn mong đợi, dịch vụ
-                    trên tàu rất chu đáo, đồ ăn tươi ngon và phòng nghỉ sạch sẽ.
-                    Chắc chắn tôi sẽ quay lại cùng gia đình.
-                  </p>
-                </div>
-              </article>
-
-              <article class="review-card">
-                <div class="review-card__avatar">TH</div>
-                <div class="review-card__content">
-                  <div class="review-card__header">
-                    <div>
-                      <h3>Trần Văn Hùng</h3>
-                      <time datetime="2026-03-10">10/03/2026</time>
-                    </div>
-                    <div class="review-card__stars">
-                      &#9733;&#9733;&#9733;&#9733;&#9733;
-                    </div>
-                  </div>
-                  <p>
-                    Tour được tổ chức chuyên nghiệp, lịch trình hợp lý và không
-                    quá gấp. Hoạt động chèo kayak rất thú vị, đội ngũ phục vụ
-                    tận tâm, đáng giá tiền.
-                  </p>
-                </div>
-              </article>
-
-              <article class="review-card">
-                <div class="review-card__avatar">LH</div>
-                <div class="review-card__content">
-                  <div class="review-card__header">
-                    <div>
-                      <h3>Lê Thị Hương</h3>
-                      <time datetime="2026-03-05">05/03/2026</time>
-                    </div>
-                    <div class="review-card__stars">
-                      &#9733;&#9733;&#9733;&#9733;&#9734;
-                    </div>
-                  </div>
-                  <p>
-                    Trải nghiệm tốt, phòng ngủ sạch sẽ và view rất đẹp. Lớp học
-                    nấu ăn thú vị, nhân viên hỗ trợ nhanh. Chỉ tiếc thời tiết
-                    chưa đẹp lắm nhưng không ảnh hưởng nhiều đến chuyến đi.
-                  </p>
-                </div>
-              </article>
-            </div>
-          </section>
-
-          <section class="section-card">
-            <h2>Câu hỏi thường gặp</h2>
-            <div class="faq-list">
-              <article class="faq-item">
-                <button
-                  class="faq-item__question"
-                  type="button"
-                  aria-expanded="false"
-                >
-                  <span>Thời gian tốt nhất để đi Vịnh Hạ Long là khi nào?</span>
-                  <span class="faq-item__icon">+</span>
-                </button>
-                <div class="faq-item__answer">
-                  <p>
-                    Khoảng từ tháng 10 đến tháng 4 là thời điểm có thời tiết ổn
-                    định, trời ít mưa và thuận tiện nhất cho các hoạt động tham
-                    quan, chèo kayak và nghỉ dưỡng.
-                  </p>
-                </div>
-              </article>
-
-              <article class="faq-item">
-                <button
-                  class="faq-item__question"
-                  type="button"
-                  aria-expanded="false"
-                >
-                  <span>Tôi cần chuẩn bị gì cho chuyến đi?</span>
-                  <span class="faq-item__icon">+</span>
-                </button>
-                <div class="faq-item__answer">
-                  <p>
-                    Bạn nên chuẩn bị giấy tờ tùy thân, quần áo gọn nhẹ, kem
-                    chống nắng, nón, đồ bơi và thuốc cá nhân nếu cần.
-                  </p>
-                </div>
-              </article>
-
-              <article class="faq-item">
-                <button
-                  class="faq-item__question"
-                  type="button"
-                  aria-expanded="false"
-                >
-                  <span
-                    >Tour có phù hợp với trẻ em và người cao tuổi không?</span
-                  >
-                  <span class="faq-item__icon">+</span>
-                </button>
-                <div class="faq-item__answer">
-                  <p>
-                    Có. Lịch trình được thiết kế cân bằng giữa nghỉ dưỡng và
-                    trải nghiệm. Du khách có thể linh hoạt bỏ qua một số hoạt
-                    động mang tính vận động nếu cần.
-                  </p>
-                </div>
-              </article>
-
-              <article class="faq-item">
-                <button
-                  class="faq-item__question"
-                  type="button"
-                  aria-expanded="false"
-                >
-                  <span>Chính sách hủy tour như thế nào?</span>
-                  <span class="faq-item__icon">+</span>
-                </button>
-                <div class="faq-item__answer">
-                  <p>
-                    Bạn được hoàn tiền 100% nếu hủy trước 7 ngày. Các mốc gần
-                    ngày khởi hành sẽ áp dụng theo tình trạng giữ chỗ và dịch vụ
-                    đã xác nhận.
-                  </p>
-                </div>
-              </article>
-
-              <article class="faq-item">
-                <button
-                  class="faq-item__question"
-                  type="button"
-                  aria-expanded="false"
-                >
-                  <span>Tôi có thể yêu cầu chế độ ăn đặc biệt không?</span>
-                  <span class="faq-item__icon">+</span>
-                </button>
-                <div class="faq-item__answer">
-                  <p>
-                    Có thể. Bạn chỉ cần ghi chú trước khi đặt hoặc liên hệ tư
-                    vấn để đội ngũ chuẩn bị thực đơn phù hợp.
-                  </p>
-                </div>
-              </article>
-
-              <article class="faq-item">
-                <button
-                  class="faq-item__question"
-                  type="button"
-                  aria-expanded="false"
-                >
-                  <span>Có wifi trên tàu không?</span>
-                  <span class="faq-item__icon">+</span>
-                </button>
-                <div class="faq-item__answer">
-                  <p>
-                    Có wifi miễn phí trên tàu, tuy nhiên tín hiệu có thể thay
-                    đổi tùy theo vị trí di chuyển trong vịnh.
-                  </p>
-                </div>
-              </article>
-
-              <article class="faq-item">
-                <button
-                  class="faq-item__question"
-                  type="button"
-                  aria-expanded="false"
-                >
-                  <span>Tour có bao gồm bảo hiểm không?</span>
-                  <span class="faq-item__icon">+</span>
-                </button>
-                <div class="faq-item__answer">
-                  <p>
-                    Có. Tour đã bao gồm bảo hiểm du lịch toàn diện và hỗ trợ
-                    24/7 trong suốt hành trình.
-                  </p>
-                </div>
-              </article>
-            </div>
+            <h2>Không bao gồm</h2>
+            <ul class="exclude-list" id="tour-excludes-list">
+              <li>Đang tải...</li>
+            </ul>
           </section>
 
           <section class="booking-panel">
             <div class="booking-card">
               <div class="booking-card__price">
                 <div class="booking-card__price-main">
-                  <strong>5.890.000&#8363;</strong>
+                  <strong id="booking-tour-price">--</strong>
                   <span>/ người</span>
                 </div>
-                <p>Đã bao gồm thuế và phí</p>
+                <p>Giá từ nhà cung cấp tour</p>
               </div>
 
               <form class="booking-form" id="booking-form">
@@ -642,8 +131,6 @@
                     id="departure-date"
                     name="departure-date"
                     type="date"
-                    value="2026-04-15"
-                    min="2026-03-21"
                   />
                 </label>
 
@@ -658,6 +145,7 @@
                       <option value="5">5 người lớn</option>
                     </select>
                   </label>
+
                   <label class="booking-field">
                     <span>&nbsp;</span>
                     <select id="child-count" name="child-count">
@@ -669,177 +157,26 @@
                   </label>
                 </div>
 
-                <div class="booking-alert">
-                  <span class="ui-icon ui-icon--info"></span>
-                  <span>Chỉ còn 8 chỗ trống</span>
-                </div>
-
                 <div class="booking-summary">
                   <div class="booking-summary__row">
-                    <span id="booking-line-label"
-                      >5.890.000&#8363; x 2 khách</span
-                    >
-                    <strong id="booking-line-total">11.780.000&#8363;</strong>
-                  </div>
-                  <div class="booking-summary__row">
-                    <span>Phí dịch vụ</span>
-                    <strong>Miễn phí</strong>
+                    <span id="booking-line-label">--</span>
+                    <strong id="booking-line-total">--</strong>
                   </div>
                   <div class="booking-summary__row booking-summary__row--total">
                     <span>Tổng cộng</span>
-                    <strong id="booking-grand-total">11.780.000&#8363;</strong>
+                    <strong id="booking-grand-total">--</strong>
                   </div>
                 </div>
 
                 <div class="booking-actions">
                   <button class="primary-button" type="submit">Đặt ngay</button>
-                  <button
-                    class="outline-button outline-button--full js-contact-button"
-                    type="button"
-                  >
-                    <span class="ui-icon ui-icon--message"></span>
-                    <span>Liên hệ tư vấn</span>
-                  </button>
                 </div>
-
-                <p class="booking-note">
-                  Bạn sẽ chưa bị trừ tiền. Xác nhận đặt chỗ sau.
-                </p>
               </form>
-            </div>
-
-            <div class="safety-card">
-              <h3>Đảm bảo an toàn</h3>
-              <ul>
-                <li>Hoàn tiền 100% nếu hủy trước 7 ngày.</li>
-                <li>Bảo hiểm du lịch toàn diện.</li>
-                <li>Hỗ trợ 24/7 trong suốt hành trình.</li>
-              </ul>
             </div>
           </section>
         </div>
-
-        <section class="similar-section">
-          <h2>Tour tương tự bạn có thể thích</h2>
-          <div class="similar-grid">
-            <article class="similar-card">
-              <div class="similar-card__media">
-                <img
-                  src="../../assets/images/tours/chitiet/tour-phu-quoc.png"
-                  alt="Du lịch Phú Quốc 4 ngày 3 đêm"
-                />
-                <span class="similar-card__price">6.890.000&#8363;</span>
-              </div>
-              <div class="similar-card__body">
-                <h3>Du lịch Phú Quốc 4N3Đ - Thiên đường biển đảo</h3>
-                <div class="similar-card__meta">
-                  <span>Phú Quốc, Kiên Giang</span>
-                  <span>4 ngày 3 đêm</span>
-                </div>
-                <div class="similar-card__footer">
-                  <span class="similar-card__rating"
-                    >4.8 <small>(156)</small></span
-                  >
-                  <a class="similar-card__link" href="#">Xem chi tiết -&gt;</a>
-                </div>
-              </div>
-            </article>
-
-            <article class="similar-card">
-              <div class="similar-card__media">
-                <img
-                  src="../../assets/images/tours/chitiet/tour-sapa.png"
-                  alt="Khám phá Sapa"
-                />
-                <span class="similar-card__price">4.590.000&#8363;</span>
-              </div>
-              <div class="similar-card__body">
-                <h3>Khám phá Sapa - Núi non hùng vĩ</h3>
-                <div class="similar-card__meta">
-                  <span>Sapa, Lào Cai</span>
-                  <span>3 ngày 2 đêm</span>
-                </div>
-                <div class="similar-card__footer">
-                  <span class="similar-card__rating"
-                    >4.9 <small>(203)</small></span
-                  >
-                  <a class="similar-card__link" href="#">Xem chi tiết -&gt;</a>
-                </div>
-              </div>
-            </article>
-
-            <article class="similar-card">
-              <div class="similar-card__media">
-                <img
-                  src="../../assets/images/tours/chitiet/tour-da-nang-hoi-an.png"
-                  alt="Tour Đà Nẵng Hội An"
-                />
-                <span class="similar-card__price">5.290.000&#8363;</span>
-              </div>
-              <div class="similar-card__body">
-                <h3>Tour Đà Nẵng - Hội An - Bà Nà Hills</h3>
-                <div class="similar-card__meta">
-                  <span>Đà Nẵng - Hội An</span>
-                  <span>4 ngày 3 đêm</span>
-                </div>
-                <div class="similar-card__footer">
-                  <span class="similar-card__rating"
-                    >4.7 <small>(178)</small></span
-                  >
-                  <a class="similar-card__link" href="#">Xem chi tiết -&gt;</a>
-                </div>
-              </div>
-            </article>
-          </div>
-        </section>
       </div>
     </main>
-
-    <footer class="site-footer" id="site-footer">
-      <div class="site-footer__inner">
-        <div class="site-footer__brand">
-          <a class="brand brand--footer" href="../../index.html">TravelTour</a>
-          <p>
-            Đồng hành cùng bạn khám phá thế giới với những trải nghiệm du lịch
-            tuyệt vời nhất.
-          </p>
-          <div class="social-links">
-            <a href="#" aria-label="Facebook">f</a>
-            <a href="#" aria-label="Instagram">i</a>
-            <a href="#" aria-label="YouTube">y</a>
-          </div>
-        </div>
-
-        <div class="site-footer__col">
-          <h4>Về chúng tôi</h4>
-          <a href="#">Giới thiệu</a>
-          <a href="#">Câu chuyện TravelTour</a>
-          <a href="#">Tuyển dụng</a>
-          <a href="#">Đối tác</a>
-        </div>
-
-        <div class="site-footer__col">
-          <h4>Hỗ trợ</h4>
-          <a href="#">Trung tâm trợ giúp</a>
-          <a href="#">Chính sách bảo mật</a>
-          <a href="#">Điều khoản dịch vụ</a>
-          <a href="#">Hướng dẫn đặt tour</a>
-        </div>
-
-        <div class="site-footer__col">
-          <h4>Liên hệ</h4>
-          <p>Hotline: 1900 1234</p>
-          <p>support@traveltour.vn</p>
-          <p>Tầng 10, Tòa nhà ABC</p>
-          <p>Hà Nội, Việt Nam</p>
-        </div>
-      </div>
-
-      <div class="site-footer__bottom">
-        <p>&copy; 2026 TravelTour. Bản quyền thuộc về TravelTour Platform.</p>
-        <p>Giấy phép kinh doanh số: 0123456789 do Sở KHĐT Hà Nội cấp.</p>
-      </div>
-    </footer>
 
     <script src="../../assets/js/tours/chitiet.js"></script>
   </body>

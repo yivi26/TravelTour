@@ -13,6 +13,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
     <link rel="stylesheet" href="../../assets/css/provider/profile.css" />
+    <link rel="stylesheet" href="../../assets/css/provider/provider-logout.css" />
   </head>
   <body>
     <aside class="sidebar">
@@ -64,6 +65,16 @@
           </a>
         </li>
       </ul>
+
+      <div class="sidebar-logout">
+        <button
+          type="button"
+          class="sidebar-logout-btn provider-logout-action"
+        >
+          <i class="fa-solid fa-right-from-bracket"></i>
+          Đăng xuất
+        </button>
+      </div>
     </aside>
 
     <main class="main-content">
@@ -79,8 +90,8 @@
           </div>
           <div class="profile">
             <div class="profile-info">
-              <div class="name">Admin User</div>
-              <div class="email">admin@traveltour.vn</div>
+              <div class="name" id="headerUserName">Provider</div>
+              <div class="email" id="headerUserEmail">provider@traveltour.vn</div>
             </div>
             <div class="avatar"><i class="fa-regular fa-user"></i></div>
           </div>
@@ -95,19 +106,29 @@
       <div class="profile-grid">
         <div class="left-col">
           <div class="card profile-summary">
-            <div class="ps-logo">
+            <div class="ps-logo" id="providerLogoPreview">
               <i class="fa-solid fa-building"></i>
             </div>
-            <div class="ps-name">TravelTour Vietnam</div>
-            <div class="ps-type">Nhà cung cấp tour du lịch</div>
+
+            <input
+              type="file"
+              id="logoInput"
+              accept="image/*"
+              hidden
+            />
+
+            <div class="ps-name" id="summaryCompanyName">Tên công ty</div>
+            <div class="ps-type" id="summaryProviderType">Nhà cung cấp tour du lịch</div>
+
             <div class="ps-rating">
               <i class="fa-solid fa-star"></i>
               <i class="fa-solid fa-star"></i>
               <i class="fa-solid fa-star"></i>
               <i class="fa-solid fa-star"></i>
               <i class="fa-solid fa-star"></i>
-              <span>(4.9/5.0)</span>
+              <span id="summaryRating">(0.0/5.0)</span>
             </div>
+
             <button class="btn-change-logo" id="changeLogoBtn">
               <i class="fa-solid fa-upload"></i> Thay đổi logo
             </button>
@@ -115,19 +136,19 @@
             <div class="ps-stats">
               <div class="ps-stat-row">
                 <span class="ps-stat-label">Tổng tour</span>
-                <span class="ps-stat-value">48 tour</span>
+                <span class="ps-stat-value" id="summaryTotalTours">0 tour</span>
               </div>
               <div class="ps-stat-row">
                 <span class="ps-stat-label">Đánh giá</span>
-                <span class="ps-stat-value">1,847 đánh giá</span>
+                <span class="ps-stat-value" id="summaryTotalReviews">0 đánh giá</span>
               </div>
               <div class="ps-stat-row">
                 <span class="ps-stat-label">Khách hàng</span>
-                <span class="ps-stat-value">12,456 khách</span>
+                <span class="ps-stat-value" id="summaryTotalCustomers">0 khách</span>
               </div>
               <div class="ps-stat-row">
                 <span class="ps-stat-label">Thành viên từ</span>
-                <span class="ps-stat-value">01/2020</span>
+                <span class="ps-stat-value" id="summaryMemberSince">--/----</span>
               </div>
             </div>
           </div>
@@ -137,19 +158,13 @@
               <i class="fa-solid fa-award"></i>
               <span>Chứng nhận</span>
             </div>
-            <div class="cert-list">
+
+            <div class="cert-list" id="certificateList">
               <div class="cert-item">
                 <div class="cert-icon"><i class="fa-solid fa-ribbon"></i></div>
                 <div class="cert-info">
-                  <div class="c-name">Giấy phép kinh doanh</div>
-                  <div class="c-status">Đã xác minh</div>
-                </div>
-              </div>
-              <div class="cert-item">
-                <div class="cert-icon"><i class="fa-solid fa-ribbon"></i></div>
-                <div class="cert-info">
-                  <div class="c-name">Chứng nhận ISO 9001</div>
-                  <div class="c-status">Đã xác minh</div>
+                  <div class="c-name">Chưa có dữ liệu chứng nhận</div>
+                  <div class="c-status">Đang cập nhật</div>
                 </div>
               </div>
             </div>
@@ -165,30 +180,47 @@
                 <input
                   type="text"
                   class="form-control"
-                  value="Công ty TNHH Du lịch TravelTour"
+                  id="companyName"
+                  value=""
                 />
               </div>
+
               <div class="form-group">
                 <label class="form-label">Tên viết tắt</label>
-                <input type="text" class="form-control" value="TravelTour VN" />
+                <input
+                  type="text"
+                  class="form-control"
+                  id="companyShortName"
+                  value=""
+                />
               </div>
+
               <div class="form-group">
                 <label class="form-label">Mã số thuế</label>
-                <input type="text" class="form-control" value="0123456789" />
+                <input
+                  type="text"
+                  class="form-control"
+                  id="taxCode"
+                  value=""
+                />
               </div>
+
               <div class="form-group">
                 <label class="form-label">Giấy phép kinh doanh</label>
                 <input
                   type="text"
                   class="form-control"
-                  value="79-01/2020/TCDL-GP LHQT"
+                  id="businessLicense"
+                  value=""
                 />
               </div>
+
               <div class="form-group full-width">
                 <label class="form-label">Giới thiệu công ty</label>
-                <textarea class="form-control">
-TravelTour Vietnam là đơn vị chuyên cung cấp các tour du lịch trong và ngoài nước với chất lượng dịch vụ hàng đầu.</textarea
-                >
+                <textarea
+                  class="form-control"
+                  id="companyDescription"
+                ></textarea>
               </div>
             </div>
           </div>
@@ -197,50 +229,62 @@ TravelTour Vietnam là đơn vị chuyên cung cấp các tour du lịch trong v
             <div class="form-section-title">Thông tin liên hệ</div>
             <div class="form-grid">
               <div class="form-group">
-                <label class="form-label"
-                  ><i class="fa-solid fa-phone"></i> Số điện thoại</label
-                >
+                <label class="form-label">
+                  <i class="fa-solid fa-phone"></i> Số điện thoại
+                </label>
                 <input
                   type="text"
                   class="form-control"
-                  value="(028) 1234 5678"
+                  id="phone"
+                  value=""
                 />
               </div>
+
               <div class="form-group">
-                <label class="form-label"
-                  ><i class="fa-solid fa-headset"></i> Hotline</label
-                >
-                <input type="text" class="form-control" value="1900 xxxx" />
+                <label class="form-label">
+                  <i class="fa-solid fa-headset"></i> Hotline
+                </label>
+                <input
+                  type="text"
+                  class="form-control"
+                  id="hotline"
+                  value=""
+                />
               </div>
+
               <div class="form-group full-width">
-                <label class="form-label"
-                  ><i class="fa-regular fa-envelope"></i> Email liên hệ</label
-                >
+                <label class="form-label">
+                  <i class="fa-regular fa-envelope"></i> Email liên hệ
+                </label>
                 <input
                   type="email"
                   class="form-control"
-                  value="contact@traveltour.vn"
+                  id="contactEmail"
+                  value=""
                 />
               </div>
+
               <div class="form-group full-width">
-                <label class="form-label"
-                  ><i class="fa-solid fa-location-dot"></i> Địa chỉ trụ
-                  sở</label
-                >
+                <label class="form-label">
+                  <i class="fa-solid fa-location-dot"></i> Địa chỉ trụ sở
+                </label>
                 <input
                   type="text"
                   class="form-control"
-                  value="123 Đường Nguyễn Huệ, Quận 1, TP. Hồ Chí Minh"
+                  id="address"
+                  value=""
                 />
               </div>
+
               <div class="form-group full-width">
-                <label class="form-label"
-                  ><i class="fa-solid fa-globe"></i> Website</label
-                >
+                <label class="form-label">
+                  <i class="fa-solid fa-globe"></i> Website
+                </label>
                 <input
                   type="text"
                   class="form-control"
-                  value="www.traveltour.vn"
+                  id="website"
+                  value=""
                 />
               </div>
             </div>
@@ -254,27 +298,38 @@ TravelTour Vietnam là đơn vị chuyên cung cấp các tour du lịch trong v
                 <input
                   type="text"
                   class="form-control"
-                  value="Ngân hàng TMCP Ngoại thương"
+                  id="bankName"
+                  value=""
                 />
               </div>
+
               <div class="form-group">
                 <label class="form-label">Chi nhánh</label>
                 <input
                   type="text"
                   class="form-control"
-                  value="Chi nhánh TP.HCM"
+                  id="bankBranch"
+                  value=""
                 />
               </div>
+
               <div class="form-group">
                 <label class="form-label">Số tài khoản</label>
-                <input type="text" class="form-control" value="1234567890" />
+                <input
+                  type="text"
+                  class="form-control"
+                  id="bankAccountNumber"
+                  value=""
+                />
               </div>
+
               <div class="form-group">
                 <label class="form-label">Chủ tài khoản</label>
                 <input
                   type="text"
                   class="form-control"
-                  value="CÔNG TY TNHH DU LỊCH TRAVELTOUR"
+                  id="bankAccountName"
+                  value=""
                 />
               </div>
             </div>
@@ -291,5 +346,6 @@ TravelTour Vietnam là đơn vị chuyên cung cấp các tour du lịch trong v
     </main>
 
     <script src="../../assets/js/provider/profile.js"></script>
+    <script src="../../assets/js/provider/provider-logout.js"></script>
   </body>
 </html>

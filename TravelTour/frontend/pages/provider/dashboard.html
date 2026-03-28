@@ -16,6 +16,7 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
     <link rel="stylesheet" href="../../assets/css/provider/dashboard.css" />
+    <link rel="stylesheet" href="../../assets/css/provider/provider-logout.css" />
   </head>
   <body>
     <div class="dashboard">
@@ -39,13 +40,9 @@
       <div class="dashboard-body">
         <!-- SIDEBAR -->
         <aside class="sidebar">
-          <!-- <div class="sidebar-subtitle">Nhà cung cấp tour</div> -->
-
           <nav class="sidebar-menu">
             <a href="./dashboard.html" class="menu-item active">
-              <span class="menu-icon"
-                ><i class="fa-solid fa-border-all"></i
-              ></span>
+              <span class="menu-icon"><i class="fa-solid fa-border-all"></i></span>
               <span>Tổng quan</span>
             </a>
 
@@ -55,9 +52,7 @@
             </a>
 
             <a href="./booking_management.html" class="menu-item">
-              <span class="menu-icon"
-                ><i class="fa-solid fa-calendar-check"></i
-              ></span>
+              <span class="menu-icon"><i class="fa-solid fa-calendar-check"></i></span>
               <span>Quản lý booking</span>
             </a>
 
@@ -67,19 +62,25 @@
             </a>
 
             <a href="./report.html" class="menu-item">
-              <span class="menu-icon"
-                ><i class="fa-solid fa-chart-line"></i
-              ></span>
+              <span class="menu-icon"><i class="fa-solid fa-chart-line"></i></span>
               <span>Báo cáo doanh thu</span>
             </a>
 
             <a href="./profile.html" class="menu-item">
-              <span class="menu-icon"
-                ><i class="fa-solid fa-building"></i
-              ></span>
+              <span class="menu-icon"><i class="fa-solid fa-building"></i></span>
               <span>Hồ sơ nhà cung cấp</span>
             </a>
           </nav>
+
+          <div class="sidebar-logout">
+            <button
+              type="button"
+              class="sidebar-logout-btn provider-logout-action"
+            >
+              <i class="fa-solid fa-right-from-bracket"></i>
+              Đăng xuất
+            </button>
+          </div>
         </aside>
 
         <!-- MAIN -->
@@ -112,14 +113,13 @@
               <p>Tổng quan hoạt động kinh doanh</p>
             </div>
 
+            <!-- STATS -->
             <section class="stats-grid">
               <div class="card stat-card">
                 <div class="stat-info">
                   <div class="title">Tổng số tour</div>
-                  <div class="value">48</div>
-                  <div class="trend">
-                    <i class="fa-solid fa-arrow-up"></i> +5 từ tháng trước
-                  </div>
+                  <div class="value" id="totalTours">0</div>
+                  <div class="trend" id="totalToursTrend">Dữ liệu thực từ hệ thống</div>
                 </div>
                 <div class="stat-icon icon-green">
                   <i class="fa-solid fa-map"></i>
@@ -129,10 +129,8 @@
               <div class="card stat-card">
                 <div class="stat-info">
                   <div class="title">Booking hôm nay</div>
-                  <div class="value">12</div>
-                  <div class="trend">
-                    <i class="fa-solid fa-arrow-up"></i> +3 từ hôm qua
-                  </div>
+                  <div class="value" id="bookingsToday">0</div>
+                  <div class="trend" id="bookingsTodayTrend">Dữ liệu thực từ hệ thống</div>
                 </div>
                 <div class="stat-icon icon-blue">
                   <i class="fa-solid fa-calendar-day"></i>
@@ -142,10 +140,8 @@
               <div class="card stat-card">
                 <div class="stat-info">
                   <div class="title">Tour đang hoạt động</div>
-                  <div class="value">42</div>
-                  <div class="trend">
-                    <i class="fa-solid fa-arrow-up"></i> 87% tổng số tour
-                  </div>
+                  <div class="value" id="activeTours">0</div>
+                  <div class="trend" id="activeToursTrend">Dữ liệu thực từ hệ thống</div>
                 </div>
                 <div class="stat-icon icon-bright-green">
                   <i class="fa-solid fa-arrow-trend-up"></i>
@@ -155,10 +151,8 @@
               <div class="card stat-card">
                 <div class="stat-info">
                   <div class="title">Doanh thu tháng</div>
-                  <div class="value">67M đ</div>
-                  <div class="trend">
-                    <i class="fa-solid fa-arrow-up"></i> +12% từ tháng trước
-                  </div>
+                  <div class="value" id="revenueMonth">0 đ</div>
+                  <div class="trend" id="revenueMonthTrend">Dữ liệu thực từ hệ thống</div>
                 </div>
                 <div class="stat-icon icon-orange">
                   <i class="fa-solid fa-dollar-sign"></i>
@@ -166,6 +160,7 @@
               </div>
             </section>
 
+            <!-- CHARTS -->
             <section class="charts-grid">
               <div class="card">
                 <div class="chart-header">
@@ -194,6 +189,7 @@
               </div>
             </section>
 
+            <!-- LISTS -->
             <section class="lists-grid">
               <div class="card">
                 <h3 class="list-header">Booking gần đây</h3>
@@ -212,5 +208,6 @@
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="../../assets/js/provider/dashboard.js"></script>
+    <script src="../../assets/js/provider/provider-logout.js"></script>
   </body>
 </html>
