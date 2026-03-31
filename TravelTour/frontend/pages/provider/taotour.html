@@ -16,9 +16,22 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
     />
 
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+
     <link rel="stylesheet" href="../../assets/css/provider/dashboard.css" />
     <link rel="stylesheet" href="../../assets/css/provider/taotour.css" />
     <link rel="stylesheet" href="../../assets/css/provider/provider-logout.css" />
+
+    <style>
+      #map {
+        height: 400px;
+        width: 100%;
+        border-radius: 12px;
+        border: 1px solid #ddd;
+        margin-top: 10px;
+        z-index: 1;
+      }
+    </style>
   </head>
   <body>
     <aside class="sidebar">
@@ -92,7 +105,7 @@
 
           <div class="profile">
             <div class="profile-info">
-              <div class="name">Green Travel Co.</div>
+              <div class="name">Provider</div>
               <div class="email">provider@traveltour.vn</div>
             </div>
             <div class="avatar">
@@ -330,10 +343,7 @@
 
             <div class="form-group">
               <label>Bản đồ</label>
-              <div class="map-placeholder">
-                <i class="fa-solid fa-location-dot"></i>
-                <p>Google Maps sẽ hiển thị tại đây</p>
-              </div>
+              <div id="map"></div>
             </div>
 
             <div class="form-group">
@@ -454,7 +464,8 @@
           </section>
         </div>
       </div>
-
+      
+      <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
       <script src="../../assets/js/provider/taotour.js"></script>
       <script src="../../assets/js/provider/provider-logout.js"></script>
     </main>

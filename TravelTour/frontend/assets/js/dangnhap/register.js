@@ -7,6 +7,18 @@ function showMessage(message, type) {
   formMessage.className = "form-message " + type;
 }
 
+/**
+ * Gọi API và parse JSON an toàn.
+ * - Tránh lỗi khi backend trả về không phải JSON (VD: HTML 404).
+ */
+async function safeJson(res) {
+  try {
+    return await res.json();
+  } catch {
+    return {};
+  }
+}
+
 toggleButtons.forEach((button) => {
   button.addEventListener("click", function () {
     const targetId = this.getAttribute("data-target");
@@ -70,19 +82,51 @@ registerForm.addEventListener("submit", function (e) {
     return;
   }
 
-  const userData = {
-    fullName,
-    email,
-    phone,
-    password,
-  };
+  // Đăng ký phải đi qua backend để ghi DB.
+  // Tuyệt đối không lưu mật khẩu ở localStorage.
+  (async () => {
+    try {
+      const res = await fetch("/api/auth/register", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ fullName, email, phone, password }),
+      });
 
-  localStorage.setItem("traveltour_user", JSON.stringify(userData));
+      const data = await safeJson(res);
 
-  showMessage("Đăng ký thành công!", "success");
-  registerForm.reset();
+      if (!res.ok) {
+        showMessage(data.message || "Đăng ký thất bại.", "error");
+        return;
+      }
 
-  setTimeout(() => {
-    window.location.href = "/login";
-  }, 1200);
+      // Lưu thông tin user tối thiểu (nếu backend trả về) để dùng ở UI.
+      if (data.user?.id) {
+        localStorage.setItem(
+          "traveltour_user",
+          JSON.stringify({
+            id: data.user.id,
+            email: data.user.email,
+            fullName: data.user.full_name || data.user.fullName,
+            phone: data.user.phone,
+            avatarUrl: data.user.avatar_url,
+            role: data.user.role || "customer",
+            isActive: data.user.is_active ?? true,
+            emailVerified: data.user.email_verified ?? false,
+            google: false,
+          })
+        );
+      }
+
+      showMessage("Đăng ký thành công!", "success");
+      registerForm.reset();
+
+      // Điều hướng về trang đăng nhập (server.js đang map /login).
+      setTimeout(() => {
+        window.location.href = "/login";
+      }, 1200);
+    } catch (error) {
+      console.error("Register error:", error);
+      showMessage("Lỗi kết nối máy chủ.", "error");
+    }
+  })();
 });

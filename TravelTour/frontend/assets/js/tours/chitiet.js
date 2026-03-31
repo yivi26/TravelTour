@@ -219,3 +219,13 @@
 
   document.addEventListener("DOMContentLoaded", init);
 })();
+const bookingForm = document.getElementById("booking-form");
+
+bookingForm.addEventListener("submit", function (e) {
+  e.preventDefault(); // chặn submit mặc định
+
+  // Có thể lấy thêm dữ liệu ở đây nếu cần
+
+  // Chuyển trang
+  window.location.href = "./ttkhachhang.html";
+});

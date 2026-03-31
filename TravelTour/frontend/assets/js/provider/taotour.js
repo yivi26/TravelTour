@@ -540,3 +540,81 @@ document.addEventListener("DOMContentLoaded", () => {
       .replaceAll("'", "&#039;");
   }
 });
+// ===========================
+// LEAFLET MAP
+// ===========================
+
+let map;
+let marker;
+
+document.addEventListener("DOMContentLoaded", () => {
+  initLeafletMap();
+});
+
+function initLeafletMap() {
+  const defaultLat = 21.0285;
+  const defaultLng = 105.8542;
+
+  map = L.map("map").setView([defaultLat, defaultLng], 13);
+
+  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap"
+  }).addTo(map);
+
+  marker = L.marker([defaultLat, defaultLng])
+    .addTo(map)
+    .bindPopup("Chọn địa điểm")
+    .openPopup();
+
+  // Click map để chọn vị trí
+  map.on("click", function (e) {
+    const { lat, lng } = e.latlng;
+
+    marker.setLatLng([lat, lng])
+      .bindPopup(`Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`)
+      .openPopup();
+  });
+
+  // 👉 THÊM PHẦN NÀY
+  const meetingPointInput = document.getElementById("meetingPoint");
+
+  let timeout = null;
+
+  meetingPointInput.addEventListener("input", function () {
+    clearTimeout(timeout);
+
+    // debounce 500ms tránh spam API
+    timeout = setTimeout(() => {
+      searchAddress(this.value);
+    }, 500);
+  });
+}
+async function searchAddress(address) {
+  if (!address || address.length < 3) return;
+
+  try {
+    const response = await fetch(
+      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
+    );
+
+    const data = await response.json();
+
+    if (data.length === 0) {
+      console.log("Không tìm thấy địa chỉ");
+      return;
+    }
+
+    const { lat, lon, display_name } = data[0];
+
+    // Di chuyển map
+    map.setView([lat, lon], 15);
+
+    // Di chuyển marker
+    marker.setLatLng([lat, lon])
+      .bindPopup(display_name)
+      .openPopup();
+
+  } catch (error) {
+    console.error("Lỗi tìm địa chỉ:", error);
+  }
+}
