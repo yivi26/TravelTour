@@ -4,7 +4,114 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chi tiết tour - TravelTour</title>
+
     <link rel="stylesheet" href="../../assets/css/tours/chitiet.css" />
+    <link
+      rel="stylesheet"
+      href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+    />
+
+    <style>
+      #tour-meeting-map {
+        width: 100%;
+        height: 320px;
+        min-height: 320px;
+        border-radius: 12px;
+        border: 1px solid #ddd;
+        margin-top: 12px;
+        position: relative;
+        overflow: hidden;
+        background: #e5f0ff;
+      }
+
+      .meeting-point-text {
+        margin: 0;
+        font-size: 15px;
+        line-height: 1.6;
+        color: #333;
+      }
+
+      .meeting-point-empty {
+        color: #888;
+        font-style: italic;
+      }
+
+      .tour-thumbs {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+        gap: 10px;
+        margin-top: 12px;
+      }
+
+      .tour-thumb {
+        padding: 0;
+        border: 2px solid transparent;
+        border-radius: 10px;
+        overflow: hidden;
+        background: #fff;
+        cursor: pointer;
+        transition: 0.2s ease;
+      }
+
+      .tour-thumb:hover {
+        transform: translateY(-2px);
+      }
+
+      .tour-thumb.active {
+        border-color: #10a669;
+      }
+
+      .tour-thumb img {
+        width: 100%;
+        height: 80px;
+        object-fit: cover;
+        display: block;
+      }
+
+      .hero-gallery__item--main img {
+        width: 100%;
+        height: 420px;
+        object-fit: cover;
+        display: block;
+        border-radius: 12px;
+      }
+
+      .map-empty-box {
+        width: 100%;
+        min-height: 120px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #888;
+        text-align: center;
+        padding: 16px;
+      }
+
+      /* FIX LEAFLET */
+      .leaflet-container {
+        width: 100%;
+        height: 100%;
+        background: #dbeafe;
+      }
+
+      .leaflet-container img,
+      .leaflet-pane img,
+      .leaflet-tile {
+        width: auto !important;
+        height: auto !important;
+        max-width: none !important;
+        max-height: none !important;
+        object-fit: initial !important;
+      }
+
+      .leaflet-tile {
+        visibility: inherit !important;
+      }
+
+      .leaflet-control-container {
+        z-index: 800;
+      }
+    </style>
   </head>
   <body class="tour-detail-page">
     <header class="site-header">
@@ -19,7 +126,7 @@
 
         <div class="site-header__actions">
           <a class="login-button" href="/login">
-            <span>Đăng nhập</span>
+            <span>Đăng xuất</span>
           </a>
         </div>
       </div>
@@ -63,6 +170,8 @@
                 alt="Ảnh tour"
               />
             </figure>
+
+            <div class="tour-thumbs" id="tour-thumbs"></div>
           </div>
         </section>
 
@@ -101,6 +210,14 @@
           </section>
 
           <section class="section-card">
+            <h2>Điểm tập trung</h2>
+            <p id="tour-meeting-point" class="meeting-point-text">
+              Đang cập nhật...
+            </p>
+            <div id="tour-meeting-map"></div>
+          </section>
+
+          <section class="section-card">
             <h2>Dịch vụ bao gồm</h2>
             <ul class="check-list" id="tour-includes-list">
               <li>Đang tải...</li>
@@ -112,6 +229,13 @@
             <ul class="exclude-list" id="tour-excludes-list">
               <li>Đang tải...</li>
             </ul>
+          </section>
+
+          <section class="section-card">
+            <h2>Lịch trình tour</h2>
+            <div id="tour-itinerary">
+              <p>Đang tải lịch trình...</p>
+            </div>
           </section>
 
           <section class="booking-panel">
@@ -178,6 +302,7 @@
       </div>
     </main>
 
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
     <script src="../../assets/js/tours/chitiet.js"></script>
   </body>
 </html>

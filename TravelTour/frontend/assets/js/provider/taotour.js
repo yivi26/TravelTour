@@ -62,8 +62,19 @@ document.addEventListener("DOMContentLoaded", () => {
   const requiredDescription = document.getElementById("requiredDescription");
   const requiredItinerary = document.getElementById("requiredItinerary");
 
+  const basePriceInput = document.getElementById("tourBasePrice");
+  const salePriceInput = document.getElementById("tourSalePrice");
+  const discountPercentInput = document.getElementById("discountPercent");
+
+  const meetingPointInput = document.getElementById("meetingPoint");
+
   let selectedCoverImage = null;
   let selectedGalleryImages = [];
+
+  let map = null;
+  let marker = null;
+  let selectedLatitude = null;
+  let selectedLongitude = null;
 
   init();
 
@@ -73,6 +84,8 @@ document.addEventListener("DOMContentLoaded", () => {
     addHighlightRow();
     addItineraryDay();
     bindEvents();
+    renderGalleryPreview();
+    initLeafletMap();
     updateFormProgress();
   }
 
@@ -81,13 +94,13 @@ document.addEventListener("DOMContentLoaded", () => {
     addDayBtn?.addEventListener("click", addItineraryDay);
 
     coverUploadBox?.addEventListener("click", () => {
-      coverImageInput.click();
+      if (coverImageInput) coverImageInput.click();
     });
 
     coverImageInput?.addEventListener("change", handleCoverImageChange);
 
     galleryAddBtn?.addEventListener("click", () => {
-      galleryImageInput.click();
+      if (galleryImageInput) galleryImageInput.click();
     });
 
     galleryImageInput?.addEventListener("change", handleGalleryImagesChange);
@@ -106,8 +119,19 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = "./tour_management.html";
     });
 
+    basePriceInput?.addEventListener("input", calculateSalePriceFromDiscount);
+    discountPercentInput?.addEventListener("input", calculateSalePriceFromDiscount);
+    salePriceInput?.addEventListener("input", syncDiscountFromSalePrice);
+
     document.addEventListener("input", updateFormProgress);
     document.addEventListener("change", updateFormProgress);
+
+    meetingPointInput?.addEventListener(
+      "input",
+      debounce(function () {
+        searchAddress(this.value);
+      }, 500)
+    );
   }
 
   function renderCategories() {
@@ -116,10 +140,7 @@ document.addEventListener("DOMContentLoaded", () => {
     categorySelect.innerHTML = `
       <option value="">-- Chọn danh mục --</option>
       ${categoryOptions
-        .map(
-          category =>
-            `<option value="${category.id}">${category.name}</option>`
-        )
+        .map((category) => `<option value="${category.id}">${category.name}</option>`)
         .join("")}
     `;
   }
@@ -162,8 +183,7 @@ document.addEventListener("DOMContentLoaded", () => {
       <button type="button" class="remove-row-btn">Xóa</button>
     `;
 
-    const removeBtn = row.querySelector(".remove-row-btn");
-    removeBtn?.addEventListener("click", () => {
+    row.querySelector(".remove-row-btn")?.addEventListener("click", () => {
       row.remove();
       updateFormProgress();
     });
@@ -205,8 +225,7 @@ document.addEventListener("DOMContentLoaded", () => {
       </div>
     `;
 
-    const removeBtn = block.querySelector(".remove-day-btn");
-    removeBtn?.addEventListener("click", () => {
+    block.querySelector(".remove-day-btn")?.addEventListener("click", () => {
       if (itineraryList.children.length === 1) {
         alert("Lịch trình phải có ít nhất 1 ngày.");
         return;
@@ -221,23 +240,21 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function reindexItineraryDays() {
-    const dayCards = itineraryList.querySelectorAll(".itinerary-day-card");
+    const dayCards = itineraryList?.querySelectorAll(".itinerary-day-card") || [];
     dayCards.forEach((card, index) => {
       const title = card.querySelector(".itinerary-day-header h4");
-      if (title) {
-        title.textContent = `Ngày ${index + 1}`;
-      }
+      if (title) title.textContent = `Ngày ${index + 1}`;
     });
   }
 
   function handleCoverImageChange(event) {
     const file = event.target.files?.[0];
-    if (!file) return;
+    if (!file || !coverPreview) return;
 
     selectedCoverImage = file;
 
     const fileReader = new FileReader();
-    fileReader.onload = e => {
+    fileReader.onload = (e) => {
       coverPreview.innerHTML = `
         <div class="image-preview-item">
           <img src="${e.target?.result}" alt="Ảnh bìa tour" style="max-width: 100%; border-radius: 12px;" />
@@ -251,7 +268,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function handleGalleryImagesChange(event) {
     const files = Array.from(event.target.files || []);
-
     if (files.length === 0) return;
 
     const totalAfterAdd = selectedGalleryImages.length + files.length;
@@ -263,15 +279,18 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedGalleryImages = [...selectedGalleryImages, ...files];
     renderGalleryPreview();
     updateFormProgress();
+    event.target.value = "";
   }
 
   function renderGalleryPreview() {
+    if (!galleryGrid || !galleryAddBtn) return;
+
     const oldItems = galleryGrid.querySelectorAll(".gallery-preview-item");
-    oldItems.forEach(item => item.remove());
+    oldItems.forEach((item) => item.remove());
 
     selectedGalleryImages.forEach((file, index) => {
       const fileReader = new FileReader();
-      fileReader.onload = e => {
+      fileReader.onload = (e) => {
         const item = document.createElement("div");
         item.className = "gallery-preview-item";
         item.innerHTML = `
@@ -291,6 +310,43 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function calculateSalePriceFromDiscount() {
+    if (!discountPercentInput || !salePriceInput) return;
+
+    const basePrice = Number(basePriceInput?.value || 0);
+    const discountPercent = Number(discountPercentInput?.value || 0);
+
+    if (!basePrice || basePrice <= 0) {
+      salePriceInput.value = "";
+      return;
+    }
+
+    if (!discountPercentInput.value.trim()) return;
+
+    const normalizedPercent = Math.min(Math.max(discountPercent, 0), 100);
+    discountPercentInput.value = normalizedPercent;
+
+    const salePrice = Math.round(basePrice * (1 - normalizedPercent / 100));
+    salePriceInput.value = salePrice >= 0 ? salePrice : 0;
+  }
+
+  function syncDiscountFromSalePrice() {
+    if (!discountPercentInput || !salePriceInput) return;
+
+    const basePrice = Number(basePriceInput?.value || 0);
+    const salePrice = Number(salePriceInput?.value || 0);
+
+    if (!basePrice || basePrice <= 0 || !salePriceInput.value.trim()) {
+      discountPercentInput.value = "";
+      return;
+    }
+
+    if (salePrice > basePrice) return;
+
+    const discountPercent = ((basePrice - salePrice) / basePrice) * 100;
+    discountPercentInput.value = Number(discountPercent.toFixed(2));
+  }
+
   function getInputValue(id) {
     const element = document.getElementById(id);
     return element ? element.value.trim() : "";
@@ -298,13 +354,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function getCheckedValues(name) {
     return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(
-      input => input.value
+      (input) => input.value
     );
   }
 
   function getHighlights() {
     return Array.from(document.querySelectorAll(".highlight-input"))
-      .map(input => input.value.trim())
+      .map((input) => input.value.trim())
       .filter(Boolean);
   }
 
@@ -312,8 +368,7 @@ document.addEventListener("DOMContentLoaded", () => {
     return Array.from(document.querySelectorAll(".itinerary-day-card"))
       .map((card, index) => {
         const title = card.querySelector(".itinerary-title")?.value.trim() || "";
-        const description =
-          card.querySelector(".itinerary-description")?.value.trim() || "";
+        const description = card.querySelector(".itinerary-description")?.value.trim() || "";
 
         return {
           day: index + 1,
@@ -321,7 +376,7 @@ document.addEventListener("DOMContentLoaded", () => {
           description
         };
       })
-      .filter(item => item.title || item.description);
+      .filter((item) => item.title || item.description);
   }
 
   function parseDurationDays(durationText) {
@@ -380,6 +435,8 @@ document.addEventListener("DOMContentLoaded", () => {
       short_description: shortDescription,
       description: shortDescription,
       meeting_point: meetingPoint,
+      latitude: selectedLatitude,
+      longitude: selectedLongitude,
       hotel_info: hotelInfo,
       transport_info: transportInfo,
       cancel_policy: cancelPolicy,
@@ -388,9 +445,9 @@ document.addEventListener("DOMContentLoaded", () => {
       highlights,
       includes: included,
       excludes: excluded,
-      itinerary_items: itineraryItems,
+      itinerary: itineraryItems,
       thumbnail_url: selectedCoverImage ? `/uploads/${selectedCoverImage.name}` : null,
-      gallery_images: selectedGalleryImages.map(file => `/uploads/${file.name}`),
+      gallery_images: selectedGalleryImages.map((file) => `/uploads/${file.name}`),
       slug: createSlug(title)
     };
   }
@@ -431,6 +488,16 @@ document.addEventListener("DOMContentLoaded", () => {
       return false;
     }
 
+    if (data.sale_price < 0) {
+      alert("Giá khuyến mãi không được nhỏ hơn 0.");
+      return false;
+    }
+
+    if (data.sale_price > 0 && data.sale_price >= data.base_price) {
+      alert("Giá khuyến mãi phải nhỏ hơn giá tour.");
+      return false;
+    }
+
     if (!data.short_description) {
       alert("Vui lòng nhập mô tả ngắn.");
       return false;
@@ -442,7 +509,7 @@ document.addEventListener("DOMContentLoaded", () => {
         return false;
       }
 
-      if (data.itinerary_items.length === 0) {
+      if (data.itinerary.length === 0) {
         alert("Vui lòng nhập ít nhất 1 ngày lịch trình.");
         return false;
       }
@@ -491,11 +558,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function updateRequiredStatus(element, isDone) {
     if (!element) return;
-    if (isDone) {
-      element.classList.add("done");
-    } else {
-      element.classList.remove("done");
-    }
+    if (isDone) element.classList.add("done");
+    else element.classList.remove("done");
   }
 
   function updateFormProgress() {
@@ -512,7 +576,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const coverDone = !!selectedCoverImage;
     const descriptionDone = !!data.short_description;
-    const itineraryDone = data.itinerary_items.length > 0;
+    const itineraryDone = data.itinerary.length > 0;
 
     updateRequiredStatus(requiredBasicInfo, basicInfoDone);
     updateRequiredStatus(requiredCoverImage, coverDone);
@@ -522,13 +586,93 @@ document.addEventListener("DOMContentLoaded", () => {
     const completedCount = [basicInfoDone, coverDone, descriptionDone, itineraryDone].filter(Boolean).length;
     const progressPercent = Math.round((completedCount / 4) * 100);
 
-    if (formProgressText) {
-      formProgressText.textContent = `${progressPercent}%`;
-    }
+    if (formProgressText) formProgressText.textContent = `${progressPercent}%`;
+    if (formProgressBar) formProgressBar.style.width = `${progressPercent}%`;
+  }
 
-    if (formProgressBar) {
-      formProgressBar.style.width = `${progressPercent}%`;
+  function initLeafletMap() {
+    const mapElement = document.getElementById("map");
+    if (!mapElement || typeof L === "undefined") return;
+
+    const defaultLat = 21.0285;
+    const defaultLng = 105.8542;
+
+    map = L.map("map").setView([defaultLat, defaultLng], 13);
+
+    L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+      attribution: "&copy; OpenStreetMap"
+    }).addTo(map);
+
+    marker = L.marker([defaultLat, defaultLng])
+      .addTo(map)
+      .bindPopup("Chọn địa điểm")
+      .openPopup();
+
+    selectedLatitude = defaultLat;
+    selectedLongitude = defaultLng;
+
+    map.on("click", async function (e) {
+      const { lat, lng } = e.latlng;
+
+      selectedLatitude = Number(lat.toFixed(7));
+      selectedLongitude = Number(lng.toFixed(7));
+
+      marker.setLatLng([lat, lng])
+        .bindPopup(`Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`)
+        .openPopup();
+
+      try {
+        const response = await fetch(
+          `https://nominatim.openstreetmap.org/reverse?format=json&lat=${lat}&lon=${lng}`
+        );
+        const data = await response.json();
+
+        if (meetingPointInput && data?.display_name) {
+          meetingPointInput.value = data.display_name;
+          updateFormProgress();
+        }
+      } catch (error) {
+        console.error("Lỗi reverse geocoding:", error);
+      }
+    });
+  }
+
+  async function searchAddress(address) {
+    if (!map || !marker || !address || address.length < 3) return;
+
+    try {
+      const response = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&limit=1&q=${encodeURIComponent(address)}`
+      );
+
+      const data = await response.json();
+
+      if (!Array.isArray(data) || data.length === 0) {
+        console.log("Không tìm thấy địa chỉ");
+        return;
+      }
+
+      const { lat, lon, display_name } = data[0];
+
+      selectedLatitude = Number(lat);
+      selectedLongitude = Number(lon);
+
+      map.setView([selectedLatitude, selectedLongitude], 15);
+
+      marker.setLatLng([selectedLatitude, selectedLongitude])
+        .bindPopup(display_name)
+        .openPopup();
+    } catch (error) {
+      console.error("Lỗi tìm địa chỉ:", error);
     }
+  }
+
+  function debounce(fn, delay = 300) {
+    let timeout = null;
+    return function (...args) {
+      clearTimeout(timeout);
+      timeout = setTimeout(() => fn.apply(this, args), delay);
+    };
   }
 
   function escapeHtml(text) {
@@ -540,81 +684,3 @@ document.addEventListener("DOMContentLoaded", () => {
       .replaceAll("'", "&#039;");
   }
 });
-// ===========================
-// LEAFLET MAP
-// ===========================
-
-let map;
-let marker;
-
-document.addEventListener("DOMContentLoaded", () => {
-  initLeafletMap();
-});
-
-function initLeafletMap() {
-  const defaultLat = 21.0285;
-  const defaultLng = 105.8542;
-
-  map = L.map("map").setView([defaultLat, defaultLng], 13);
-
-  L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
-    attribution: "&copy; OpenStreetMap"
-  }).addTo(map);
-
-  marker = L.marker([defaultLat, defaultLng])
-    .addTo(map)
-    .bindPopup("Chọn địa điểm")
-    .openPopup();
-
-  // Click map để chọn vị trí
-  map.on("click", function (e) {
-    const { lat, lng } = e.latlng;
-
-    marker.setLatLng([lat, lng])
-      .bindPopup(`Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`)
-      .openPopup();
-  });
-
-  // 👉 THÊM PHẦN NÀY
-  const meetingPointInput = document.getElementById("meetingPoint");
-
-  let timeout = null;
-
-  meetingPointInput.addEventListener("input", function () {
-    clearTimeout(timeout);
-
-    // debounce 500ms tránh spam API
-    timeout = setTimeout(() => {
-      searchAddress(this.value);
-    }, 500);
-  });
-}
-async function searchAddress(address) {
-  if (!address || address.length < 3) return;
-
-  try {
-    const response = await fetch(
-      `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(address)}`
-    );
-
-    const data = await response.json();
-
-    if (data.length === 0) {
-      console.log("Không tìm thấy địa chỉ");
-      return;
-    }
-
-    const { lat, lon, display_name } = data[0];
-
-    // Di chuyển map
-    map.setView([lat, lon], 15);
-
-    // Di chuyển marker
-    marker.setLatLng([lat, lon])
-      .bindPopup(display_name)
-      .openPopup();
-
-  } catch (error) {
-    console.error("Lỗi tìm địa chỉ:", error);
-  }
-}
