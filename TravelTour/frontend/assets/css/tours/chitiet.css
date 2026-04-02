@@ -44,11 +44,10 @@ body.tour-detail-page {
   line-height: 1.6;
 }
 
+/* FIX QUAN TRỌNG: bỏ width/height/object-fit global cho mọi img */
 img {
   display: block;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
+  max-width: 100%;
 }
 
 a {
@@ -329,8 +328,6 @@ button {
 
 .hero-gallery {
   display: grid;
-  grid-template-columns: minmax(0, 1.45fr) repeat(2, minmax(0, 0.72fr));
-  grid-template-rows: repeat(2, minmax(140px, 1fr));
   gap: 12px;
   min-height: 360px;
 }
@@ -342,6 +339,9 @@ button {
 }
 
 .hero-gallery__item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   transition: transform 0.3s ease;
 }
 
@@ -350,18 +350,7 @@ button {
 }
 
 .hero-gallery__item--main {
-  grid-row: 1 / span 2;
-}
-
-.hero-gallery__item--overlay::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  background: linear-gradient(
-    180deg,
-    transparent 38%,
-    rgba(17, 27, 33, 0.6) 100%
-  );
+  min-height: 420px;
 }
 
 .gallery-button {
@@ -369,6 +358,38 @@ button {
   right: 14px;
   bottom: 14px;
   z-index: 1;
+}
+
+/* THUMBNAIL GALLERY */
+.tour-thumbs {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
+  gap: 10px;
+}
+
+.tour-thumb {
+  padding: 0;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  overflow: hidden;
+  background: #fff;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.tour-thumb:hover {
+  transform: translateY(-2px);
+}
+
+.tour-thumb.active {
+  border-color: var(--primary);
+}
+
+.tour-thumb img {
+  width: 100%;
+  height: 80px;
+  object-fit: cover;
+  display: block;
 }
 
 .detail-sections {
@@ -989,6 +1010,9 @@ button {
 }
 
 .similar-card__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
   transition: transform 0.28s ease;
 }
 
@@ -1488,6 +1512,42 @@ button {
   color: var(--primary);
 }
 
+/* ===== FIX LEAFLET MAP ===== */
+#tour-meeting-map {
+  width: 100%;
+  height: 320px;
+  min-height: 320px;
+  position: relative;
+  overflow: hidden;
+  border-radius: 12px;
+  border: 1px solid #ddd;
+  background: #dbeafe;
+}
+
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  background: #dbeafe;
+}
+
+.leaflet-container img,
+.leaflet-pane img,
+.leaflet-tile {
+  width: auto !important;
+  height: auto !important;
+  max-width: none !important;
+  max-height: none !important;
+  object-fit: initial !important;
+}
+
+.leaflet-tile {
+  visibility: inherit !important;
+}
+
+.leaflet-control-container {
+  z-index: 800;
+}
+
 @media (max-width: 1024px) {
   .site-header__left {
     gap: 24px;
@@ -1524,15 +1584,7 @@ button {
     display: none;
   }
 
-  .hero-gallery {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    grid-template-rows: repeat(3, minmax(120px, 1fr));
-    min-height: 0;
-  }
-
   .hero-gallery__item--main {
-    grid-column: 1 / -1;
-    grid-row: 1 / span 1;
     min-height: 260px;
   }
 

@@ -19,6 +19,9 @@ export async function createTour(providerId, data) {
     slug,
     description,
     location,
+    meeting_point,
+    latitude,
+    longitude,
     base_price,
     duration_days,
     max_capacity,
@@ -27,7 +30,7 @@ export async function createTour(providerId, data) {
     excludes,
     status,
     category_id,
-    itinerary_items,
+    itinerary,
     gallery_images
   } = data;
 
@@ -35,10 +38,27 @@ export async function createTour(providerId, data) {
     ? status
     : "draft";
 
-  const finalSlug = slug || String(title || "")
-    .toLowerCase()
-    .trim()
-    .replace(/\s+/g, "-");
+  const finalSlug =
+    slug ||
+    String(title || "")
+      .toLowerCase()
+      .trim()
+      .replace(/\s+/g, "-");
+
+  const finalItinerary =
+    Array.isArray(itinerary) && itinerary.length > 0
+      ? JSON.stringify(itinerary)
+      : null;
+
+  const finalIncludes =
+    Array.isArray(includes) && includes.length > 0
+      ? JSON.stringify(includes)
+      : null;
+
+  const finalExcludes =
+    Array.isArray(excludes) && excludes.length > 0
+      ? JSON.stringify(excludes)
+      : null;
 
   const [result] = await db.query(
     `
@@ -49,6 +69,9 @@ export async function createTour(providerId, data) {
       description,
       itinerary,
       location,
+      meeting_point,
+      latitude,
+      longitude,
       base_price,
       duration_days,
       max_capacity,
@@ -57,27 +80,24 @@ export async function createTour(providerId, data) {
       excludes,
       status
     )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `,
     [
       providerId,
-      title,
+      title || null,
       finalSlug,
       description || null,
-      Array.isArray(itinerary_items) && itinerary_items.length
-        ? JSON.stringify(itinerary_items)
-        : null,
+      finalItinerary,
       location || null,
+      meeting_point || null,
+      latitude ?? null,
+      longitude ?? null,
       base_price || 0,
       duration_days || 1,
       max_capacity || 1,
       thumbnail_url || null,
-      Array.isArray(includes) && includes.length
-        ? JSON.stringify(includes)
-        : null,
-      Array.isArray(excludes) && excludes.length
-        ? JSON.stringify(excludes)
-        : null,
+      finalIncludes,
+      finalExcludes,
       finalStatus
     ]
   );
@@ -91,17 +111,7 @@ export async function createTour(providerId, data) {
     );
   }
 
-  if (Array.isArray(gallery_images) && gallery_images.length > 0) {
-    for (let index = 0; index < gallery_images.length; index += 1) {
-      await db.query(
-        `
-        INSERT INTO tour_images (tour_id, image_url, display_order, is_cover)
-        VALUES (?, ?, ?, 0)
-        `,
-        [tourId, gallery_images[index], index]
-      );
-    }
-  }
+  const insertedUrls = new Set();
 
   if (thumbnail_url) {
     await db.query(
@@ -111,6 +121,29 @@ export async function createTour(providerId, data) {
       `,
       [tourId, thumbnail_url]
     );
+    insertedUrls.add(String(thumbnail_url).trim());
+  }
+
+  if (Array.isArray(gallery_images) && gallery_images.length > 0) {
+    let displayOrder = 1;
+
+    for (const imageUrl of gallery_images) {
+      const normalizedUrl = String(imageUrl || "").trim();
+      if (!normalizedUrl || insertedUrls.has(normalizedUrl)) {
+        continue;
+      }
+
+      await db.query(
+        `
+        INSERT INTO tour_images (tour_id, image_url, display_order, is_cover)
+        VALUES (?, ?, ?, 0)
+        `,
+        [tourId, normalizedUrl, displayOrder]
+      );
+
+      insertedUrls.add(normalizedUrl);
+      displayOrder += 1;
+    }
   }
 
   return tourId;
@@ -139,10 +172,7 @@ export async function getBookingsByProvider(providerId) {
 }
 
 export async function updateBookingStatus(bookingId, status) {
-  await db.query(
-    `UPDATE bookings SET status = ? WHERE id = ?`,
-    [status, bookingId]
-  );
+  await db.query(`UPDATE bookings SET status = ? WHERE id = ?`, [status, bookingId]);
 }
 
 export async function getGuides(providerId) {
@@ -198,9 +228,7 @@ export async function getProviderProfile(providerId) {
     [providerId]
   );
 
-  if (!rows.length) {
-    return null;
-  }
+  if (!rows.length) return null;
 
   const provider = rows[0];
 
@@ -313,9 +341,6 @@ export async function updateProviderProfile(providerId, data) {
   return getProviderProfile(providerId);
 }
 
-/* =========================
-   DASHBOARD DATA THỰC
-========================= */
 export async function getDashboardDataByProvider(providerId) {
   const [[totalToursRow]] = await db.query(
     `
@@ -441,10 +466,7 @@ export async function getDashboardDataByProvider(providerId) {
     const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
     const label = `T${date.getMonth() + 1}`;
 
-    monthLabels.push({
-      key: monthKey,
-      label
-    });
+    monthLabels.push({ key: monthKey, label });
   }
 
   bookingTrendRows.forEach((item) => {
@@ -497,43 +519,20 @@ export async function getDashboardDataByProvider(providerId) {
 
 function normalizeBookingStatus(status) {
   const value = String(status || "").toLowerCase();
-
-  if (value === "confirmed" || value === "completed") {
-    return "Đã xác nhận";
-  }
-
-  if (value === "pending") {
-    return "Chờ xác nhận";
-  }
-
-  if (value === "cancelled") {
-    return "Đã hủy";
-  }
-
+  if (value === "confirmed" || value === "completed") return "Đã xác nhận";
+  if (value === "pending") return "Chờ xác nhận";
+  if (value === "cancelled") return "Đã hủy";
   return status || "Không xác định";
 }
 
 function getBookingStatusClass(status) {
   const value = String(status || "").toLowerCase();
-
-  if (value === "confirmed" || value === "completed") {
-    return "confirmed";
-  }
-
-  if (value === "pending") {
-    return "pending";
-  }
-
-  if (value === "cancelled") {
-    return "cancelled";
-  }
-
+  if (value === "confirmed" || value === "completed") return "confirmed";
+  if (value === "pending") return "pending";
+  if (value === "cancelled") return "cancelled";
   return "pending";
 }
 
-/* =========================
-   PUBLIC API CHO KHÁCH HÀNG
-========================= */
 export async function getPublicFeaturedTours(limit = 6) {
   const [rows] = await db.query(
     `
@@ -543,6 +542,9 @@ export async function getPublicFeaturedTours(limit = 6) {
       t.slug,
       t.description,
       t.location,
+      t.meeting_point,
+      t.latitude,
+      t.longitude,
       t.base_price,
       t.duration_days,
       t.max_capacity,
@@ -572,6 +574,9 @@ export async function getPublicTours(filters = {}) {
       t.slug,
       t.description,
       t.location,
+      t.meeting_point,
+      t.latitude,
+      t.longitude,
       t.base_price,
       t.duration_days,
       t.max_capacity,
@@ -610,6 +615,9 @@ export async function getPublicTourById(tourId) {
       t.slug,
       t.description,
       t.location,
+      t.meeting_point,
+      t.latitude,
+      t.longitude,
       t.base_price,
       t.duration_days,
       t.max_capacity,
@@ -629,9 +637,7 @@ export async function getPublicTourById(tourId) {
     [tourId]
   );
 
-  if (!rows.length) {
-    return null;
-  }
+  if (!rows.length) return null;
 
   const tour = rows[0];
 
