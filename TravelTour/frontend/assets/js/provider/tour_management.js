@@ -6,25 +6,28 @@ let toursData = [];
 async function loadTours() {
   try {
     const res = await fetch("/api/provider/tours");
-    const data = await res.json();
+    const result = await res.json();
 
-    console.log("TOURS:", data);
+    console.log("TOURS:", result);
 
     if (!res.ok) {
-      console.error("API lỗi:", data);
-      alert(data.message || "Không tải được danh sách tour");
+      console.error("API lỗi:", result);
+      alert(result.message || "Không tải được danh sách tour");
       return;
     }
 
-    if (!Array.isArray(data)) {
-      console.error("Dữ liệu tours không hợp lệ:", data);
+    // ✅ FIX Ở ĐÂY
+    const tours = Array.isArray(result.data) ? result.data : [];
+
+    if (!Array.isArray(result.data)) {
+      console.error("Dữ liệu tours không hợp lệ:", result);
       return;
     }
 
-    toursData = data;
+    toursData = tours;
 
-    renderTable(data);
-    renderStats(data);
+    renderTable(tours);
+    renderStats(tours);
   } catch (err) {
     console.error("Lỗi load tours:", err);
     alert("Có lỗi xảy ra khi tải danh sách tour");

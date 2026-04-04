@@ -1,8 +1,3 @@
-// =========================================
-// taotour.js
-// Xử lý tạo mới + chỉnh sửa tour
-// =========================================
-
 document.addEventListener("DOMContentLoaded", () => {
   const params = new URLSearchParams(window.location.search);
   const tourId = params.get("id");
@@ -58,9 +53,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const saveDraftBtn = document.getElementById("saveDraftBtn");
   const cancelCreateTourBtn = document.getElementById("cancelCreateTourBtn");
 
-  const formProgressText = document.getElementById("formProgressText");
-  const formProgressBar = document.getElementById("formProgressBar");
-
   const requiredBasicInfo = document.getElementById("requiredBasicInfo");
   const requiredCoverImage = document.getElementById("requiredCoverImage");
   const requiredDescription = document.getElementById("requiredDescription");
@@ -108,11 +100,11 @@ document.addEventListener("DOMContentLoaded", () => {
     if (pageDesc) pageDesc.textContent = "Cập nhật thông tin tour đã tạo";
 
     if (publishTourBtn) {
-      publishTourBtn.innerHTML = "Cập nhật và xuất bản";
+      publishTourBtn.textContent = "Cập nhật và xuất bản";
     }
 
     if (saveDraftBtn) {
-      saveDraftBtn.innerHTML = "Lưu cập nhật";
+      saveDraftBtn.textContent = "Lưu cập nhật";
     }
   }
 
@@ -121,13 +113,13 @@ document.addEventListener("DOMContentLoaded", () => {
     addDayBtn?.addEventListener("click", addItineraryDay);
 
     coverUploadBox?.addEventListener("click", () => {
-      if (coverImageInput) coverImageInput.click();
+      coverImageInput?.click();
     });
 
     coverImageInput?.addEventListener("change", handleCoverImageChange);
 
     galleryAddBtn?.addEventListener("click", () => {
-      if (galleryImageInput) galleryImageInput.click();
+      galleryImageInput?.click();
     });
 
     galleryImageInput?.addEventListener("change", handleGalleryImagesChange);
@@ -203,12 +195,14 @@ document.addEventListener("DOMContentLoaded", () => {
   async function loadTourDetail(id) {
     try {
       const response = await fetch(`/api/provider/tours/${id}`);
-      const tour = await response.json();
+      const result = await response.json();
 
       if (!response.ok) {
-        alert(tour.message || "Không tải được dữ liệu tour.");
+        alert(result.message || "Không tải được dữ liệu tour.");
         return;
       }
+
+      const tour = result.data;
 
       setValue("tourTitle", tour.title);
       setValue("tourCode", tour.code);
@@ -507,9 +501,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function setValue(id, value) {
     const element = document.getElementById(id);
-    if (element) {
-      element.value = value ?? "";
-    }
+    if (element) element.value = value ?? "";
   }
 
   function getCheckedValues(name) {
@@ -603,7 +595,7 @@ document.addEventListener("DOMContentLoaded", () => {
       end_date: endDate || null,
       max_capacity: Number.isFinite(maxCapacity) ? maxCapacity : 0,
       base_price: Number.isFinite(basePrice) ? basePrice : 0,
-      sale_price: Number.isFinite(salePrice) ? salePrice : 0,
+      sale_price: Number.isFinite(salePrice) && salePrice > 0 ? salePrice : 0,
       short_description: shortDescription,
       description: shortDescription,
       meeting_point: meetingPoint,
@@ -725,10 +717,18 @@ document.addEventListener("DOMContentLoaded", () => {
         body: JSON.stringify(payload)
       });
 
-      const result = await response.json();
+      const text = await response.text();
+      let result = {};
+
+      try {
+        result = text ? JSON.parse(text) : {};
+      } catch {
+        result = { message: text || "Response không phải JSON" };
+      }
 
       if (!response.ok) {
-        alert(result.message || (isEditMode ? "Cập nhật tour thất bại." : "Tạo tour thất bại."));
+        console.error("CREATE/UPDATE TOUR ERROR:", result);
+        alert(result.error || result.message || "Lưu tour thất bại.");
         return;
       }
 
@@ -771,12 +771,6 @@ document.addEventListener("DOMContentLoaded", () => {
     updateRequiredStatus(requiredCoverImage, coverDone);
     updateRequiredStatus(requiredDescription, descriptionDone);
     updateRequiredStatus(requiredItinerary, itineraryDone);
-
-    const completedCount = [basicInfoDone, coverDone, descriptionDone, itineraryDone].filter(Boolean).length;
-    const progressPercent = Math.round((completedCount / 4) * 100);
-
-    if (formProgressText) formProgressText.textContent = `${progressPercent}%`;
-    if (formProgressBar) formProgressBar.style.width = `${progressPercent}%`;
   }
 
   function initLeafletMap() {
@@ -838,7 +832,6 @@ document.addEventListener("DOMContentLoaded", () => {
       const data = await response.json();
 
       if (!Array.isArray(data) || data.length === 0) {
-        console.log("Không tìm thấy địa chỉ");
         return;
       }
 
