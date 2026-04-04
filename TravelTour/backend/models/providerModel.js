@@ -1,5 +1,70 @@
 import db from "../config/db.js";
 
+function safeJsonParse(value, fallback = []) {
+  if (!value) return fallback;
+  try {
+    return JSON.parse(value);
+  } catch {
+    return fallback;
+  }
+}
+
+function createSlug(text = "") {
+  return String(text)
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/đ/g, "d")
+    .replace(/[^a-z0-9\s-]/g, "")
+    .trim()
+    .replace(/\s+/g, "-")
+    .replace(/-+/g, "-");
+}
+
+async function isTourCodeExists(providerId, code, excludeId = null) {
+  if (!code) return false;
+
+  let sql = `
+    SELECT id
+    FROM tours
+    WHERE provider_id = ?
+      AND code = ?
+  `;
+  const params = [providerId, code];
+
+  if (excludeId) {
+    sql += ` AND id <> ? `;
+    params.push(excludeId);
+  }
+
+  sql += ` LIMIT 1 `;
+
+  const [rows] = await db.query(sql, params);
+  return rows.length > 0;
+}
+
+async function isTourSlugExists(providerId, slug, excludeId = null) {
+  if (!slug) return false;
+
+  let sql = `
+    SELECT id
+    FROM tours
+    WHERE provider_id = ?
+      AND slug = ?
+  `;
+  const params = [providerId, slug];
+
+  if (excludeId) {
+    sql += ` AND id <> ? `;
+    params.push(excludeId);
+  }
+
+  sql += ` LIMIT 1 `;
+
+  const [rows] = await db.query(sql, params);
+  return rows.length > 0;
+}
+
 export async function getToursByProvider(providerId) {
   const [rows] = await db.query(
     `
@@ -10,6 +75,7 @@ export async function getToursByProvider(providerId) {
     `,
     [providerId]
   );
+
   return rows;
 }
 
@@ -63,11 +129,11 @@ export async function getTourById(providerId, id) {
     cancel_policy: tour.cancel_policy || "",
     terms_conditions: tour.terms_conditions || "",
     other_notes: tour.other_notes || "",
-    highlights: tour.highlights ? JSON.parse(tour.highlights) : [],
-    includes: tour.includes ? JSON.parse(tour.includes) : [],
-    excludes: tour.excludes ? JSON.parse(tour.excludes) : [],
-    itinerary: tour.itinerary ? JSON.parse(tour.itinerary) : [],
-    thumbnail_url: coverImage ? coverImage.image_url : (tour.thumbnail_url || null),
+    highlights: safeJsonParse(tour.highlights, []),
+    includes: safeJsonParse(tour.includes, []),
+    excludes: safeJsonParse(tour.excludes, []),
+    itinerary: safeJsonParse(tour.itinerary, []),
+    thumbnail_url: coverImage ? coverImage.image_url : tour.thumbnail_url || null,
     gallery_images: galleryImages
   };
 }
@@ -109,142 +175,151 @@ export async function createTour(providerId, data) {
     ? status
     : "draft";
 
-  const finalSlug =
-    slug ||
-    String(title || "")
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, "-");
+  let finalSlug = slug || createSlug(title);
+  if (!finalSlug) {
+    finalSlug = `tour-${Date.now()}`;
+  }
+
+  if (await isTourCodeExists(providerId, code)) {
+    throw new Error("Mã tour đã tồn tại");
+  }
+
+  if (await isTourSlugExists(providerId, finalSlug)) {
+    finalSlug = `${finalSlug}-${Date.now()}`;
+  }
 
   const finalItinerary =
-    Array.isArray(itinerary) && itinerary.length > 0
-      ? JSON.stringify(itinerary)
-      : null;
+    Array.isArray(itinerary) && itinerary.length > 0 ? JSON.stringify(itinerary) : null;
 
   const finalIncludes =
-    Array.isArray(includes) && includes.length > 0
-      ? JSON.stringify(includes)
-      : null;
+    Array.isArray(includes) && includes.length > 0 ? JSON.stringify(includes) : null;
 
   const finalExcludes =
-    Array.isArray(excludes) && excludes.length > 0
-      ? JSON.stringify(excludes)
-      : null;
+    Array.isArray(excludes) && excludes.length > 0 ? JSON.stringify(excludes) : null;
 
   const finalHighlights =
-    Array.isArray(highlights) && highlights.length > 0
-      ? JSON.stringify(highlights)
-      : null;
+    Array.isArray(highlights) && highlights.length > 0 ? JSON.stringify(highlights) : null;
 
-  const [result] = await db.query(
-    `
-    INSERT INTO tours (
-      provider_id,
-      title,
-      slug,
-      code,
-      description,
-      highlights,
-      itinerary,
-      location,
-      meeting_point,
-      latitude,
-      longitude,
-      base_price,
-      sale_price,
-      duration_days,
-      duration_text,
-      max_capacity,
-      thumbnail_url,
-      includes,
-      excludes,
-      start_date,
-      end_date,
-      hotel_info,
-      transport_info,
-      cancel_policy,
-      terms_conditions,
-      other_notes,
-      status
-    )
-    VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-    `,
-    [
-      providerId,
-      title || null,
-      finalSlug,
-      code || null,
-      short_description || description || null,
-      finalHighlights,
-      finalItinerary,
-      location || null,
-      meeting_point || null,
-      latitude ?? null,
-      longitude ?? null,
-      base_price || 0,
-      sale_price || 0,
-      duration_days || 1,
-      duration_text || null,
-      max_capacity || 1,
-      thumbnail_url || null,
-      finalIncludes,
-      finalExcludes,
-      start_date || null,
-      end_date || null,
-      hotel_info || null,
-      transport_info || null,
-      cancel_policy || null,
-      terms_conditions || null,
-      other_notes || null,
-      finalStatus
-    ]
-  );
+  const conn = await db.getConnection();
 
-  const tourId = result.insertId;
+  try {
+    await conn.beginTransaction();
 
-  if (category_id) {
-    await db.query(
-      `INSERT INTO tour_category_map (tour_id, category_id) VALUES (?, ?)`,
-      [tourId, category_id]
-    );
-  }
-
-  const insertedUrls = new Set();
-
-  if (thumbnail_url) {
-    await db.query(
+    const [result] = await conn.query(
       `
-      INSERT INTO tour_images (tour_id, image_url, display_order, is_cover)
-      VALUES (?, ?, 0, 1)
+      INSERT INTO tours (
+        provider_id,
+        title,
+        slug,
+        code,
+        description,
+        highlights,
+        itinerary,
+        location,
+        meeting_point,
+        latitude,
+        longitude,
+        base_price,
+        sale_price,
+        duration_days,
+        duration_text,
+        max_capacity,
+        thumbnail_url,
+        includes,
+        excludes,
+        start_date,
+        end_date,
+        hotel_info,
+        transport_info,
+        cancel_policy,
+        terms_conditions,
+        other_notes,
+        status
+      )
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
-      [tourId, thumbnail_url]
+      [
+        providerId,
+        title || null,
+        finalSlug,
+        code || null,
+        short_description || description || null,
+        finalHighlights,
+        finalItinerary,
+        location || null,
+        meeting_point || null,
+        latitude ?? null,
+        longitude ?? null,
+        base_price || 0,
+        sale_price || 0,
+        duration_days || 1,
+        duration_text || null,
+        max_capacity || 1,
+        thumbnail_url || null,
+        finalIncludes,
+        finalExcludes,
+        start_date || null,
+        end_date || null,
+        hotel_info || null,
+        transport_info || null,
+        cancel_policy || null,
+        terms_conditions || null,
+        other_notes || null,
+        finalStatus
+      ]
     );
-    insertedUrls.add(String(thumbnail_url).trim());
-  }
 
-  if (Array.isArray(gallery_images) && gallery_images.length > 0) {
-    let displayOrder = 1;
+    const tourId = result.insertId;
 
-    for (const imageUrl of gallery_images) {
-      const normalizedUrl = String(imageUrl || "").trim();
-      if (!normalizedUrl || insertedUrls.has(normalizedUrl)) {
-        continue;
-      }
+    if (category_id) {
+      await conn.query(
+        `INSERT INTO tour_category_map (tour_id, category_id) VALUES (?, ?)`,
+        [tourId, category_id]
+      );
+    }
 
-      await db.query(
+    const insertedUrls = new Set();
+
+    if (thumbnail_url) {
+      const normalizedCover = String(thumbnail_url).trim();
+      await conn.query(
         `
         INSERT INTO tour_images (tour_id, image_url, display_order, is_cover)
-        VALUES (?, ?, ?, 0)
+        VALUES (?, ?, 0, 1)
         `,
-        [tourId, normalizedUrl, displayOrder]
+        [tourId, normalizedCover]
       );
-
-      insertedUrls.add(normalizedUrl);
-      displayOrder += 1;
+      insertedUrls.add(normalizedCover);
     }
-  }
 
-  return tourId;
+    if (Array.isArray(gallery_images) && gallery_images.length > 0) {
+      let displayOrder = 1;
+
+      for (const imageUrl of gallery_images) {
+        const normalizedUrl = String(imageUrl || "").trim();
+        if (!normalizedUrl || insertedUrls.has(normalizedUrl)) continue;
+
+        await conn.query(
+          `
+          INSERT INTO tour_images (tour_id, image_url, display_order, is_cover)
+          VALUES (?, ?, ?, 0)
+          `,
+          [tourId, normalizedUrl, displayOrder]
+        );
+
+        insertedUrls.add(normalizedUrl);
+        displayOrder += 1;
+      }
+    }
+
+    await conn.commit();
+    return tourId;
+  } catch (error) {
+    await conn.rollback();
+    throw error;
+  } finally {
+    conn.release();
+  }
 }
 
 export async function updateTour(providerId, id, data) {
@@ -284,146 +359,171 @@ export async function updateTour(providerId, id, data) {
     ? status
     : "draft";
 
-  const finalSlug =
-    slug ||
-    String(title || "")
-      .toLowerCase()
-      .trim()
-      .replace(/\s+/g, "-");
+  let finalSlug = slug || createSlug(title);
+  if (!finalSlug) {
+    finalSlug = `tour-${id}`;
+  }
+
+  if (await isTourCodeExists(providerId, code, id)) {
+    throw new Error("Mã tour đã tồn tại");
+  }
+
+  if (await isTourSlugExists(providerId, finalSlug, id)) {
+    finalSlug = `${finalSlug}-${id}`;
+  }
 
   const finalItinerary =
-    Array.isArray(itinerary) && itinerary.length > 0
-      ? JSON.stringify(itinerary)
-      : null;
+    Array.isArray(itinerary) && itinerary.length > 0 ? JSON.stringify(itinerary) : null;
 
   const finalIncludes =
-    Array.isArray(includes) && includes.length > 0
-      ? JSON.stringify(includes)
-      : null;
+    Array.isArray(includes) && includes.length > 0 ? JSON.stringify(includes) : null;
 
   const finalExcludes =
-    Array.isArray(excludes) && excludes.length > 0
-      ? JSON.stringify(excludes)
-      : null;
+    Array.isArray(excludes) && excludes.length > 0 ? JSON.stringify(excludes) : null;
 
   const finalHighlights =
-    Array.isArray(highlights) && highlights.length > 0
-      ? JSON.stringify(highlights)
-      : null;
+    Array.isArray(highlights) && highlights.length > 0 ? JSON.stringify(highlights) : null;
 
-  await db.query(
-    `
-    UPDATE tours
-    SET
-      title = ?,
-      slug = ?,
-      code = ?,
-      description = ?,
-      highlights = ?,
-      itinerary = ?,
-      location = ?,
-      meeting_point = ?,
-      latitude = ?,
-      longitude = ?,
-      base_price = ?,
-      sale_price = ?,
-      duration_days = ?,
-      duration_text = ?,
-      max_capacity = ?,
-      thumbnail_url = ?,
-      includes = ?,
-      excludes = ?,
-      start_date = ?,
-      end_date = ?,
-      hotel_info = ?,
-      transport_info = ?,
-      cancel_policy = ?,
-      terms_conditions = ?,
-      other_notes = ?,
-      status = ?
-    WHERE provider_id = ?
-      AND id = ?
-    `,
-    [
-      title || null,
-      finalSlug,
-      code || null,
-      short_description || description || null,
-      finalHighlights,
-      finalItinerary,
-      location || null,
-      meeting_point || null,
-      latitude ?? null,
-      longitude ?? null,
-      base_price || 0,
-      sale_price || 0,
-      duration_days || 1,
-      duration_text || null,
-      max_capacity || 1,
-      thumbnail_url || null,
-      finalIncludes,
-      finalExcludes,
-      start_date || null,
-      end_date || null,
-      hotel_info || null,
-      transport_info || null,
-      cancel_policy || null,
-      terms_conditions || null,
-      other_notes || null,
-      finalStatus,
-      providerId,
-      id
-    ]
-  );
+  const conn = await db.getConnection();
 
-  await db.query(`DELETE FROM tour_category_map WHERE tour_id = ?`, [id]);
-  if (category_id) {
-    await db.query(
-      `INSERT INTO tour_category_map (tour_id, category_id) VALUES (?, ?)`,
-      [id, category_id]
-    );
-  }
+  try {
+    await conn.beginTransaction();
 
-  await db.query(`DELETE FROM tour_images WHERE tour_id = ?`, [id]);
-
-  const insertedUrls = new Set();
-
-  if (thumbnail_url) {
-    await db.query(
+    await conn.query(
       `
-      INSERT INTO tour_images (tour_id, image_url, display_order, is_cover)
-      VALUES (?, ?, 0, 1)
+      UPDATE tours
+      SET
+        title = ?,
+        slug = ?,
+        code = ?,
+        description = ?,
+        highlights = ?,
+        itinerary = ?,
+        location = ?,
+        meeting_point = ?,
+        latitude = ?,
+        longitude = ?,
+        base_price = ?,
+        sale_price = ?,
+        duration_days = ?,
+        duration_text = ?,
+        max_capacity = ?,
+        thumbnail_url = ?,
+        includes = ?,
+        excludes = ?,
+        start_date = ?,
+        end_date = ?,
+        hotel_info = ?,
+        transport_info = ?,
+        cancel_policy = ?,
+        terms_conditions = ?,
+        other_notes = ?,
+        status = ?
+      WHERE provider_id = ?
+        AND id = ?
       `,
-      [id, thumbnail_url]
+      [
+        title || null,
+        finalSlug,
+        code || null,
+        short_description || description || null,
+        finalHighlights,
+        finalItinerary,
+        location || null,
+        meeting_point || null,
+        latitude ?? null,
+        longitude ?? null,
+        base_price || 0,
+        sale_price || 0,
+        duration_days || 1,
+        duration_text || null,
+        max_capacity || 1,
+        thumbnail_url || null,
+        finalIncludes,
+        finalExcludes,
+        start_date || null,
+        end_date || null,
+        hotel_info || null,
+        transport_info || null,
+        cancel_policy || null,
+        terms_conditions || null,
+        other_notes || null,
+        finalStatus,
+        providerId,
+        id
+      ]
     );
-    insertedUrls.add(String(thumbnail_url).trim());
-  }
 
-  if (Array.isArray(gallery_images) && gallery_images.length > 0) {
-    let displayOrder = 1;
+    await conn.query(`DELETE FROM tour_category_map WHERE tour_id = ?`, [id]);
 
-    for (const imageUrl of gallery_images) {
-      const normalizedUrl = String(imageUrl || "").trim();
-      if (!normalizedUrl || insertedUrls.has(normalizedUrl)) {
-        continue;
-      }
+    if (category_id) {
+      await conn.query(
+        `INSERT INTO tour_category_map (tour_id, category_id) VALUES (?, ?)`,
+        [id, category_id]
+      );
+    }
 
-      await db.query(
+    await conn.query(`DELETE FROM tour_images WHERE tour_id = ?`, [id]);
+
+    const insertedUrls = new Set();
+
+    if (thumbnail_url) {
+      const normalizedCover = String(thumbnail_url).trim();
+
+      await conn.query(
         `
         INSERT INTO tour_images (tour_id, image_url, display_order, is_cover)
-        VALUES (?, ?, ?, 0)
+        VALUES (?, ?, 0, 1)
         `,
-        [id, normalizedUrl, displayOrder]
+        [id, normalizedCover]
       );
 
-      insertedUrls.add(normalizedUrl);
-      displayOrder += 1;
+      insertedUrls.add(normalizedCover);
     }
+
+    if (Array.isArray(gallery_images) && gallery_images.length > 0) {
+      let displayOrder = 1;
+
+      for (const imageUrl of gallery_images) {
+        const normalizedUrl = String(imageUrl || "").trim();
+        if (!normalizedUrl || insertedUrls.has(normalizedUrl)) continue;
+
+        await conn.query(
+          `
+          INSERT INTO tour_images (tour_id, image_url, display_order, is_cover)
+          VALUES (?, ?, ?, 0)
+          `,
+          [id, normalizedUrl, displayOrder]
+        );
+
+        insertedUrls.add(normalizedUrl);
+        displayOrder += 1;
+      }
+    }
+
+    await conn.commit();
+  } catch (error) {
+    await conn.rollback();
+    throw error;
+  } finally {
+    conn.release();
   }
 }
 
 export async function deleteTour(id) {
-  await db.query(`DELETE FROM tours WHERE id = ?`, [id]);
+  const conn = await db.getConnection();
+  try {
+    await conn.beginTransaction();
+    await conn.query(`DELETE FROM tour_images WHERE tour_id = ?`, [id]);
+    await conn.query(`DELETE FROM tour_category_map WHERE tour_id = ?`, [id]);
+    await conn.query(`DELETE FROM tours WHERE id = ?`, [id]);
+    await conn.commit();
+  } catch (error) {
+    await conn.rollback();
+    throw error;
+  } finally {
+    conn.release();
+  }
 }
 
 export async function updateTourStatus(id, status) {
@@ -614,23 +714,15 @@ export async function updateProviderProfile(providerId, data) {
   return getProviderProfile(providerId);
 }
 
+/* Các hàm dashboard + public tours giữ nguyên nếu đang chạy ổn */
 export async function getDashboardDataByProvider(providerId) {
   const [[totalToursRow]] = await db.query(
-    `
-    SELECT COUNT(*) AS totalTours
-    FROM tours
-    WHERE provider_id = ?
-    `,
+    `SELECT COUNT(*) AS totalTours FROM tours WHERE provider_id = ?`,
     [providerId]
   );
 
   const [[activeToursRow]] = await db.query(
-    `
-    SELECT COUNT(*) AS activeTours
-    FROM tours
-    WHERE provider_id = ?
-      AND status = 'active'
-    `,
+    `SELECT COUNT(*) AS activeTours FROM tours WHERE provider_id = ? AND status = 'active'`,
     [providerId]
   );
 
@@ -658,152 +750,14 @@ export async function getDashboardDataByProvider(providerId) {
     [providerId]
   );
 
-  const [recentBookingsRows] = await db.query(
-    `
-    SELECT
-      b.id,
-      u.full_name AS customer_name,
-      t.title AS tour_title,
-      b.booked_at,
-      b.status
-    FROM bookings b
-    JOIN tours t ON b.tour_id = t.id
-    JOIN users u ON b.user_id = u.id
-    WHERE t.provider_id = ?
-    ORDER BY b.booked_at DESC
-    LIMIT 5
-    `,
-    [providerId]
-  );
-
-  const [upcomingToursRows] = await db.query(
-    `
-    SELECT
-      t.id,
-      t.title,
-      t.location,
-      t.duration_days,
-      t.max_capacity,
-      t.base_price,
-      t.created_at
-    FROM tours t
-    WHERE t.provider_id = ?
-      AND t.status = 'active'
-    ORDER BY t.created_at DESC
-    LIMIT 5
-    `,
-    [providerId]
-  );
-
-  const [bookingTrendRows] = await db.query(
-    `
-    SELECT
-      DATE_FORMAT(b.booked_at, '%Y-%m') AS month_key,
-      MONTH(b.booked_at) AS month_number,
-      COUNT(*) AS totalBookings
-    FROM bookings b
-    JOIN tours t ON b.tour_id = t.id
-    WHERE t.provider_id = ?
-      AND b.booked_at >= DATE_SUB(CURDATE(), INTERVAL 5 MONTH)
-    GROUP BY DATE_FORMAT(b.booked_at, '%Y-%m'), MONTH(b.booked_at)
-    ORDER BY month_key ASC
-    `,
-    [providerId]
-  );
-
-  const [revenueTrendRows] = await db.query(
-    `
-    SELECT
-      DATE_FORMAT(b.booked_at, '%Y-%m') AS month_key,
-      MONTH(b.booked_at) AS month_number,
-      COALESCE(SUM(t.base_price), 0) AS totalRevenue
-    FROM bookings b
-    JOIN tours t ON b.tour_id = t.id
-    WHERE t.provider_id = ?
-      AND b.status IN ('confirmed', 'completed')
-      AND b.booked_at >= DATE_SUB(CURDATE(), INTERVAL 5 MONTH)
-    GROUP BY DATE_FORMAT(b.booked_at, '%Y-%m'), MONTH(b.booked_at)
-    ORDER BY month_key ASC
-    `,
-    [providerId]
-  );
-
-  const monthLabels = [];
-  const bookingMap = {};
-  const revenueMap = {};
-
-  for (let i = 5; i >= 0; i -= 1) {
-    const date = new Date();
-    date.setMonth(date.getMonth() - i);
-
-    const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}`;
-    const label = `T${date.getMonth() + 1}`;
-
-    monthLabels.push({ key: monthKey, label });
-  }
-
-  bookingTrendRows.forEach((item) => {
-    bookingMap[item.month_key] = Number(item.totalBookings || 0);
-  });
-
-  revenueTrendRows.forEach((item) => {
-    revenueMap[item.month_key] = Number(item.totalRevenue || 0);
-  });
-
-  const bookingChart = monthLabels.map((item) => bookingMap[item.key] || 0);
-  const revenueChart = monthLabels.map((item) =>
-    Number(((revenueMap[item.key] || 0) / 1000000).toFixed(2))
-  );
-  const chartLabels = monthLabels.map((item) => item.label);
-
-  const recentBookings = recentBookingsRows.map((item) => ({
-    id: item.id,
-    customer: item.customer_name || "Khách hàng",
-    tour: item.tour_title || "Chưa có tên tour",
-    date: item.booked_at,
-    status: normalizeBookingStatus(item.status),
-    statusClass: getBookingStatusClass(item.status)
-  }));
-
-  const upcomingTours = upcomingToursRows.map((item) => ({
-    id: item.id,
-    name: item.title || "Chưa có tên tour",
-    guide: item.location ? `Địa điểm: ${item.location}` : "Chưa có địa điểm",
-    date: item.created_at,
-    guests: `${item.max_capacity || 0} khách`
-  }));
-
   return {
     stats: {
       totalTours: Number(totalToursRow?.totalTours || 0),
       bookingsToday: Number(bookingsTodayRow?.bookingsToday || 0),
       activeTours: Number(activeToursRow?.activeTours || 0),
       revenueMonth: Number(revenueMonthRow?.revenueMonth || 0)
-    },
-    charts: {
-      labels: chartLabels,
-      revenue: revenueChart,
-      bookings: bookingChart
-    },
-    recentBookings,
-    upcomingTours
+    }
   };
-}
-
-function normalizeBookingStatus(status) {
-  const value = String(status || "").toLowerCase();
-  if (value === "confirmed" || value === "completed") return "Đã xác nhận";
-  if (value === "pending") return "Chờ xác nhận";
-  if (value === "cancelled") return "Đã hủy";
-  return status || "Không xác định";
-}
-
-function getBookingStatusClass(status) {
-  const value = String(status || "").toLowerCase();
-  if (value === "confirmed" || value === "completed") return "confirmed";
-  if (value === "pending") return "pending";
-  if (value === "cancelled") return "cancelled";
-  return "pending";
 }
 
 export async function getPublicFeaturedTours(limit = 6) {
@@ -869,10 +823,7 @@ export async function getPublicTours(filters = {}) {
     params.push(`%${destination}%`);
   }
 
-  sql += `
-    ORDER BY t.created_at DESC
-    LIMIT ?
-  `;
+  sql += ` ORDER BY t.created_at DESC LIMIT ? `;
   params.push(Number(limit));
 
   const [rows] = await db.query(sql, params);

@@ -19,6 +19,99 @@ import {
 
 const PROVIDER_ID = 1;
 
+function normalizeTourPayload(body = {}) {
+  return {
+    title: String(body.title || "").trim(),
+    slug: String(body.slug || "").trim(),
+    code: String(body.code || "").trim(),
+    description: String(body.description || body.short_description || "").trim(),
+    short_description: String(body.short_description || body.description || "").trim(),
+    location: String(body.location || "").trim(),
+    meeting_point: String(body.meeting_point || "").trim(),
+
+    latitude:
+      body.latitude === "" || body.latitude == null || Number.isNaN(Number(body.latitude))
+        ? null
+        : Number(body.latitude),
+
+    longitude:
+      body.longitude === "" || body.longitude == null || Number.isNaN(Number(body.longitude))
+        ? null
+        : Number(body.longitude),
+
+    base_price: Number(body.base_price || 0),
+    sale_price: Number(body.sale_price || 0),
+    duration_days: Number(body.duration_days || 1),
+    duration_text: String(body.duration_text || "").trim(),
+    max_capacity: Number(body.max_capacity || 0),
+
+    thumbnail_url: String(body.thumbnail_url || "").trim() || null,
+    includes: Array.isArray(body.includes) ? body.includes : [],
+    excludes: Array.isArray(body.excludes) ? body.excludes : [],
+    status: String(body.status || "draft").trim(),
+    category_id: body.category_id ? Number(body.category_id) : null,
+    itinerary: Array.isArray(body.itinerary) ? body.itinerary : [],
+    gallery_images: Array.isArray(body.gallery_images) ? body.gallery_images : [],
+    highlights: Array.isArray(body.highlights) ? body.highlights : [],
+    start_date: body.start_date || null,
+    end_date: body.end_date || null,
+    hotel_info: String(body.hotel_info || "").trim(),
+    transport_info: String(body.transport_info || "").trim(),
+    cancel_policy: String(body.cancel_policy || "").trim(),
+    terms_conditions: String(body.terms_conditions || "").trim(),
+    other_notes: String(body.other_notes || "").trim()
+  };
+}
+
+function validateTourPayload(payload) {
+  if (!payload.title) return "Vui lòng nhập tên tour";
+  if (!payload.code) return "Vui lòng nhập mã tour";
+  if (!payload.category_id) return "Vui lòng chọn danh mục";
+  if (!payload.location) return "Vui lòng nhập điểm đến";
+  if (!payload.duration_text) return "Vui lòng nhập thời gian tour";
+
+  if (!Number.isFinite(payload.max_capacity) || payload.max_capacity <= 0) {
+    return "Số người tối đa không hợp lệ";
+  }
+
+  if (!Number.isFinite(payload.base_price) || payload.base_price <= 0) {
+    return "Giá tour không hợp lệ";
+  }
+
+  if (!Number.isFinite(payload.sale_price) || payload.sale_price < 0) {
+    return "Giá khuyến mãi không hợp lệ";
+  }
+
+  if (payload.sale_price > 0 && payload.sale_price >= payload.base_price) {
+    return "Giá khuyến mãi phải nhỏ hơn giá tour";
+  }
+
+  if (!payload.short_description) {
+    return "Vui lòng nhập mô tả ngắn";
+  }
+
+  if (payload.status === "active") {
+    if (!payload.thumbnail_url) {
+      return "Vui lòng chọn ảnh bìa chính";
+    }
+
+    if (!Array.isArray(payload.itinerary) || payload.itinerary.length === 0) {
+      return "Vui lòng nhập ít nhất 1 ngày lịch trình";
+    }
+  }
+
+  if (payload.start_date && payload.end_date) {
+    const start = new Date(payload.start_date);
+    const end = new Date(payload.end_date);
+
+    if (!Number.isNaN(start.getTime()) && !Number.isNaN(end.getTime()) && start > end) {
+      return "Ngày kết thúc phải lớn hơn hoặc bằng ngày bắt đầu";
+    }
+  }
+
+  return null;
+}
+
 /* =========================
    PUBLIC API CHO KHÁCH HÀNG
 ========================= */
@@ -35,7 +128,7 @@ export async function getPublicFeaturedToursController(req, res) {
     console.error("❌ PUBLIC FEATURED TOURS ERROR:", err);
     return res.status(500).json({
       message: "Lỗi lấy tour nổi bật",
-      error: err.message
+      error: err.sqlMessage || err.message
     });
   }
 }
@@ -55,7 +148,7 @@ export async function getPublicToursController(req, res) {
     console.error("❌ PUBLIC TOURS ERROR:", err);
     return res.status(500).json({
       message: "Lỗi lấy danh sách tour",
-      error: err.message
+      error: err.sqlMessage || err.message
     });
   }
 }
@@ -65,17 +158,13 @@ export async function getPublicTourDetailController(req, res) {
     const tourId = Number(req.params.id);
 
     if (!tourId) {
-      return res.status(400).json({
-        message: "ID tour không hợp lệ"
-      });
+      return res.status(400).json({ message: "ID tour không hợp lệ" });
     }
 
     const tour = await getPublicTourById(tourId);
 
     if (!tour) {
-      return res.status(404).json({
-        message: "Không tìm thấy tour"
-      });
+      return res.status(404).json({ message: "Không tìm thấy tour" });
     }
 
     return res.status(200).json({
@@ -86,7 +175,7 @@ export async function getPublicTourDetailController(req, res) {
     console.error("❌ PUBLIC TOUR DETAIL ERROR:", err);
     return res.status(500).json({
       message: "Lỗi lấy chi tiết tour",
-      error: err.message
+      error: err.sqlMessage || err.message
     });
   }
 }
@@ -106,7 +195,7 @@ export async function getDashboardData(req, res) {
     console.error("❌ DASHBOARD ERROR:", err);
     return res.status(500).json({
       message: "Lỗi lấy dữ liệu dashboard",
-      error: err.message
+      error: err.sqlMessage || err.message
     });
   }
 }
@@ -129,7 +218,7 @@ export async function getProfile(req, res) {
     console.error("❌ GET PROFILE ERROR:", err);
     return res.status(500).json({
       message: "Lỗi lấy hồ sơ provider",
-      error: err.message
+      error: err.sqlMessage || err.message
     });
   }
 }
@@ -146,7 +235,7 @@ export async function updateProfile(req, res) {
     console.error("❌ UPDATE PROFILE ERROR:", err);
     return res.status(500).json({
       message: "Lỗi cập nhật hồ sơ provider",
-      error: err.message
+      error: err.sqlMessage || err.message
     });
   }
 }
@@ -157,12 +246,16 @@ export async function updateProfile(req, res) {
 export async function getTours(req, res) {
   try {
     const tours = await getToursByProvider(PROVIDER_ID);
-    return res.status(200).json(tours);
+
+    return res.status(200).json({
+      message: "Lấy danh sách tour thành công",
+      data: tours
+    });
   } catch (err) {
     console.error("❌ TOUR ERROR:", err);
     return res.status(500).json({
       message: "Lỗi lấy tour",
-      error: err.message
+      error: err.sqlMessage || err.message
     });
   }
 }
@@ -185,28 +278,44 @@ export async function getTourDetailController(req, res) {
       });
     }
 
-    return res.status(200).json(tour);
+    return res.status(200).json({
+      message: "Lấy chi tiết tour thành công",
+      data: tour
+    });
   } catch (err) {
     console.error("❌ GET TOUR DETAIL ERROR:", err);
     return res.status(500).json({
       message: "Lỗi lấy chi tiết tour",
-      error: err.message
+      error: err.sqlMessage || err.message
     });
   }
 }
 
 export async function createNewTour(req, res) {
   try {
-    const tourId = await createTour(PROVIDER_ID, req.body);
+    const payload = normalizeTourPayload(req.body);
+    const validationError = validateTourPayload(payload);
+
+    if (validationError) {
+      return res.status(400).json({
+        message: validationError
+      });
+    }
+
+    const tourId = await createTour(PROVIDER_ID, payload);
+
     return res.status(201).json({
       message: "Tạo tour thành công",
       tourId
     });
   } catch (err) {
     console.error("❌ CREATE TOUR ERROR:", err);
+    console.error("❌ SQL MESSAGE:", err.sqlMessage);
+    console.error("❌ SQL CODE:", err.code);
+
     return res.status(500).json({
       message: "Lỗi tạo tour",
-      error: err.message
+      error: err.sqlMessage || err.message || "Unknown error"
     });
   }
 }
@@ -229,7 +338,16 @@ export async function updateTourController(req, res) {
       });
     }
 
-    await updateTour(PROVIDER_ID, id, req.body);
+    const payload = normalizeTourPayload(req.body);
+    const validationError = validateTourPayload(payload);
+
+    if (validationError) {
+      return res.status(400).json({
+        message: validationError
+      });
+    }
+
+    await updateTour(PROVIDER_ID, id, payload);
 
     return res.status(200).json({
       message: "Cập nhật tour thành công"
@@ -238,14 +356,31 @@ export async function updateTourController(req, res) {
     console.error("❌ UPDATE TOUR ERROR:", err);
     return res.status(500).json({
       message: "Lỗi cập nhật tour",
-      error: err.message
+      error: err.sqlMessage || err.message
     });
   }
 }
 
 export async function deleteTourController(req, res) {
   try {
-    await deleteTour(req.params.id);
+    const id = Number(req.params.id);
+
+    if (!id) {
+      return res.status(400).json({
+        message: "ID tour không hợp lệ"
+      });
+    }
+
+    const existedTour = await getTourById(PROVIDER_ID, id);
+
+    if (!existedTour) {
+      return res.status(404).json({
+        message: "Không tìm thấy tour để xóa"
+      });
+    }
+
+    await deleteTour(id);
+
     return res.status(200).json({
       message: "Xóa tour thành công"
     });
@@ -253,7 +388,7 @@ export async function deleteTourController(req, res) {
     console.error("❌ DELETE TOUR ERROR:", err);
     return res.status(500).json({
       message: "Lỗi xóa tour",
-      error: err.message
+      error: err.sqlMessage || err.message
     });
   }
 }
@@ -282,6 +417,14 @@ export async function updateTourStatusController(req, res) {
       });
     }
 
+    const existedTour = await getTourById(PROVIDER_ID, id);
+
+    if (!existedTour) {
+      return res.status(404).json({
+        message: "Không tìm thấy tour"
+      });
+    }
+
     await updateTourStatus(id, status);
 
     return res.status(200).json({
@@ -291,7 +434,7 @@ export async function updateTourStatusController(req, res) {
     console.error("❌ UPDATE TOUR STATUS ERROR:", err);
     return res.status(500).json({
       message: "Lỗi cập nhật trạng thái tour",
-      error: err.message
+      error: err.sqlMessage || err.message
     });
   }
 }
@@ -307,7 +450,7 @@ export async function getBookings(req, res) {
     console.error("❌ BOOKING ERROR:", err);
     return res.status(500).json({
       message: "Lỗi booking",
-      error: err.message
+      error: err.sqlMessage || err.message
     });
   }
 }
@@ -331,7 +474,7 @@ export async function updateBooking(req, res) {
     console.error("❌ UPDATE BOOKING ERROR:", err);
     return res.status(500).json({
       message: "Lỗi update booking",
-      error: err.message
+      error: err.sqlMessage || err.message
     });
   }
 }
@@ -347,7 +490,7 @@ export async function getAllGuides(req, res) {
     console.error("❌ GUIDE ERROR:", err);
     return res.status(500).json({
       message: "Lỗi guide",
-      error: err.message
+      error: err.sqlMessage || err.message
     });
   }
 }
@@ -371,7 +514,7 @@ export async function assignGuideController(req, res) {
     console.error("❌ ASSIGN GUIDE ERROR:", err);
     return res.status(500).json({
       message: "Lỗi assign guide",
-      error: err.message
+      error: err.sqlMessage || err.message
     });
   }
 }

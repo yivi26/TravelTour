@@ -416,19 +416,23 @@
               <button class="full-btn secondary-btn" id="saveDraftBtn">Lưu nháp</button>
               <button class="full-btn outline-btn" id="cancelCreateTourBtn">Hủy</button>
             </div>
+<div class="side-divider"></div>
 
-            <div class="side-divider"></div>
-
-            <div class="side-block">
-              <h4>Trạng thái</h4>
-              <div class="progress-row">
-                <span>Tiến độ</span>
-                <strong id="formProgressText">0%</strong>
-              </div>
-              <div class="progress-bar">
-                <div class="progress-bar-fill" id="formProgressBar" style="width: 0%"></div>
-              </div>
-            </div>
+<div class="side-block">
+  <h4>Import Excel</h4>
+  <button type="button" class="full-btn outline-btn" id="importExcelBtn">
+    <i class="fa-solid fa-file-excel"></i> Import file Excel
+  </button>
+  <input
+    id="excelFileInput"
+    type="file"
+    accept=".xlsx,.xls"
+    hidden
+  />
+  <small style="display:block;margin-top:8px;color:#666;">
+    File Excel phải đúng tên cột để hệ thống tự đổ dữ liệu.
+  </small>
+</div>
 
             <div class="side-divider"></div>
 
@@ -464,7 +468,7 @@
           </section>
         </div>
       </div>
-      
+      <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
       <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
       <script src="../../assets/js/provider/taotour.js"></script>
       <script src="../../assets/js/provider/provider-logout.js"></script>
