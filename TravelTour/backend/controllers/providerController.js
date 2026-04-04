@@ -1,6 +1,8 @@
 import {
   getToursByProvider,
+  getTourById,
   createTour,
+  updateTour,
   deleteTour,
   updateTourStatus,
   getBookingsByProvider,
@@ -165,6 +167,34 @@ export async function getTours(req, res) {
   }
 }
 
+export async function getTourDetailController(req, res) {
+  try {
+    const id = Number(req.params.id);
+
+    if (!id) {
+      return res.status(400).json({
+        message: "ID tour không hợp lệ"
+      });
+    }
+
+    const tour = await getTourById(PROVIDER_ID, id);
+
+    if (!tour) {
+      return res.status(404).json({
+        message: "Không tìm thấy tour"
+      });
+    }
+
+    return res.status(200).json(tour);
+  } catch (err) {
+    console.error("❌ GET TOUR DETAIL ERROR:", err);
+    return res.status(500).json({
+      message: "Lỗi lấy chi tiết tour",
+      error: err.message
+    });
+  }
+}
+
 export async function createNewTour(req, res) {
   try {
     const tourId = await createTour(PROVIDER_ID, req.body);
@@ -176,6 +206,38 @@ export async function createNewTour(req, res) {
     console.error("❌ CREATE TOUR ERROR:", err);
     return res.status(500).json({
       message: "Lỗi tạo tour",
+      error: err.message
+    });
+  }
+}
+
+export async function updateTourController(req, res) {
+  try {
+    const id = Number(req.params.id);
+
+    if (!id) {
+      return res.status(400).json({
+        message: "ID tour không hợp lệ"
+      });
+    }
+
+    const existedTour = await getTourById(PROVIDER_ID, id);
+
+    if (!existedTour) {
+      return res.status(404).json({
+        message: "Không tìm thấy tour để cập nhật"
+      });
+    }
+
+    await updateTour(PROVIDER_ID, id, req.body);
+
+    return res.status(200).json({
+      message: "Cập nhật tour thành công"
+    });
+  } catch (err) {
+    console.error("❌ UPDATE TOUR ERROR:", err);
+    return res.status(500).json({
+      message: "Lỗi cập nhật tour",
       error: err.message
     });
   }
@@ -199,6 +261,13 @@ export async function deleteTourController(req, res) {
 export async function updateTourStatusController(req, res) {
   try {
     const { status } = req.body;
+    const id = Number(req.params.id);
+
+    if (!id) {
+      return res.status(400).json({
+        message: "ID tour không hợp lệ"
+      });
+    }
 
     if (!status) {
       return res.status(400).json({
@@ -206,7 +275,14 @@ export async function updateTourStatusController(req, res) {
       });
     }
 
-    await updateTourStatus(req.params.id, status);
+    const allowedStatuses = ["draft", "active", "paused", "archived", "full"];
+    if (!allowedStatuses.includes(status)) {
+      return res.status(400).json({
+        message: "Trạng thái tour không hợp lệ"
+      });
+    }
+
+    await updateTourStatus(id, status);
 
     return res.status(200).json({
       message: "Cập nhật trạng thái tour thành công"

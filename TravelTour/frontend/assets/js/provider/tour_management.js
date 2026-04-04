@@ -1,8 +1,8 @@
+let toursData = [];
+
 // =========================================
 // 📦 LOAD DANH SÁCH TOUR
 // =========================================
-let toursData = []; // lưu data gốc
-
 async function loadTours() {
   try {
     const res = await fetch("/api/provider/tours");
@@ -10,8 +10,14 @@ async function loadTours() {
 
     console.log("TOURS:", data);
 
-    if (!Array.isArray(data)) {
+    if (!res.ok) {
       console.error("API lỗi:", data);
+      alert(data.message || "Không tải được danh sách tour");
+      return;
+    }
+
+    if (!Array.isArray(data)) {
+      console.error("Dữ liệu tours không hợp lệ:", data);
       return;
     }
 
@@ -21,6 +27,7 @@ async function loadTours() {
     renderStats(data);
   } catch (err) {
     console.error("Lỗi load tours:", err);
+    alert("Có lỗi xảy ra khi tải danh sách tour");
   }
 }
 
@@ -29,19 +36,31 @@ async function loadTours() {
 // =========================================
 function renderTable(data) {
   const tbody = document.getElementById("tourTableBody");
+  if (!tbody) return;
+
   tbody.innerHTML = "";
+
+  if (!Array.isArray(data) || data.length === 0) {
+    tbody.innerHTML = `
+      <tr>
+        <td colspan="6" style="text-align:center;">Không có tour nào</td>
+      </tr>
+    `;
+    return;
+  }
 
   data.forEach(t => {
     tbody.innerHTML += `
       <tr>
-        <td>${t.title}</td>
-        <td>${t.location}</td>
+        <td>${escapeHtml(t.title || "")}</td>
+        <td>${escapeHtml(t.location || "")}</td>
         <td>${formatMoney(t.base_price)}</td>
-        <td>${t.max_capacity}</td>
+        <td>${Number(t.max_capacity || 0)}</td>
         <td>${renderStatus(t.status)}</td>
         <td>
-          <button onclick="deleteTour(${t.id})">🗑</button>
-          <button onclick="toggleStatus(${t.id}, '${t.status}')">🔄</button>
+          <button type="button" onclick="editTour(${t.id})" title="Chỉnh sửa">✏️</button>
+          <button type="button" onclick="deleteTour(${t.id})" title="Xóa">🗑️</button>
+          <button type="button" onclick="toggleStatus(${t.id}, '${String(t.status || "").replace(/'/g, "\\'")}')" title="Đổi trạng thái">🔄</button>
         </td>
       </tr>
     `;
@@ -49,18 +68,31 @@ function renderTable(data) {
 }
 
 // =========================================
+// ✏️ CHỈNH SỬA TOUR
+// =========================================
+function editTour(id) {
+  if (!id) return;
+  window.location.href = `./taotour.html?id=${id}`;
+}
+
+// =========================================
 // 📊 STATS
 // =========================================
 function renderStats(data) {
-  document.getElementById("totalTours").innerText = data.length;
+  const totalTours = document.getElementById("totalTours");
+  const activeTours = document.getElementById("activeTours");
+  const fullTours = document.getElementById("fullTours");
+  const stoppedTours = document.getElementById("stoppedTours");
+
+  if (totalTours) totalTours.innerText = data.length;
 
   const active = data.filter(t => t.status === "active").length;
   const full = data.filter(t => t.status === "full").length;
   const stopped = data.filter(t => t.status === "paused").length;
 
-  document.getElementById("activeTours").innerText = active;
-  document.getElementById("fullTours").innerText = full;
-  document.getElementById("stoppedTours").innerText = stopped;
+  if (activeTours) activeTours.innerText = active;
+  if (fullTours) fullTours.innerText = full;
+  if (stoppedTours) stoppedTours.innerText = stopped;
 }
 
 // =========================================
@@ -70,11 +102,11 @@ const searchInput = document.getElementById("searchInput");
 
 if (searchInput) {
   searchInput.addEventListener("input", e => {
-    const keyword = e.target.value.toLowerCase();
+    const keyword = String(e.target.value || "").toLowerCase().trim();
 
     const filtered = toursData.filter(t =>
-      t.title.toLowerCase().includes(keyword) ||
-      t.location.toLowerCase().includes(keyword)
+      String(t.title || "").toLowerCase().includes(keyword) ||
+      String(t.location || "").toLowerCase().includes(keyword)
     );
 
     renderTable(filtered);
@@ -99,11 +131,24 @@ async function deleteTour(id) {
   const confirmDelete = confirm("Bạn có chắc muốn xoá tour?");
   if (!confirmDelete) return;
 
-  await fetch(`/api/provider/tours/${id}`, {
-    method: "DELETE"
-  });
+  try {
+    const res = await fetch(`/api/provider/tours/${id}`, {
+      method: "DELETE"
+    });
 
-  loadTours();
+    const result = await res.json();
+
+    if (!res.ok) {
+      alert(result.message || "Xóa tour thất bại");
+      return;
+    }
+
+    alert("Xóa tour thành công");
+    loadTours();
+  } catch (err) {
+    console.error("Lỗi deleteTour:", err);
+    alert("Có lỗi xảy ra khi xóa tour");
+  }
 }
 
 // =========================================
@@ -112,16 +157,35 @@ async function deleteTour(id) {
 async function toggleStatus(id, currentStatus) {
   let newStatus = "active";
 
-  if (currentStatus === "active") newStatus = "paused";
-  else if (currentStatus === "paused") newStatus = "active";
+  if (currentStatus === "active") {
+    newStatus = "paused";
+  } else if (currentStatus === "paused") {
+    newStatus = "active";
+  } else if (currentStatus === "draft") {
+    newStatus = "active";
+  } else if (currentStatus === "archived") {
+    newStatus = "active";
+  }
 
-  await fetch(`/api/provider/tours/${id}`, {
-    method: "PUT",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ status: newStatus })
-  });
+  try {
+    const res = await fetch(`/api/provider/tours/${id}/status`, {
+      method: "PATCH",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ status: newStatus })
+    });
 
-  loadTours();
+    const result = await res.json();
+
+    if (!res.ok) {
+      alert(result.message || "Cập nhật trạng thái thất bại");
+      return;
+    }
+
+    loadTours();
+  } catch (err) {
+    console.error("Lỗi toggleStatus:", err);
+    alert("Có lỗi xảy ra khi cập nhật trạng thái");
+  }
 }
 
 // =========================================
@@ -132,17 +196,30 @@ function renderStatus(status) {
     active: "🟢 Đang hoạt động",
     paused: "🟡 Tạm dừng",
     draft: "⚪ Nháp",
-    archived: "🔴 Ngưng"
+    archived: "🔴 Ngưng",
+    full: "🔵 Đã đầy"
   };
 
-  return map[status] || status;
+  return map[status] || escapeHtml(String(status || ""));
 }
 
 // =========================================
 // 💰 FORMAT TIỀN
 // =========================================
 function formatMoney(value) {
-  return Number(value).toLocaleString("vi-VN") + " đ";
+  return Number(value || 0).toLocaleString("vi-VN") + " đ";
+}
+
+// =========================================
+// 🛡 ESCAPE HTML
+// =========================================
+function escapeHtml(text) {
+  return String(text)
+    .replaceAll("&", "&amp;")
+    .replaceAll("<", "&lt;")
+    .replaceAll(">", "&gt;")
+    .replaceAll('"', "&quot;")
+    .replaceAll("'", "&#039;");
 }
 
 // =========================================

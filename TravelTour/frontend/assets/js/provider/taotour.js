@@ -1,9 +1,13 @@
 // =========================================
 // taotour.js
-// Xử lý toàn bộ chức năng trang tạo tour
+// Xử lý tạo mới + chỉnh sửa tour
 // =========================================
 
 document.addEventListener("DOMContentLoaded", () => {
+  const params = new URLSearchParams(window.location.search);
+  const tourId = params.get("id");
+  const isEditMode = !!tourId;
+
   const categoryOptions = [
     { id: 1, name: "Rừng nhiệt đới" },
     { id: 2, name: "Biển đảo" },
@@ -68,6 +72,9 @@ document.addEventListener("DOMContentLoaded", () => {
 
   const meetingPointInput = document.getElementById("meetingPoint");
 
+  const pageTitle = document.getElementById("pageTitle");
+  const pageDesc = document.getElementById("pageDesc");
+
   let selectedCoverImage = null;
   let selectedGalleryImages = [];
 
@@ -78,15 +85,35 @@ document.addEventListener("DOMContentLoaded", () => {
 
   init();
 
-  function init() {
+  async function init() {
     renderCategories();
     renderServiceCheckboxes();
-    addHighlightRow();
-    addItineraryDay();
     bindEvents();
-    renderGalleryPreview();
     initLeafletMap();
+
+    if (isEditMode) {
+      updatePageMode();
+      await loadTourDetail(tourId);
+    } else {
+      addHighlightRow();
+      addItineraryDay();
+    }
+
+    renderGalleryPreview();
     updateFormProgress();
+  }
+
+  function updatePageMode() {
+    if (pageTitle) pageTitle.textContent = "Chỉnh sửa tour";
+    if (pageDesc) pageDesc.textContent = "Cập nhật thông tin tour đã tạo";
+
+    if (publishTourBtn) {
+      publishTourBtn.innerHTML = "Cập nhật và xuất bản";
+    }
+
+    if (saveDraftBtn) {
+      saveDraftBtn.innerHTML = "Lưu cập nhật";
+    }
   }
 
   function bindEvents() {
@@ -114,7 +141,7 @@ document.addEventListener("DOMContentLoaded", () => {
     });
 
     cancelCreateTourBtn?.addEventListener("click", () => {
-      const isConfirmed = confirm("Bạn có chắc muốn hủy tạo tour?");
+      const isConfirmed = confirm("Bạn có chắc muốn hủy?");
       if (!isConfirmed) return;
       window.location.href = "./tour_management.html";
     });
@@ -140,7 +167,7 @@ document.addEventListener("DOMContentLoaded", () => {
     categorySelect.innerHTML = `
       <option value="">-- Chọn danh mục --</option>
       ${categoryOptions
-        .map((category) => `<option value="${category.id}">${category.name}</option>`)
+        .map(category => `<option value="${category.id}">${category.name}</option>`)
         .join("")}
     `;
   }
@@ -170,6 +197,114 @@ document.addEventListener("DOMContentLoaded", () => {
           `
         )
         .join("");
+    }
+  }
+
+  async function loadTourDetail(id) {
+    try {
+      const response = await fetch(`/api/provider/tours/${id}`);
+      const tour = await response.json();
+
+      if (!response.ok) {
+        alert(tour.message || "Không tải được dữ liệu tour.");
+        return;
+      }
+
+      setValue("tourTitle", tour.title);
+      setValue("tourCode", tour.code);
+      setValue("categorySelect", tour.category_id);
+      setValue("tourLocation", tour.location);
+      setValue("tourDurationText", tour.duration_text);
+      setValue("tourStartDate", formatDateForInput(tour.start_date));
+      setValue("tourEndDate", formatDateForInput(tour.end_date));
+      setValue("tourMaxCapacity", tour.max_capacity);
+      setValue("tourBasePrice", tour.base_price);
+      setValue("tourSalePrice", tour.sale_price);
+      setValue("tourShortDescription", tour.short_description || tour.description);
+      setValue("meetingPoint", tour.meeting_point);
+      setValue("hotelInfo", tour.hotel_info);
+      setValue("transportInfo", tour.transport_info);
+      setValue("cancelPolicy", tour.cancel_policy);
+      setValue("termsConditions", tour.terms_conditions);
+      setValue("otherNotes", tour.other_notes);
+
+      syncDiscountFromSalePrice();
+
+      if (highlightList) {
+        highlightList.innerHTML = "";
+        if (Array.isArray(tour.highlights) && tour.highlights.length > 0) {
+          tour.highlights.forEach(item => addHighlightRow(item));
+        } else {
+          addHighlightRow();
+        }
+      }
+
+      if (itineraryList) {
+        itineraryList.innerHTML = "";
+        if (Array.isArray(tour.itinerary) && tour.itinerary.length > 0) {
+          tour.itinerary.forEach(day => addItineraryDay(day));
+        } else {
+          addItineraryDay();
+        }
+      }
+
+      if (Array.isArray(tour.includes)) {
+        document
+          .querySelectorAll('input[name="includedServices"]')
+          .forEach(input => {
+            input.checked = tour.includes.includes(input.value);
+          });
+      }
+
+      if (Array.isArray(tour.excludes)) {
+        document
+          .querySelectorAll('input[name="excludedServices"]')
+          .forEach(input => {
+            input.checked = tour.excludes.includes(input.value);
+          });
+      }
+
+      if (tour.thumbnail_url && coverPreview) {
+        selectedCoverImage = {
+          name: getFileNameFromUrl(tour.thumbnail_url),
+          existing: true,
+          url: tour.thumbnail_url
+        };
+
+        coverPreview.innerHTML = `
+          <div class="image-preview-item">
+            <img src="${tour.thumbnail_url}" alt="Ảnh bìa tour" style="max-width: 100%; border-radius: 12px;" />
+            <p style="margin-top: 8px;">${getFileNameFromUrl(tour.thumbnail_url)}</p>
+          </div>
+        `;
+      }
+
+      if (Array.isArray(tour.gallery_images)) {
+        selectedGalleryImages = tour.gallery_images.map(url => ({
+          name: getFileNameFromUrl(url),
+          existing: true,
+          url
+        }));
+        renderGalleryPreview();
+      }
+
+      if (tour.latitude != null && tour.longitude != null) {
+        selectedLatitude = Number(tour.latitude);
+        selectedLongitude = Number(tour.longitude);
+
+        if (map && marker) {
+          map.setView([selectedLatitude, selectedLongitude], 15);
+          marker
+            .setLatLng([selectedLatitude, selectedLongitude])
+            .bindPopup(tour.meeting_point || "Điểm gặp")
+            .openPopup();
+        }
+      }
+
+      updateFormProgress();
+    } catch (error) {
+      console.error("Lỗi loadTourDetail:", error);
+      alert("Có lỗi xảy ra khi tải thông tin tour.");
     }
   }
 
@@ -254,7 +389,7 @@ document.addEventListener("DOMContentLoaded", () => {
     selectedCoverImage = file;
 
     const fileReader = new FileReader();
-    fileReader.onload = (e) => {
+    fileReader.onload = e => {
       coverPreview.innerHTML = `
         <div class="image-preview-item">
           <img src="${e.target?.result}" alt="Ảnh bìa tour" style="max-width: 100%; border-radius: 12px;" />
@@ -286,11 +421,29 @@ document.addEventListener("DOMContentLoaded", () => {
     if (!galleryGrid || !galleryAddBtn) return;
 
     const oldItems = galleryGrid.querySelectorAll(".gallery-preview-item");
-    oldItems.forEach((item) => item.remove());
+    oldItems.forEach(item => item.remove());
 
     selectedGalleryImages.forEach((file, index) => {
+      if (file?.existing && file?.url) {
+        const item = document.createElement("div");
+        item.className = "gallery-preview-item";
+        item.innerHTML = `
+          <img src="${file.url}" alt="Gallery Image" style="width: 100%; height: 100px; object-fit: cover; border-radius: 10px;" />
+          <button type="button" class="remove-gallery-btn" data-index="${index}">×</button>
+        `;
+
+        galleryGrid.insertBefore(item, galleryAddBtn);
+
+        item.querySelector(".remove-gallery-btn")?.addEventListener("click", () => {
+          selectedGalleryImages.splice(index, 1);
+          renderGalleryPreview();
+          updateFormProgress();
+        });
+        return;
+      }
+
       const fileReader = new FileReader();
-      fileReader.onload = (e) => {
+      fileReader.onload = e => {
         const item = document.createElement("div");
         item.className = "gallery-preview-item";
         item.innerHTML = `
@@ -352,15 +505,22 @@ document.addEventListener("DOMContentLoaded", () => {
     return element ? element.value.trim() : "";
   }
 
+  function setValue(id, value) {
+    const element = document.getElementById(id);
+    if (element) {
+      element.value = value ?? "";
+    }
+  }
+
   function getCheckedValues(name) {
     return Array.from(document.querySelectorAll(`input[name="${name}"]:checked`)).map(
-      (input) => input.value
+      input => input.value
     );
   }
 
   function getHighlights() {
     return Array.from(document.querySelectorAll(".highlight-input"))
-      .map((input) => input.value.trim())
+      .map(input => input.value.trim())
       .filter(Boolean);
   }
 
@@ -376,7 +536,7 @@ document.addEventListener("DOMContentLoaded", () => {
           description
         };
       })
-      .filter((item) => item.title || item.description);
+      .filter(item => item.title || item.description);
   }
 
   function parseDurationDays(durationText) {
@@ -394,6 +554,18 @@ document.addEventListener("DOMContentLoaded", () => {
       .replace(/[^a-z0-9\s-]/g, "")
       .trim()
       .replace(/\s+/g, "-");
+  }
+
+  function getFileNameFromUrl(url) {
+    if (!url) return "";
+    return url.split("/").pop().split("?")[0];
+  }
+
+  function formatDateForInput(dateString) {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    if (Number.isNaN(date.getTime())) return "";
+    return date.toISOString().split("T")[0];
   }
 
   function collectFormData() {
@@ -446,8 +618,14 @@ document.addEventListener("DOMContentLoaded", () => {
       includes: included,
       excludes: excluded,
       itinerary: itineraryItems,
-      thumbnail_url: selectedCoverImage ? `/uploads/${selectedCoverImage.name}` : null,
-      gallery_images: selectedGalleryImages.map((file) => `/uploads/${file.name}`),
+      thumbnail_url: selectedCoverImage
+        ? (selectedCoverImage.existing
+            ? selectedCoverImage.url
+            : `/uploads/${selectedCoverImage.name}`)
+        : null,
+      gallery_images: selectedGalleryImages.map(file =>
+        file.existing ? file.url : `/uploads/${file.name}`
+      ),
       slug: createSlug(title)
     };
   }
@@ -531,10 +709,16 @@ document.addEventListener("DOMContentLoaded", () => {
         status
       };
 
-      console.log("Payload tạo tour:", payload);
+      console.log(isEditMode ? "Payload cập nhật tour:" : "Payload tạo tour:", payload);
 
-      const response = await fetch("/api/provider/tours", {
-        method: "POST",
+      const url = isEditMode
+        ? `/api/provider/tours/${tourId}`
+        : "/api/provider/tours";
+
+      const method = isEditMode ? "PUT" : "POST";
+
+      const response = await fetch(url, {
+        method,
         headers: {
           "Content-Type": "application/json"
         },
@@ -544,15 +728,20 @@ document.addEventListener("DOMContentLoaded", () => {
       const result = await response.json();
 
       if (!response.ok) {
-        alert(result.message || "Tạo tour thất bại.");
+        alert(result.message || (isEditMode ? "Cập nhật tour thất bại." : "Tạo tour thất bại."));
         return;
       }
 
-      alert(status === "draft" ? "Lưu nháp thành công!" : "Xuất bản tour thành công!");
+      alert(
+        isEditMode
+          ? (status === "draft" ? "Lưu cập nhật nháp thành công!" : "Cập nhật tour thành công!")
+          : (status === "draft" ? "Lưu nháp thành công!" : "Xuất bản tour thành công!")
+      );
+
       window.location.href = "./tour_management.html";
     } catch (error) {
       console.error("Lỗi submit tour:", error);
-      alert("Có lỗi xảy ra khi tạo tour.");
+      alert(isEditMode ? "Có lỗi xảy ra khi cập nhật tour." : "Có lỗi xảy ra khi tạo tour.");
     }
   }
 
@@ -617,7 +806,8 @@ document.addEventListener("DOMContentLoaded", () => {
       selectedLatitude = Number(lat.toFixed(7));
       selectedLongitude = Number(lng.toFixed(7));
 
-      marker.setLatLng([lat, lng])
+      marker
+        .setLatLng([lat, lng])
         .bindPopup(`Lat: ${lat.toFixed(5)}, Lng: ${lng.toFixed(5)}`)
         .openPopup();
 
@@ -659,7 +849,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
       map.setView([selectedLatitude, selectedLongitude], 15);
 
-      marker.setLatLng([selectedLatitude, selectedLongitude])
+      marker
+        .setLatLng([selectedLatitude, selectedLongitude])
         .bindPopup(display_name)
         .openPopup();
     } catch (error) {
