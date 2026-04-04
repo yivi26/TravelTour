@@ -121,14 +121,13 @@ img {
 /* Hero */
 .hero {
   position: relative;
-  height: 620px;
+  height: 480px; /* đã giảm từ 620 */
   margin-top: 72px;
   background: url("https://images.unsplash.com/photo-1684247969270-87c01490a584?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1400")
     center/cover no-repeat;
   display: flex;
   align-items: center;
 }
-
 .hero-overlay {
   position: absolute;
   inset: 0;
