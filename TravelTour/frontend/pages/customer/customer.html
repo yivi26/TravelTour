@@ -1,0 +1,165 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Thông tin khách hàng - TravelTour</title>
+    <link rel="stylesheet" href="../../assets/css/customer/customer.css" />
+  </head>
+  <body>
+    <div class="dashboard">
+      <!-- Top Navigation -->
+      <header class="topbar">
+       <div class="topbar-left">
+  <button class="menu-toggle" id="menuToggle">☰</button>
+  <a href="../../index.html" class="logo">TravelTour</a> 
+</div>
+
+        <div class="topbar-right">
+          <div class="user-info">
+            <p class="user-name">Nguyễn Văn An</p>
+            <p class="user-role">Khách hàng</p>
+          </div>
+          <img
+            class="user-avatar"
+            src="https://images.unsplash.com/photo-1768933294181-82778103e501?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYXBweSUyMGFzaWFuJTIwd29tYW4lMjB0cmF2ZWxlciUyMHBvcnRyYWl0fGVufDF8fHx8MTc3MzY3MjYxNXww&ixlib=rb-4.1.0&q=80&w=1080"
+            alt="User Avatar"
+          />
+        </div>
+      </header>
+
+      <div class="dashboard-body">
+        <!-- Sidebar -->
+        <aside class="sidebar" id="sidebar">
+          <nav class="sidebar-menu">
+            <a href="customer.html" class="menu-item active">
+              <span class="menu-icon">👤</span>
+              <span>Thông tin cá nhân</span>
+            </a>
+
+            <a href="history.html" class="menu-item">
+              <span class="menu-icon">🕘</span>
+              <span>Lịch sử đặt tour</span>
+            </a>
+
+            <a href="booking.html" class="menu-item">
+              <span class="menu-icon">📅</span>
+              <span>Booking của tôi</span>
+            </a>
+
+            <a href="changepass.html" class="menu-item">
+              <span class="menu-icon">🔒</span>
+              <span>Đổi mật khẩu</span>
+            </a>
+
+            <button class="menu-item logout-btn" type="button">
+              <span class="menu-icon">🚪</span>
+              <span>Đăng xuất</span>
+            </button>
+          </nav>
+        </aside>
+
+        <!-- Overlay mobile -->
+        <div class="sidebar-overlay" id="sidebarOverlay"></div>
+
+        <!-- Main Content -->
+        <main class="main-content">
+          <div class="page-container">
+            <!-- Page Header -->
+            <section class="page-header">
+              <h1>Thông tin cá nhân</h1>
+              <p>Quản lý thông tin tài khoản của bạn</p>
+            </section>
+
+            <!-- Profile Card -->
+            <section class="card profile-card">
+              <div class="profile-layout">
+                <!-- Avatar -->
+                <div class="avatar-section">
+                  <div class="avatar-wrapper">
+                    <img
+                      src="https://images.unsplash.com/photo-1768933294181-82778103e501?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYXBweSUyMGFzaWFuJTIwd29tYW4lMjB0cmF2ZWxlciUyMHBvcnRyYWl0fGVufDF8fHx8MTc3MzY3MjYxNXww&ixlib=rb-4.1.0&q=80&w=1080"
+                      alt="User Avatar"
+                      class="profile-avatar"
+                    />
+                    <button
+                      class="avatar-camera-btn"
+                      id="changeAvatarBtn"
+                      type="button"
+                    >
+                      📷
+                    </button>
+                  </div>
+                  <p class="avatar-label">Ảnh đại diện</p>
+                </div>
+
+                <!-- Profile Information -->
+                <div class="profile-info">
+                  <div class="info-grid">
+                    <div class="info-group">
+                      <label>Họ và tên</label>
+                      <div class="info-box">
+                        <span>Nguyễn Văn An</span>
+                      </div>
+                    </div>
+
+                    <div class="info-group">
+                      <label>Email</label>
+                      <div class="info-box">
+                        <span class="info-icon">✉</span>
+                        <span>nguyenvanan@email.com</span>
+                      </div>
+                    </div>
+
+                    <div class="info-group">
+                      <label>Số điện thoại</label>
+                      <div class="info-box">
+                        <span class="info-icon">📞</span>
+                        <span>0912 345 678</span>
+                      </div>
+                    </div>
+
+                    <div class="info-group">
+                      <label>Địa chỉ</label>
+                      <div class="info-box">
+                        <span class="info-icon">📍</span>
+                        <span>Hà Nội, Việt Nam</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="action-buttons">
+                    <button class="btn btn-primary" id="updateInfoBtn">
+                      Cập nhật thông tin
+                    </button>
+                    <button class="btn btn-outline" id="changePasswordBtn">
+                      Đổi mật khẩu
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Recent Bookings -->
+            <section class="card bookings-card">
+              <div class="section-header">
+                <h2>Booking gần đây</h2>
+                <p>Danh sách các tour bạn đã đặt gần đây</p>
+              </div>
+
+              <div id="bookingList" class="booking-list"></div>
+
+              <div class="view-all-wrap">
+                <button class="btn btn-light" id="viewAllBtn">
+                  Xem tất cả booking
+                </button>
+              </div>
+            </section>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script src="../../assets/js/customer/customer.js"></script>
+  </body>
+</html>

@@ -1,0 +1,433 @@
+const fallbackFeatures = [
+  {
+    icon: "🛡️",
+    title: "Uy tín",
+    description: "Đảm bảo chất lượng dịch vụ tốt nhất"
+  },
+  {
+    icon: "🧭",
+    title: "Đa dạng tour",
+    description: "Hàng trăm điểm đến hấp dẫn"
+  },
+  {
+    icon: "🏆",
+    title: "Hướng dẫn viên chuyên nghiệp",
+    description: "Đội ngũ HDV giàu kinh nghiệm"
+  },
+  {
+    icon: "💵",
+    title: "Giá tốt",
+    description: "Cam kết giá cạnh tranh nhất"
+  }
+];
+
+const fallbackPromotions = [
+  {
+    id: 1,
+    title: "Ưu đãi đặt sớm",
+    description: "Đặt tour sớm để nhận nhiều khuyến mãi hấp dẫn",
+    discount: "10%",
+    image:
+      "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80",
+    validUntil: "30/12/2026"
+  },
+  {
+    id: 2,
+    title: "Ưu đãi nhóm khách",
+    description: "Áp dụng ưu đãi tốt hơn cho nhóm từ 4 khách trở lên",
+    discount: "15%",
+    image:
+      "https://images.unsplash.com/photo-1527631746610-bca00a040d60?auto=format&fit=crop&w=1200&q=80",
+    validUntil: "31/12/2026"
+  }
+];
+
+function formatCurrency(value) {
+  return Number(value || 0).toLocaleString("vi-VN") + "đ";
+}
+
+function getDurationText(days) {
+  const totalDays = Number(days || 1);
+  if (totalDays <= 1) return "1 ngày";
+  return `${totalDays} ngày ${Math.max(totalDays - 1, 0)} đêm`;
+}
+
+function getTourImage(tour) {
+  const rawUrl = String(tour.thumbnail_url || "").trim();
+
+  if (!rawUrl) {
+    return "https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80";
+  }
+
+  if (rawUrl.startsWith("http://") || rawUrl.startsWith("https://")) {
+    return rawUrl;
+  }
+
+  if (rawUrl.startsWith("/assets/") || rawUrl.startsWith("/uploads/")) {
+    return rawUrl;
+  }
+
+  if (rawUrl.startsWith("assets/") || rawUrl.startsWith("uploads/")) {
+    return "/" + rawUrl;
+  }
+
+  return `/uploads/${rawUrl}`;
+}
+
+function goToTourList(query = "") {
+  const baseUrl = "./pages/tours/dstour.html";
+  window.location.href = query ? `${baseUrl}?${query}` : baseUrl;
+}
+
+function goToTourDetail(tourId) {
+  window.location.href = `./pages/tours/chitiet.html?id=${tourId}`;
+}
+
+async function fetchFeaturedTours() {
+  const response = await fetch(
+    "http://localhost:3000/api/provider/public/featured-tours?limit=6"
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Không thể lấy tour nổi bật");
+  }
+
+  const result = await response.json();
+  return result.data || [];
+}
+
+function renderDestinationsFromTours(tours) {
+  const container = document.getElementById("destinations-list");
+  if (!container) return;
+
+  if (!Array.isArray(tours) || tours.length === 0) {
+    container.innerHTML = `
+      <div class="destination-card">
+        <div class="destination-content">
+          <h3>Chưa có dữ liệu</h3>
+          <p class="location">Hiện chưa có điểm đến nào</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  const uniqueLocations = [];
+  const seen = new Set();
+
+  tours.forEach((tour) => {
+    const location = (tour.location || "Chưa cập nhật").trim();
+
+    if (!seen.has(location)) {
+      seen.add(location);
+      uniqueLocations.push({
+        id: tour.id,
+        name: location,
+        location,
+        image: getTourImage(tour),
+        price: formatCurrency(tour.base_price || 0)
+      });
+    }
+  });
+
+  container.innerHTML = uniqueLocations
+    .slice(0, 4)
+    .map(
+      (dest) => `
+      <div class="destination-card" data-destination="${dest.location}">
+        <img
+          src="${dest.image}"
+          alt="${dest.name}"
+          onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80';"
+        >
+        <div class="destination-content">
+          <div class="destination-top">
+            <h3>${dest.name}</h3>
+            <span class="rating">📍</span>
+          </div>
+
+          <p class="location">${dest.location}</p>
+
+          <div class="destination-bottom">
+            <div class="price-wrap">
+              <span class="price-label">Từ</span>
+              <span class="price">${dest.price}</span>
+            </div>
+            <span class="reviews">Điểm đến nổi bật</span>
+          </div>
+        </div>
+      </div>
+    `
+    )
+    .join("");
+}
+
+function renderTours(tours) {
+  const container = document.getElementById("featured-tours-list");
+  if (!container) return;
+
+  if (!Array.isArray(tours) || tours.length === 0) {
+    container.innerHTML = `
+      <div class="tour-card">
+        <div class="tour-content">
+          <h3>Chưa có tour</h3>
+          <p class="muted">Hiện chưa có tour nào đang hoạt động.</p>
+        </div>
+      </div>
+    `;
+    return;
+  }
+
+  container.innerHTML = tours
+    .slice(0, 6)
+    .map(
+      (tour) => `
+      <div class="tour-card">
+        <img
+          src="${getTourImage(tour)}"
+          alt="${tour.title || "Tour du lịch"}"
+          onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80';"
+        >
+        <div class="tour-content">
+          <h3>${tour.title || "Chưa có tên tour"}</h3>
+          <p class="muted">${tour.description || "Tour du lịch hấp dẫn từ TravelTour"}</p>
+
+          <div class="tour-rating">
+            <span>📍 ${tour.location || "Chưa cập nhật"}</span>
+            <span class="reviews">${getDurationText(tour.duration_days)}</span>
+          </div>
+
+          <div class="tour-bottom">
+            <div>
+              <p class="muted">Giá từ</p>
+              <p class="price">${formatCurrency(tour.base_price || 0)}</p>
+            </div>
+
+            <button
+              type="button"
+              class="btn btn-primary btn-detail"
+              data-tour-id="${tour.id}"
+            >
+              Xem chi tiết
+            </button>
+          </div>
+        </div>
+      </div>
+    `
+    )
+    .join("");
+}
+
+function renderFeatures() {
+  const container = document.getElementById("features-list");
+  if (!container) return;
+
+  container.innerHTML = fallbackFeatures
+    .map(
+      (feature) => `
+      <div class="feature-card">
+        <div class="feature-icon">${feature.icon}</div>
+        <h3>${feature.title}</h3>
+        <p>${feature.description}</p>
+      </div>
+    `
+    )
+    .join("");
+}
+
+function renderPromotions() {
+  const container = document.getElementById("promotions-list");
+  if (!container) return;
+
+  container.innerHTML = fallbackPromotions
+    .map(
+      (promo) => `
+      <div class="promo-card">
+        <div class="promo-badge">-${promo.discount}</div>
+        <img src="${promo.image}" alt="${promo.title}">
+        <div class="promo-content">
+          <h3>${promo.title}</h3>
+          <p>${promo.description}</p>
+          <p class="muted">Có hiệu lực đến: ${promo.validUntil}</p>
+          <button
+            type="button"
+            class="btn btn-primary btn-book-now"
+            data-promo-id="${promo.id}"
+            style="margin-top:16px;"
+          >
+            Đặt tour ngay
+          </button>
+        </div>
+      </div>
+    `
+    )
+    .join("");
+}
+
+function bindNavbarBookingButton() {
+  const bookingButton = document.querySelector(".nav-actions .btn.btn-primary");
+  if (!bookingButton) return;
+
+  bookingButton.addEventListener("click", () => {
+    goToTourList();
+  });
+}
+
+function bindDestinationCards() {
+  const destinationCards = document.querySelectorAll(".destination-card");
+
+  destinationCards.forEach((card) => {
+    card.addEventListener("click", () => {
+      const destination = card.dataset.destination || "";
+      const query = new URLSearchParams({ destination }).toString();
+      goToTourList(query);
+    });
+
+    card.style.cursor = "pointer";
+  });
+}
+
+function bindTourDetailButtons() {
+  document.addEventListener("click", function (e) {
+    const btn = e.target.closest(".btn-detail");
+    if (!btn) return;
+
+    const tourId = btn.dataset.tourId;
+    if (!tourId) return;
+
+    goToTourDetail(tourId);
+  });
+}
+
+function bindPromotionButtons() {
+  const bookNowButtons = document.querySelectorAll(".btn-book-now");
+
+  bookNowButtons.forEach((button) => {
+    button.addEventListener("click", () => {
+      goToTourList();
+    });
+  });
+}
+
+function bindSearchForm() {
+  const searchBox = document.querySelector(".search-box");
+  const searchButton = document.querySelector(".btn-search");
+
+  if (!searchBox || !searchButton) return;
+
+  const destinationInput = searchBox.querySelector('input[type="text"]');
+  const dateInput = searchBox.querySelector('input[type="date"]');
+  const passengerSelect = searchBox.querySelector("select");
+
+  searchButton.addEventListener("click", () => {
+    const destination = destinationInput?.value.trim() || "";
+    const departureDate = dateInput?.value || "";
+    const passengers = passengerSelect?.value || "";
+
+    const params = new URLSearchParams();
+
+    if (destination) params.append("destination", destination);
+    if (departureDate) params.append("date", departureDate);
+    if (passengers) params.append("passengers", passengers);
+
+    goToTourList(params.toString());
+  });
+}
+
+function bindHeaderMenu() {
+  const menuLinks = document.querySelectorAll(".nav-menu a");
+
+  menuLinks.forEach((link) => {
+    const text = link.textContent.trim().toLowerCase();
+
+    link.addEventListener("click", (event) => {
+      event.preventDefault();
+
+      if (text.includes("trang chủ")) {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+        return;
+      }
+
+      if (text.includes("giới thiệu")) {
+        document.querySelector(".why-section")?.scrollIntoView({
+          behavior: "smooth"
+        });
+        return;
+      }
+
+      if (text.includes("điểm đến")) {
+        document.querySelector("#destinations-list")?.scrollIntoView({
+          behavior: "smooth"
+        });
+      }
+    });
+  });
+}
+
+function bindUserIcon() {
+  const userIcon = document.querySelector(".user-icon");
+  if (!userIcon) return;
+
+  userIcon.addEventListener("click", (event) => {
+    event.preventDefault();
+
+    const savedUser = localStorage.getItem("traveltour_user");
+
+    if (savedUser) {
+      window.location.href = "./pages/customer/customer.html";
+      return;
+    }
+
+    window.location.href = "/login";
+  });
+}
+
+function bindLogoutButton() {
+  const btnLogout = document.getElementById("btnLogout");
+  if (!btnLogout) return;
+
+  btnLogout.addEventListener("click", () => {
+    localStorage.removeItem("traveltour_user");
+    localStorage.removeItem("traveltour_remember");
+    window.location.href = "/login";
+  });
+}
+
+async function initHomePage() {
+  try {
+    const tours = await fetchFeaturedTours();
+
+    renderDestinationsFromTours(tours);
+    renderTours(tours);
+    renderFeatures();
+    renderPromotions();
+
+    bindNavbarBookingButton();
+    bindDestinationCards();
+    bindTourDetailButtons();
+    bindPromotionButtons();
+    bindSearchForm();
+    bindHeaderMenu();
+    bindUserIcon();
+    bindLogoutButton();
+  } catch (error) {
+    console.error("Lỗi tải dữ liệu trang chủ:", error);
+
+    renderDestinationsFromTours([]);
+    renderTours([]);
+    renderFeatures();
+    renderPromotions();
+
+    bindNavbarBookingButton();
+    bindDestinationCards();
+    bindTourDetailButtons();
+    bindPromotionButtons();
+    bindSearchForm();
+    bindHeaderMenu();
+    bindUserIcon();
+    bindLogoutButton();
+  }
+}
+
+document.addEventListener("DOMContentLoaded", initHomePage);
