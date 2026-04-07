@@ -1,0 +1,227 @@
+<!doctype html>
+<html lang="vi">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Hồ sơ cá nhân</title>
+    <link rel="stylesheet" href="../../assets/css/guide/tongquan.css" />
+    <link rel="stylesheet" href="../../assets/css/guide/hoso.css" />
+  </head>
+  <body>
+    <div class="dashboard">
+      <!-- TOPBAR -->
+      <header class="topbar">
+        <div class="topbar-left">
+          <a href="tongquan.html" class="logo">TravelTour</a>
+        </div>
+
+        <div class="topbar-right">
+          <div class="user-info">
+            <p class="user-name">Nguyễn Văn An</p>
+            <p class="user-role">Hướng dẫn viên</p>
+          </div>
+          <img
+            class="user-avatar"
+            src="https://images.unsplash.com/photo-1768933294181-82778103e501?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"
+            alt="Guide Avatar"
+          />
+        </div>
+      </header>
+
+      <div class="dashboard-body">
+        <!-- SIDEBAR -->
+        <aside class="sidebar">
+          <nav class="sidebar-menu">
+            <a href="tongquan.html" class="menu-item">
+              <span class="menu-icon">📊</span>
+              <span>Dashboard</span>
+            </a>
+
+            <a href="lichtrinh.html" class="menu-item">
+              <span class="menu-icon">🕘</span>
+              <span>Lịch trình của tôi</span>
+            </a>
+
+            <a href="tourdangdan.html" class="menu-item">
+              <span class="menu-icon">📅</span>
+              <span>Tour đang dẫn</span>
+            </a>
+
+            <a href="khachhang.html" class="menu-item">
+              <span class="menu-icon">👥</span>
+              <span>Khách hàng</span>
+            </a>
+
+            <a href="thunhap.html" class="menu-item">
+              <span class="menu-icon">💰</span>
+              <span>Thu nhập</span>
+            </a>
+
+            <a href="hoso.html" class="menu-item active">
+              <span class="menu-icon">👤</span>
+              <span>Hồ sơ cá nhân</span>
+            </a>
+
+            <button class="menu-item logout-btn" type="button" id="logoutBtn">
+              <span class="menu-icon">🚪</span>
+              <span>Đăng xuất</span>
+            </button>
+          </nav>
+        </aside>
+
+        <!-- MAIN -->
+        <main class="main-content">
+          <div class="page-container">
+            <div class="page-header">
+              <h1>Hồ sơ cá nhân</h1>
+              <p>Quản lý thông tin cá nhân và nghề nghiệp của bạn</p>
+            </div>
+
+            <!-- Profile Header -->
+            <section class="card profile-header-card">
+              <div class="profile-header-layout">
+                <div class="profile-avatar-wrap">
+                  <div class="profile-avatar-box">
+                    <span>HĐV</span>
+                  </div>
+                  <button class="camera-btn" id="cameraBtn" type="button">
+                    📷
+                  </button>
+                </div>
+
+                <div class="profile-header-info">
+                  <h2>Nguyễn Văn An</h2>
+                  <p class="profile-role">Hướng dẫn viên du lịch</p>
+
+                  <div class="profile-badges">
+                    <div class="profile-badge">
+                      <span class="badge-icon">🏅</span>
+                      <span>Hướng dẫn viên chuyên nghiệp</span>
+                    </div>
+
+                    <div class="profile-badge">
+                      <span>⭐ 4.9/5.0 (128 đánh giá)</span>
+                    </div>
+                  </div>
+                </div>
+
+                <button class="edit-btn" id="editBtn" type="button">
+                  ✏️ Chỉnh sửa
+                </button>
+              </div>
+            </section>
+
+            <!-- Info Grid -->
+            <section class="info-grid">
+              <!-- Personal Information -->
+              <div class="card info-card">
+                <h3 class="section-title small-title">Thông tin cá nhân</h3>
+
+                <div class="info-stack">
+                  <div class="info-item with-icon">
+                    <div class="info-icon-box green">👤</div>
+                    <div>
+                      <p class="info-label">Họ và tên</p>
+                      <p class="info-value">Nguyễn Văn An</p>
+                    </div>
+                  </div>
+
+                  <div class="info-item with-icon">
+                    <div class="info-icon-box blue">📞</div>
+                    <div>
+                      <p class="info-label">Số điện thoại</p>
+                      <p class="info-value">0901234567</p>
+                    </div>
+                  </div>
+
+                  <div class="info-item with-icon">
+                    <div class="info-icon-box purple">✉️</div>
+                    <div>
+                      <p class="info-label">Email</p>
+                      <p class="info-value">nguyen.van.an@traveltour.vn</p>
+                    </div>
+                  </div>
+
+                  <div class="info-item simple-box">
+                    <p class="info-label">Ngày sinh</p>
+                    <p class="info-value">15/05/1990</p>
+                  </div>
+
+                  <div class="info-item simple-box">
+                    <p class="info-label">Địa chỉ</p>
+                    <p class="info-value">123 Đường Lê Lợi, Quận 1, TP. HCM</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Professional Information -->
+              <div class="card info-card">
+                <h3 class="section-title small-title">Thông tin nghề nghiệp</h3>
+
+                <div class="info-stack">
+                  <div class="info-item simple-box">
+                    <p class="info-label">Kinh nghiệm</p>
+                    <p class="info-value">
+                      8 năm kinh nghiệm hướng dẫn viên du lịch
+                    </p>
+                  </div>
+
+                  <div class="info-item simple-box">
+                    <p class="info-label">Chứng chỉ</p>
+                    <div class="certificate-list">
+                      <div class="certificate-item">
+                        <span class="dot green-dot"></span>
+                        <span>Chứng chỉ hướng dẫn viên du lịch quốc tế</span>
+                      </div>
+                      <div class="certificate-item">
+                        <span class="dot green-dot"></span>
+                        <span>Chứng chỉ sơ cấp cứu</span>
+                      </div>
+                      <div class="certificate-item">
+                        <span class="dot green-dot"></span>
+                        <span>Tiếng Anh giao tiếp IELTS 7.5</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <div class="info-item simple-box">
+                    <p class="info-label">Chuyên môn</p>
+                    <div class="tag-list">
+                      <span class="tag green-tag">Du lịch sinh thái</span>
+                      <span class="tag blue-tag">Trekking</span>
+                      <span class="tag purple-tag">Văn hóa địa phương</span>
+                      <span class="tag yellow-tag">Du lịch biển đảo</span>
+                    </div>
+                  </div>
+
+                  <div class="info-item simple-box">
+                    <p class="info-label">Ngôn ngữ</p>
+                    <div class="language-list">
+                      <div class="language-row">
+                        <span>Tiếng Việt</span>
+                        <span class="lang-level green-text">Bản ngữ</span>
+                      </div>
+                      <div class="language-row">
+                        <span>Tiếng Anh</span>
+                        <span class="lang-level green-text">Thành thạo</span>
+                      </div>
+                      <div class="language-row">
+                        <span>Tiếng Pháp</span>
+                        <span class="lang-level yellow-text">Cơ bản</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </section>
+
+            <!-- Statistics -->
+            <section class="profile-stats-grid" id="profileStatsGrid"></section>
+          </div>
+        </main>
+      </div>
+    </div>
+
+    <script src="../../assets/js/guide/hoso.js"></script>
+  </body>
+</html>
