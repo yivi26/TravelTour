@@ -278,13 +278,7 @@ function bindDestinationCards() {
   const destinationCards = document.querySelectorAll(".destination-card");
 
   destinationCards.forEach((card) => {
-    card.addEventListener("click", () => {
-      const destination = card.dataset.destination || "";
-      const query = new URLSearchParams({ destination }).toString();
-      goToTourList(query);
-    });
-
-    card.style.cursor = "pointer";
+    card.style.cursor = "default";
   });
 }
 
@@ -411,6 +405,7 @@ async function initHomePage() {
     bindHeaderMenu();
     bindUserIcon();
     bindLogoutButton();
+    bindChatbot();
   } catch (error) {
     console.error("Lỗi tải dữ liệu trang chủ:", error);
 
@@ -427,7 +422,103 @@ async function initHomePage() {
     bindHeaderMenu();
     bindUserIcon();
     bindLogoutButton();
+    bindChatbot();
   }
 }
 
+
 document.addEventListener("DOMContentLoaded", initHomePage);
+function addChatMessage(role, content) {
+  const messages = document.getElementById("chatbotMessages");
+  if (!messages) return;
+
+  const messageEl = document.createElement("div");
+  messageEl.className = `chatbot-message ${role}`;
+  messageEl.textContent = content;
+  messages.appendChild(messageEl);
+
+  messages.scrollTop = messages.scrollHeight;
+}
+
+async function callChatbotApi(message) {
+  const response = await fetch("http://localhost:3000/api/chatbot", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+      // Nếu API của bạn cần token thì thêm:
+      // "Authorization": "Bearer YOUR_TOKEN"
+    },
+    body: JSON.stringify({
+      message: message,
+      userId: "guest_user"
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Không gọi được chatbot API");
+  }
+
+  const result = await response.json();
+
+  // Tùy format API của bạn, chỉnh lại dòng dưới
+  return result.reply || result.message || result.data || "Xin lỗi, tôi chưa có phản hồi.";
+}
+
+function bindChatbot() {
+  const chatbotToggle = document.getElementById("chatbotToggle");
+  const chatbotClose = document.getElementById("chatbotClose");
+  const chatbotBox = document.getElementById("chatbotBox");
+  const chatbotSend = document.getElementById("chatbotSend");
+  const chatbotInput = document.getElementById("chatbotInput");
+
+  if (!chatbotToggle || !chatbotClose || !chatbotBox || !chatbotSend || !chatbotInput) {
+    return;
+  }
+
+  chatbotToggle.addEventListener("click", () => {
+    chatbotBox.classList.toggle("open");
+  });
+
+  chatbotClose.addEventListener("click", () => {
+    chatbotBox.classList.remove("open");
+  });
+
+  async function handleSendMessage() {
+    const userMessage = chatbotInput.value.trim();
+    if (!userMessage) return;
+
+    addChatMessage("user", userMessage);
+    chatbotInput.value = "";
+
+    addChatMessage("bot", "Đang trả lời...");
+
+    try {
+      const messages = document.getElementById("chatbotMessages");
+      const loadingMessage = messages.lastElementChild;
+
+      const botReply = await callChatbotApi(userMessage);
+
+      if (loadingMessage) {
+        loadingMessage.textContent = botReply;
+      }
+    } catch (error) {
+      console.error("Chatbot error:", error);
+
+      const messages = document.getElementById("chatbotMessages");
+      const loadingMessage = messages.lastElementChild;
+
+      if (loadingMessage) {
+        loadingMessage.textContent = "Xin lỗi, hệ thống chatbot đang bận. Vui lòng thử lại sau.";
+      }
+    }
+  }
+
+  chatbotSend.addEventListener("click", handleSendMessage);
+
+  chatbotInput.addEventListener("keypress", (event) => {
+    if (event.key === "Enter") {
+      handleSendMessage();
+    }
+  });
+}
