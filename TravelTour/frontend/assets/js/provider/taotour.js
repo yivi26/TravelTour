@@ -67,6 +67,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const pageTitle = document.getElementById("pageTitle");
   const pageDesc = document.getElementById("pageDesc");
 
+  const showCancelPolicyBtn = document.getElementById("showCancelPolicyBtn");
+  const showTermsBtn = document.getElementById("showTermsBtn");
+
   let selectedCoverImage = null;
   let selectedGalleryImages = [];
 
@@ -152,6 +155,40 @@ document.addEventListener("DOMContentLoaded", () => {
       }, 500)
     );
   }
+  showCancelPolicyBtn?.addEventListener("click", () => {
+  const cancelPolicyInput = document.getElementById("cancelPolicy");
+  if (!cancelPolicyInput) return;
+
+  // nếu đang có nội dung → xóa (thu lại)
+  if (cancelPolicyInput.value.trim() !== "") {
+    cancelPolicyInput.value = "";
+  } else {
+    // nếu đang trống → đổ nội dung
+    cancelPolicyInput.value = `- Hủy trước 7 ngày: hoàn 100% giá tour
+- Hủy trước 3 - 6 ngày: hoàn 50% giá tour
+- Hủy trước 1 - 2 ngày: hoàn 30% giá tour
+- Hủy trong ngày khởi hành: không hoàn phí`;
+  }
+
+  updateFormProgress();
+});
+
+showTermsBtn?.addEventListener("click", () => {
+  const termsConditionsInput = document.getElementById("termsConditions");
+  if (!termsConditionsInput) return;
+
+  if (termsConditionsInput.value.trim() !== "") {
+    termsConditionsInput.value = "";
+  } else {
+    termsConditionsInput.value = `- Quý khách cần cung cấp thông tin cá nhân chính xác khi đăng ký tour
+- Công ty không chịu trách nhiệm nếu khách đến trễ giờ khởi hành
+- Lịch trình có thể thay đổi tùy theo điều kiện thời tiết hoặc tình hình thực tế
+- Quý khách tự bảo quản tư trang cá nhân trong suốt chuyến đi`;
+  }
+
+  updateFormProgress();
+});
+
 
   function renderCategories() {
     if (!categorySelect) return;
@@ -583,7 +620,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const included = getCheckedValues("includedServices");
     const excluded = getCheckedValues("excludedServices");
     const itineraryItems = getItineraryItems();
-
+    
     return {
       title,
       code,

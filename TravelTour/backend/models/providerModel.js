@@ -843,12 +843,19 @@ export async function getPublicTourById(tourId) {
       t.latitude,
       t.longitude,
       t.base_price,
+      t.sale_price,
       t.duration_days,
+      t.duration_text,
       t.max_capacity,
       t.thumbnail_url,
       t.includes,
       t.excludes,
       t.itinerary,
+      t.hotel_info,
+      t.transport_info,
+      t.cancel_policy,
+      t.terms_conditions,
+      t.other_notes,
       t.status,
       t.created_at,
       p.company_name AS provider_name
@@ -877,6 +884,11 @@ export async function getPublicTourById(tourId) {
 
   return {
     ...tour,
+    cancel_policy: tour.cancel_policy || "",
+    terms_conditions: tour.terms_conditions || "",
+    other_notes: tour.other_notes || "",
+    hotel_info: tour.hotel_info || "",
+    transport_info: tour.transport_info || "",
     images: imageRows || []
   };
 }

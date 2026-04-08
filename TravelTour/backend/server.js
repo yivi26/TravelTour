@@ -6,7 +6,7 @@ import { fileURLToPath } from "url";
 
 import authRoutes from "./routes/auth.js";
 import providerRoutes from "./routes/provider.js";
-
+import chatbotRoutes from "./routes/chatbot.js";
 dotenv.config();
 
 const app = express();
@@ -71,7 +71,7 @@ app.get("/api/test", (req, res) => {
 ========================= */
 app.use("/api/auth", authRoutes);
 app.use("/api/provider", providerRoutes);
-
+app.use("/api/chatbot", chatbotRoutes);
 /* =========================
    404 API
 ========================= */

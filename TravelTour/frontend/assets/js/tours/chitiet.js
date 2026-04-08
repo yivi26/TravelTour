@@ -19,6 +19,23 @@
     return new Intl.NumberFormat("vi-VN").format(Number(value || 0)) + "đ";
   }
 
+  function escapeHtml(text) {
+    return String(text ?? "")
+      .replaceAll("&", "&amp;")
+      .replaceAll("<", "&lt;")
+      .replaceAll(">", "&gt;")
+      .replaceAll('"', "&quot;")
+      .replaceAll("'", "&#039;");
+  }
+
+  function formatMultilineText(text) {
+    return escapeHtml(text).replace(/\n/g, "<br>");
+  }
+
+  function hasText(value) {
+    return String(value ?? "").trim() !== "";
+  }
+
   function getTourIdFromURL() {
     const params = new URLSearchParams(window.location.search);
     return params.get("id");
@@ -92,11 +109,13 @@
     if (!container) return;
 
     if (!Array.isArray(items) || items.length === 0) {
-      container.innerHTML = `<li>${emptyText}</li>`;
+      container.innerHTML = `<li>${escapeHtml(emptyText)}</li>`;
       return;
     }
 
-    container.innerHTML = items.map((item) => `<li>${item}</li>`).join("");
+    container.innerHTML = items
+      .map((item) => `<li>${escapeHtml(item)}</li>`)
+      .join("");
   }
 
   function renderItinerary(itinerary) {
@@ -112,9 +131,9 @@
       .map(
         (day) => `
           <div class="itinerary-day">
-            <h3>Ngày ${day.day || ""}</h3>
-            <h4>${day.title || "Chưa có tiêu đề"}</h4>
-            <p>${day.description || "Chưa có mô tả cho ngày này."}</p>
+            <h3>Ngày ${escapeHtml(day.day || "")}</h3>
+            <h4>${escapeHtml(day.title || "Chưa có tiêu đề")}</h4>
+            <p>${escapeHtml(day.description || "Chưa có mô tả cho ngày này.")}</p>
           </div>
         `
       )
@@ -146,7 +165,7 @@
         (imageUrl, index) => `
           <button
             type="button"
-            class="tour-thumb"
+            class="tour-thumb ${imageUrl === activeMainImage ? "active" : ""}"
             data-image="${imageUrl}"
             aria-label="Xem ảnh tour ${index + 1}"
           >
@@ -156,10 +175,15 @@
       )
       .join("");
 
-    thumbsContainer.querySelectorAll(".tour-thumb").forEach((button) => {
+    const thumbButtons = thumbsContainer.querySelectorAll(".tour-thumb");
+
+    thumbButtons.forEach((button) => {
       button.addEventListener("click", () => {
         const imageUrl = button.getAttribute("data-image") || FALLBACK_IMAGE;
         mainImage.src = imageUrl;
+
+        thumbButtons.forEach((item) => item.classList.remove("active"));
+        button.classList.add("active");
       });
     });
   }
@@ -168,7 +192,7 @@
     const meetingPointElement = document.getElementById("tour-meeting-point");
     if (!meetingPointElement) return;
 
-    if (!meetingPoint || !meetingPoint.trim()) {
+    if (!hasText(meetingPoint)) {
       meetingPointElement.textContent = "Chưa cập nhật điểm tập trung.";
       meetingPointElement.classList.add("meeting-point-empty");
       return;
@@ -191,7 +215,7 @@
     if (!mapContainer) return;
 
     destroyMeetingMap();
-    mapContainer.innerHTML = `<div class="map-empty-box">${message}</div>`;
+    mapContainer.innerHTML = `<div class="map-empty-box">${escapeHtml(message)}</div>`;
   }
 
   function clearMapFallback() {
@@ -207,6 +231,11 @@
 
     if (!Number.isFinite(lat) || !Number.isFinite(lng)) {
       renderMapEmpty("Chưa có dữ liệu bản đồ cho điểm tập trung.");
+      return;
+    }
+
+    if (typeof L === "undefined") {
+      renderMapEmpty("Không tải được bản đồ.");
       return;
     }
 
@@ -229,18 +258,82 @@
     }, 200);
   }
 
+  function renderPolicySection(tour) {
+    const policySection = document.getElementById("tour-policy-section");
+    const cancelPolicyWrap = document.getElementById("cancel-policy-wrap");
+    const termsConditionsWrap = document.getElementById("terms-conditions-wrap");
+    const otherNotesWrap = document.getElementById("other-notes-wrap");
+
+    const cancelPolicyEl = document.getElementById("tour-cancel-policy");
+    const termsConditionsEl = document.getElementById("tour-terms-conditions");
+    const otherNotesEl = document.getElementById("tour-other-notes");
+
+    if (
+      !policySection ||
+      !cancelPolicyWrap ||
+      !termsConditionsWrap ||
+      !otherNotesWrap ||
+      !cancelPolicyEl ||
+      !termsConditionsEl ||
+      !otherNotesEl
+    ) {
+      return;
+    }
+
+    const cancelPolicy = tour.cancel_policy || "";
+    const termsConditions = tour.terms_conditions || "";
+    const otherNotes = tour.other_notes || "";
+
+    const hasCancelPolicy = hasText(cancelPolicy);
+    const hasTermsConditions = hasText(termsConditions);
+    const hasOtherNotes = hasText(otherNotes);
+
+    policySection.style.display = "none";
+    cancelPolicyWrap.style.display = "none";
+    termsConditionsWrap.style.display = "none";
+    otherNotesWrap.style.display = "none";
+
+    cancelPolicyEl.innerHTML = "";
+    termsConditionsEl.innerHTML = "";
+    otherNotesEl.innerHTML = "";
+
+    if (!hasCancelPolicy && !hasTermsConditions && !hasOtherNotes) {
+      return;
+    }
+
+    policySection.style.display = "block";
+
+    if (hasCancelPolicy) {
+      cancelPolicyWrap.style.display = "block";
+      cancelPolicyEl.innerHTML = formatMultilineText(cancelPolicy);
+    }
+
+    if (hasTermsConditions) {
+      termsConditionsWrap.style.display = "block";
+      termsConditionsEl.innerHTML = formatMultilineText(termsConditions);
+    }
+
+    if (hasOtherNotes) {
+      otherNotesWrap.style.display = "block";
+      otherNotesEl.innerHTML = formatMultilineText(otherNotes);
+    }
+  }
+
   function renderTourDetail(tour) {
     currentTour = tour;
-    TOUR_PRICE = Number(tour.base_price || 0);
+    TOUR_PRICE =
+  tour.sale_price && Number(tour.sale_price) > 0
+    ? Number(tour.sale_price)
+    : Number(tour.base_price || 0);
 
     const title = tour.title || "Chưa có tên tour";
     const location = tour.location || "Chưa cập nhật";
     const provider = tour.provider_name || "Nhà cung cấp";
-    const description = tour.description || "Chưa có mô tả";
+    const description = tour.description || tour.short_description || "Chưa có mô tả";
     const meetingPoint = tour.meeting_point || "";
     const duration = getDurationText(tour.duration_days);
     const capacity = `${Number(tour.max_capacity || 0)} khách`;
-    const displayPrice = formatCurrency(tour.base_price || 0);
+    const displayPrice = formatCurrency(TOUR_PRICE);
 
     document.title = `${title} - TravelTour`;
 
@@ -276,6 +369,8 @@
     renderItinerary(itinerary);
     setMeetingPointText(meetingPoint);
     renderMeetingPointMap(tour);
+    renderExtraInfo(tour);
+    renderPolicySection(tour);
     updateBookingSummary();
   }
 
@@ -304,26 +399,28 @@
     dateInput.value = localDate;
   }
 
-  async function init() {
-    try {
-      const tourId = getTourIdFromURL();
+ async function init() {
+  try {
+    const tourId = getTourIdFromURL();
 
-      if (!tourId) {
-        alert("Thiếu ID tour");
-        return;
-      }
+    const tour = await fetchTourDetail(tourId);
 
-      const tour = await fetchTourDetail(tourId);
-      renderTourDetail(tour);
-      setupDepartureDate();
-    } catch (error) {
-      console.error("Lỗi tải chi tiết tour:", error);
-      alert("Không thể tải dữ liệu chi tiết tour");
-    }
+    console.log("TOUR DATA:", tour); // 👈 thêm dòng này
+
+    renderTourDetail(tour);
+    setupDepartureDate();
+  } catch (error) {
+    console.error("Lỗi tải chi tiết tour:", error);
+  }
+}
+
+  if (adultSelect) {
+    adultSelect.addEventListener("change", updateBookingSummary);
   }
 
-  if (adultSelect) adultSelect.addEventListener("change", updateBookingSummary);
-  if (childSelect) childSelect.addEventListener("change", updateBookingSummary);
+  if (childSelect) {
+    childSelect.addEventListener("change", updateBookingSummary);
+  }
 
   if (bookingForm) {
     bookingForm.addEventListener("submit", function (event) {
@@ -338,7 +435,37 @@
       window.location.href = "./ttkhachhang.html";
     });
   }
-  
+  function renderExtraInfo(tour) {
+  const section = document.getElementById("tour-extra-info-section");
+  const hotelWrap = document.getElementById("hotel-info-wrap");
+  const transportWrap = document.getElementById("transport-info-wrap");
+
+  const hotelEl = document.getElementById("tour-hotel-info");
+  const transportEl = document.getElementById("tour-transport-info");
+
+  if (!section) return;
+
+  const hasHotel = tour.hotel_info && tour.hotel_info.trim() !== "";
+  const hasTransport = tour.transport_info && tour.transport_info.trim() !== "";
+
+  section.style.display = "none";
+  hotelWrap.style.display = "none";
+  transportWrap.style.display = "none";
+
+  if (!hasHotel && !hasTransport) return;
+
+  section.style.display = "block";
+
+  if (hasHotel) {
+    hotelWrap.style.display = "block";
+    hotelEl.innerHTML = tour.hotel_info.replace(/\n/g, "<br>");
+  }
+
+  if (hasTransport) {
+    transportWrap.style.display = "block";
+    transportEl.innerHTML = tour.transport_info.replace(/\n/g, "<br>");
+  }
+}
 
   document.addEventListener("DOMContentLoaded", init);
 })();
