@@ -52,6 +52,7 @@ document.addEventListener("DOMContentLoaded", () => {
   const publishTourBtn = document.getElementById("publishTourBtn");
   const saveDraftBtn = document.getElementById("saveDraftBtn");
   const cancelCreateTourBtn = document.getElementById("cancelCreateTourBtn");
+  
 
   const requiredBasicInfo = document.getElementById("requiredBasicInfo");
   const requiredCoverImage = document.getElementById("requiredCoverImage");
@@ -70,6 +71,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const showCancelPolicyBtn = document.getElementById("showCancelPolicyBtn");
   const showTermsBtn = document.getElementById("showTermsBtn");
 
+  const importExcelBtn = document.getElementById("importExcelBtn");
+  const excelFileInput = document.getElementById("excelFileInput");
+
   let selectedCoverImage = null;
   let selectedGalleryImages = [];
 
@@ -77,6 +81,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let marker = null;
   let selectedLatitude = null;
   let selectedLongitude = null;
+
+  let excelImportedData = null;
 
   init();
 
@@ -154,6 +160,12 @@ document.addEventListener("DOMContentLoaded", () => {
         searchAddress(this.value);
       }, 500)
     );
+
+    importExcelBtn?.addEventListener("click", () => {
+      excelFileInput?.click();
+    });
+
+    excelFileInput?.addEventListener("change", handleExcelFileChange);
   }
   showCancelPolicyBtn?.addEventListener("click", () => {
   const cancelPolicyInput = document.getElementById("cancelPolicy");
@@ -903,5 +915,247 @@ showTermsBtn?.addEventListener("click", () => {
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+  }
+
+  function normalizeExcelHeader(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/\s+/g, " ");
+  }
+
+  function pickRowValue(row, keys) {
+    if (!row) return "";
+    const normalizedMap = new Map();
+    Object.keys(row).forEach(k => {
+      normalizedMap.set(normalizeExcelHeader(k), row[k]);
+    });
+    for (const k of keys) {
+      const v = normalizedMap.get(normalizeExcelHeader(k));
+      if (v != null && String(v).trim() !== "") return v;
+    }
+    return "";
+  }
+
+  function toNumberOrEmpty(value) {
+    const n = Number(String(value ?? "").replaceAll(",", "").trim());
+    return Number.isFinite(n) ? n : "";
+  }
+
+  function splitList(value) {
+    if (value == null) return [];
+    return String(value)
+      .split(/[,;|]/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  }
+
+  function applyExcelToForm(parsed) {
+    if (!parsed) return;
+
+    const { mainRow, itineraryRows = [], highlightRows = [], includes = [], excludes = [] } = parsed;
+    if (mainRow) {
+      const title = pickRowValue(mainRow, ["title", "ten tour", "ten", "tour name"]);
+      const code = pickRowValue(mainRow, ["code", "ma tour", "tour code"]);
+      const location = pickRowValue(mainRow, ["location", "diem den", "dia diem", "noi den"]);
+      const durationText = pickRowValue(mainRow, ["duration_text", "thoi gian", "thoi gian tour", "duration"]);
+      const startDate = pickRowValue(mainRow, ["start_date", "ngay khoi hanh", "start date"]);
+      const endDate = pickRowValue(mainRow, ["end_date", "ngay ket thuc", "end date"]);
+      const maxCapacity = toNumberOrEmpty(pickRowValue(mainRow, ["max_capacity", "so nguoi", "so cho", "capacity"]));
+      const basePrice = toNumberOrEmpty(pickRowValue(mainRow, ["base_price", "gia goc", "gia tour", "base price"]));
+      const salePrice = toNumberOrEmpty(pickRowValue(mainRow, ["sale_price", "gia khuyen mai", "sale price"]));
+      const shortDescription = pickRowValue(mainRow, ["short_description", "mo ta ngan", "mo ta", "description"]);
+      const meetingPoint = pickRowValue(mainRow, ["meeting_point", "diem gap", "meeting point"]);
+      const hotelInfo = pickRowValue(mainRow, ["hotel_info", "khach san", "hotel"]);
+      const transportInfo = pickRowValue(mainRow, ["transport_info", "phuong tien", "transport"]);
+      const cancelPolicy = pickRowValue(mainRow, ["cancel_policy", "chinh sach huy", "cancel policy"]);
+      const termsConditions = pickRowValue(mainRow, ["terms_conditions", "dieu khoan", "terms"]);
+      const otherNotes = pickRowValue(mainRow, ["other_notes", "ghi chu", "note"]);
+
+      if (title) setValue("tourTitle", title);
+      if (code) setValue("tourCode", code);
+      if (location) setValue("tourLocation", location);
+      if (durationText) setValue("tourDurationText", durationText);
+      if (startDate) setValue("tourStartDate", formatDateForInput(startDate));
+      if (endDate) setValue("tourEndDate", formatDateForInput(endDate));
+      if (maxCapacity !== "") setValue("tourMaxCapacity", maxCapacity);
+      if (basePrice !== "") setValue("tourBasePrice", basePrice);
+      if (salePrice !== "") setValue("tourSalePrice", salePrice);
+      if (shortDescription) setValue("tourShortDescription", shortDescription);
+      if (meetingPoint) setValue("meetingPoint", meetingPoint);
+      if (hotelInfo) setValue("hotelInfo", hotelInfo);
+      if (transportInfo) setValue("transportInfo", transportInfo);
+      if (cancelPolicy) setValue("cancelPolicy", cancelPolicy);
+      if (termsConditions) setValue("termsConditions", termsConditions);
+      if (otherNotes) setValue("otherNotes", otherNotes);
+
+      // category_id: cho phép nhập ID hoặc tên danh mục
+      const categoryRaw = pickRowValue(mainRow, ["category_id", "danh muc id", "category", "danh muc"]);
+      if (categoryRaw) {
+        const categoryId = Number(categoryRaw);
+        if (Number.isFinite(categoryId)) {
+          setValue("categorySelect", categoryId);
+        } else {
+          const normalized = normalizeExcelHeader(categoryRaw);
+          const found = categoryOptions.find(c => normalizeExcelHeader(c.name) === normalized);
+          if (found) setValue("categorySelect", found.id);
+        }
+      }
+    }
+
+    // highlights: hỗ trợ 1 cột hoặc list
+    const highlightFromMain = mainRow
+      ? splitList(pickRowValue(mainRow, ["highlights", "diem noi bat", "highlight"]))
+      : [];
+    const highlightValues = [
+      ...highlightFromMain,
+      ...highlightRows
+        .map(r => String(pickRowValue(r, ["highlight", "diem noi bat", "noi bat", "value"]) || ""))
+        .map(s => s.trim())
+        .filter(Boolean)
+    ];
+    if (highlightList && highlightValues.length > 0) {
+      highlightList.innerHTML = "";
+      highlightValues.forEach(v => addHighlightRow(v));
+    }
+
+    // itinerary: hỗ trợ sheet có cột day/title/description hoặc cột "itinerary" dạng text
+    if (itineraryList && itineraryRows.length > 0) {
+      itineraryList.innerHTML = "";
+      itineraryRows
+        .map(r => {
+          const day = toNumberOrEmpty(pickRowValue(r, ["day", "ngay", "so ngay"]));
+          const title = pickRowValue(r, ["title", "tieu de", "ten ngay"]);
+          const description = pickRowValue(r, ["description", "noi dung", "chi tiet"]);
+          return {
+            day: day === "" ? null : Number(day),
+            title: String(title || "").trim(),
+            description: String(description || "").trim()
+          };
+        })
+        .filter(d => d.title || d.description)
+        .forEach(d => addItineraryDay(d));
+      reindexItineraryDays();
+    }
+
+    // dịch vụ: set checkbox theo text
+    const includesFromMain = mainRow ? splitList(pickRowValue(mainRow, ["includes", "dich vu bao gom", "included"])) : [];
+    const excludesFromMain = mainRow ? splitList(pickRowValue(mainRow, ["excludes", "dich vu khong bao gom", "excluded"])) : [];
+    const includesAll = [...includesFromMain, ...includes].map(s => normalizeExcelHeader(s));
+    const excludesAll = [...excludesFromMain, ...excludes].map(s => normalizeExcelHeader(s));
+
+    if (includesAll.length > 0) {
+      document.querySelectorAll('input[name="includedServices"]').forEach(input => {
+        input.checked = includesAll.includes(normalizeExcelHeader(input.value));
+      });
+    }
+    if (excludesAll.length > 0) {
+      document.querySelectorAll('input[name="excludedServices"]').forEach(input => {
+        input.checked = excludesAll.includes(normalizeExcelHeader(input.value));
+      });
+    }
+
+    syncDiscountFromSalePrice();
+    updateFormProgress();
+  }
+
+  function parseExcelWorkbook(workbook) {
+    const sheetNames = workbook.SheetNames || [];
+    const warnings = [];
+    const sheets = [];
+
+    const parsedSheets = sheetNames.map(name => {
+      const ws = workbook.Sheets[name];
+      const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
+      const headers = rows.length > 0 ? Object.keys(rows[0]) : [];
+      const normalizedName = normalizeExcelHeader(name);
+      return { name, normalizedName, rows, headers };
+    });
+
+    parsedSheets.forEach(s => sheets.push({ name: s.name, rows: s.rows, headers: s.headers }));
+
+    const findSheet = (candidates) => {
+      for (const c of candidates) {
+        const norm = normalizeExcelHeader(c);
+        const found = parsedSheets.find(s => s.normalizedName === norm);
+        if (found) return found;
+      }
+      return null;
+    };
+
+    const mainSheet =
+      findSheet(["tour", "thong tin tour", "thong tin", "main"]) ||
+      parsedSheets[0] ||
+      null;
+
+    const itinerarySheet = findSheet(["itinerary", "lich trinh", "schedule"]);
+    const highlightSheet = findSheet(["highlights", "diem noi bat", "highlight"]);
+    const servicesSheet = findSheet(["services", "dich vu", "service"]);
+
+    const mainRow = mainSheet?.rows?.[0] || null;
+
+    let itineraryRows = [];
+    if (itinerarySheet?.rows?.length) {
+      itineraryRows = itinerarySheet.rows;
+    } else if (mainSheet?.rows?.length) {
+      const hasItineraryCols = mainSheet.headers.some(h =>
+        ["day", "ngay", "tieu de", "title", "description", "noi dung"].includes(normalizeExcelHeader(h))
+      );
+      if (hasItineraryCols && mainSheet.rows.length > 1) itineraryRows = mainSheet.rows;
+    }
+
+    const highlightRows = highlightSheet?.rows || [];
+
+    let includes = [];
+    let excludes = [];
+    if (servicesSheet?.rows?.length) {
+      servicesSheet.rows.forEach(r => {
+        const includeVal = pickRowValue(r, ["include", "included", "bao gom", "includedServices"]);
+        const excludeVal = pickRowValue(r, ["exclude", "excluded", "khong bao gom", "excludedServices"]);
+        includes.push(...splitList(includeVal));
+        excludes.push(...splitList(excludeVal));
+      });
+    }
+
+    if (!mainRow) warnings.push("Không tìm thấy dòng dữ liệu chính (main row) để đổ vào form.");
+    if (!window.XLSX) warnings.push("Thiếu thư viện XLSX trên trang (SheetJS).");
+
+    return {
+      sheets,
+      warnings,
+      mainRow,
+      itineraryRows,
+      highlightRows,
+      includes,
+      excludes
+    };
+  }
+
+  async function handleExcelFileChange(event) {
+    try {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      if (typeof XLSX === "undefined") {
+        alert("Chưa load được thư viện đọc Excel (XLSX).");
+        return;
+      }
+
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: "array" });
+
+      const parsed = parseExcelWorkbook(workbook);
+      excelImportedData = parsed;
+
+      applyExcelToForm(parsed);
+
+      event.target.value = "";
+    } catch (error) {
+      console.error("Lỗi import Excel:", error);
+      alert("Có lỗi xảy ra khi đọc file Excel. Vui lòng kiểm tra định dạng file.");
+    }
   }
 });
