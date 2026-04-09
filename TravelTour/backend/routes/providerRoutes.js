@@ -13,6 +13,7 @@ import {
   assignGuideController,
   getPublicFeaturedToursController,
   getPublicToursController,
+  getPublicDiscountedToursController,
   getPublicTourDetailController,
   getProfile,
   updateProfile
@@ -25,6 +26,7 @@ const router = express.Router();
 ========================= */
 router.get("/public/featured-tours", getPublicFeaturedToursController);
 router.get("/public/tours", getPublicToursController);
+router.get("/public/discounted-tours", getPublicDiscountedToursController);
 router.get("/public/tours/:id", getPublicTourDetailController);
 
 /* =========================

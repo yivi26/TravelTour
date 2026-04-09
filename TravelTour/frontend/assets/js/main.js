@@ -97,6 +97,39 @@ async function fetchFeaturedTours() {
   return result.data || [];
 }
 
+async function fetchDiscountedTours(limit = 6) {
+  const response = await fetch(
+    `http://localhost:3000/api/provider/public/discounted-tours?limit=${encodeURIComponent(
+      String(limit)
+    )}`
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Không thể lấy tour ưu đãi");
+  }
+
+  const result = await response.json();
+  return result.data || [];
+}
+
+function computeDiscountPercent(basePrice, salePrice) {
+  const base = Number(basePrice) || 0;
+  const sale = Number(salePrice) || 0;
+  if (base <= 0 || sale <= 0 || sale >= base) return 0;
+  return Math.round(((base - sale) / base) * 100);
+}
+
+function formatDateVi(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const dd = String(date.getDate()).padStart(2, "0");
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const yyyy = String(date.getFullYear());
+  return `${dd}/${mm}/${yyyy}`;
+}
+
 function renderDestinationsFromTours(tours) {
   const container = document.getElementById("destinations-list");
   if (!container) return;
@@ -265,6 +298,55 @@ function renderPromotions() {
     .join("");
 }
 
+function renderPromotionsFromTours(tours) {
+  const container = document.getElementById("promotions-list");
+  if (!container) return;
+
+  if (!Array.isArray(tours) || tours.length === 0) {
+    renderPromotions();
+    return;
+  }
+
+  container.innerHTML = tours
+    .slice(0, 2)
+    .map((tour) => {
+      const discountPercent = computeDiscountPercent(tour.base_price, tour.sale_price);
+      const validUntil = formatDateVi(tour.end_date);
+      const description =
+        (tour.description || "").trim() || "Tour du lịch ưu đãi hấp dẫn từ TravelTour";
+      const image = getTourImage(tour);
+
+      return `
+      <div class="promo-card" data-tour-id="${tour.id}">
+        <div class="promo-badge">-${discountPercent || 0}%</div>
+        <img
+          src="${image}"
+          alt="${tour.title || "Ưu đãi tour"}"
+          onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80';"
+        >
+        <div class="promo-content">
+          <h3>${tour.title || "Ưu đãi tour"}</h3>
+          <p>${description}</p>
+          ${
+            validUntil
+              ? `<p class="muted">Có hiệu lực đến: ${validUntil}</p>`
+              : `<p class="muted">Số lượng ưu đãi có hạn</p>`
+          }
+          <button
+            type="button"
+            class="btn btn-primary btn-book-now"
+            data-tour-id="${tour.id}"
+            style="margin-top:16px;"
+          >
+            Xem chi tiết
+          </button>
+        </div>
+      </div>
+    `;
+    })
+    .join("");
+}
+
 function bindNavbarBookingButton() {
   const bookingButton = document.querySelector(".nav-actions .btn.btn-primary");
   if (!bookingButton) return;
@@ -295,12 +377,35 @@ function bindTourDetailButtons() {
 }
 
 function bindPromotionButtons() {
-  const bookNowButtons = document.querySelectorAll(".btn-book-now");
+  document.addEventListener("click", function (e) {
+    const bookNowBtn = e.target.closest(".btn-book-now");
+    if (bookNowBtn) {
+      e.preventDefault();
+      e.stopPropagation();
 
-  bookNowButtons.forEach((button) => {
-    button.addEventListener("click", () => {
+      const tourId = bookNowBtn.dataset.tourId;
+      if (tourId) {
+        goToTourDetail(tourId);
+        return;
+      }
+
       goToTourList();
-    });
+      return;
+    }
+
+    const promoCard = e.target.closest(".promo-card");
+    if (!promoCard) return;
+
+    const tourId = promoCard.dataset.tourId;
+    if (tourId) {
+      goToTourDetail(tourId);
+      return;
+    }
+  });
+
+  const promoCards = document.querySelectorAll(".promo-card");
+  promoCards.forEach((card) => {
+    card.style.cursor = "pointer";
   });
 }
 
@@ -390,12 +495,15 @@ function bindLogoutButton() {
 
 async function initHomePage() {
   try {
-    const tours = await fetchFeaturedTours();
+    const [tours, discountedTours] = await Promise.all([
+      fetchFeaturedTours(),
+      fetchDiscountedTours(6).catch(() => [])
+    ]);
 
     renderDestinationsFromTours(tours);
     renderTours(tours);
     renderFeatures();
-    renderPromotions();
+    renderPromotionsFromTours(discountedTours);
 
     bindNavbarBookingButton();
     bindDestinationCards();

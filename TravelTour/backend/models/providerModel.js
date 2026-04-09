@@ -830,6 +830,37 @@ export async function getPublicTours(filters = {}) {
   return rows;
 }
 
+export async function getPublicDiscountedTours(limit = 6) {
+  const [rows] = await db.query(
+    `
+    SELECT
+      t.id,
+      t.title,
+      t.slug,
+      t.description,
+      t.location,
+      t.base_price,
+      t.sale_price,
+      t.thumbnail_url,
+      t.start_date,
+      t.end_date,
+      t.status,
+      t.created_at,
+      p.company_name AS provider_name
+    FROM tours t
+    LEFT JOIN providers p ON t.provider_id = p.id
+    WHERE t.status = 'active'
+      AND t.sale_price > 0
+      AND t.sale_price < t.base_price
+    ORDER BY t.created_at DESC
+    LIMIT ?
+    `,
+    [Number(limit)]
+  );
+
+  return rows;
+}
+
 export async function getPublicTourById(tourId) {
   const [rows] = await db.query(
     `
@@ -851,6 +882,8 @@ export async function getPublicTourById(tourId) {
       t.includes,
       t.excludes,
       t.itinerary,
+      t.start_date,
+      t.end_date,
       t.hotel_info,
       t.transport_info,
       t.cancel_policy,

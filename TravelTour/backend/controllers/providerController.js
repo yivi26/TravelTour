@@ -14,6 +14,7 @@
     getDashboardDataByProvider,
     getPublicFeaturedTours,
     getPublicTours,
+    getPublicDiscountedTours,
     getPublicTourById
   } from "../models/providerModel.js";
 
@@ -148,6 +149,24 @@
       console.error("❌ PUBLIC TOURS ERROR:", err);
       return res.status(500).json({
         message: "Lỗi lấy danh sách tour",
+        error: err.sqlMessage || err.message
+      });
+    }
+  }
+
+  export async function getPublicDiscountedToursController(req, res) {
+    try {
+      const limit = Number(req.query.limit || 6);
+      const tours = await getPublicDiscountedTours(limit);
+
+      return res.status(200).json({
+        message: "Lấy danh sách tour ưu đãi thành công",
+        data: tours
+      });
+    } catch (err) {
+      console.error("❌ PUBLIC DISCOUNTED TOURS ERROR:", err);
+      return res.status(500).json({
+        message: "Lỗi lấy tour ưu đãi",
         error: err.sqlMessage || err.message
       });
     }
