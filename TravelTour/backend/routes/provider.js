@@ -7,10 +7,11 @@ import {
   updateTourController,
   deleteTourController,
   updateTourStatusController,
+  getToursForGuideAssignmentController,
   getBookings,
   updateBooking,
   getAllGuides,
-  assignGuideController,
+  assignGuideToTourController,
   getPublicFeaturedToursController,
   getPublicToursController,
   getPublicDiscountedToursController,
@@ -43,6 +44,7 @@ router.get("/dashboard", getDashboardData);
 /* =========================
    PROVIDER TOURS
 ========================= */
+router.get("/tours/guide-assignment", getToursForGuideAssignmentController);
 router.get("/tours", getTours);
 router.get("/tours/:id", getTourDetailController);
 router.post("/tours", createNewTour);
@@ -60,6 +62,6 @@ router.put("/bookings/:id", updateBooking);
    PROVIDER GUIDES
 ========================= */
 router.get("/guides", getAllGuides);
-router.post("/assign-guide", assignGuideController);
+router.post("/assign-guide-to-tour", assignGuideToTourController);
 
 export default router;

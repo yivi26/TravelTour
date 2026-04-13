@@ -41,7 +41,8 @@
     return params.get("id");
   }
 
-  function getDurationText(days) {
+  function getDurationText(days, durationText) {
+    if (hasText(durationText)) return durationText;
     const totalDays = Number(days || 1);
     if (totalDays <= 1) return "1 ngày";
     return `${totalDays} ngày ${Math.max(totalDays - 1, 0)} đêm`;
@@ -90,6 +91,41 @@
     }
 
     return [...new Set(gallery.filter(Boolean))];
+  }
+
+  function getAppliedPrice(tour) {
+    const basePrice = Number(tour?.base_price || 0);
+    const salePrice = Number(tour?.sale_price || 0);
+
+    if (salePrice > 0 && salePrice < basePrice) {
+      return salePrice;
+    }
+
+    return basePrice;
+  }
+
+  function getTaxPercent(tour) {
+    const p = Number(tour?.tax_percent);
+    return Number.isFinite(p) && p > 0 ? p : 0;
+  }
+
+  function getTaxAmount(tour) {
+    const taxPercent = getTaxPercent(tour);
+    if (taxPercent <= 0) return 0;
+
+    const appliedPrice = getAppliedPrice(tour);
+    const taxValue = Number(tour?.tax || 0);
+
+    if (taxValue > 0) return taxValue;
+
+    return Math.round(appliedPrice * (taxPercent / 100));
+  }
+
+  function getFinalPrice(tour) {
+    const finalPrice = Number(tour?.final_price || 0);
+    if (finalPrice > 0) return finalPrice;
+
+    return getAppliedPrice(tour) + getTaxAmount(tour);
   }
 
   async function fetchTourDetail(id) {
@@ -319,21 +355,59 @@
     }
   }
 
+  function renderExtraInfo(tour) {
+    const section = document.getElementById("tour-extra-info-section");
+    const hotelWrap = document.getElementById("hotel-info-wrap");
+    const transportWrap = document.getElementById("transport-info-wrap");
+
+    const hotelEl = document.getElementById("tour-hotel-info");
+    const transportEl = document.getElementById("tour-transport-info");
+
+    if (!section || !hotelWrap || !transportWrap || !hotelEl || !transportEl) return;
+
+    const hasHotel = hasText(tour.hotel_info);
+    const hasTransport = hasText(tour.transport_info);
+
+    section.style.display = "none";
+    hotelWrap.style.display = "none";
+    transportWrap.style.display = "none";
+
+    if (!hasHotel && !hasTransport) return;
+
+    section.style.display = "block";
+
+    if (hasHotel) {
+      hotelWrap.style.display = "block";
+      hotelEl.innerHTML = formatMultilineText(tour.hotel_info);
+    }
+
+    if (hasTransport) {
+      transportWrap.style.display = "block";
+      transportEl.innerHTML = formatMultilineText(tour.transport_info);
+    }
+  }
+
   function renderTourDetail(tour) {
     currentTour = tour;
-    TOUR_PRICE =
-  tour.sale_price && Number(tour.sale_price) > 0
-    ? Number(tour.sale_price)
-    : Number(tour.base_price || 0);
+
+    const appliedPrice = getAppliedPrice(tour);
+    const taxPercent = getTaxPercent(tour);
+    const taxAmount = getTaxAmount(tour);
+    const finalPrice = getFinalPrice(tour);
+
+    TOUR_PRICE = finalPrice;
 
     const title = tour.title || "Chưa có tên tour";
     const location = tour.location || "Chưa cập nhật";
     const provider = tour.provider_name || "Nhà cung cấp";
     const description = tour.description || tour.short_description || "Chưa có mô tả";
     const meetingPoint = tour.meeting_point || "";
-    const duration = getDurationText(tour.duration_days);
+    const duration = getDurationText(tour.duration_days, tour.duration_text);
     const capacity = `${Number(tour.max_capacity || 0)} khách`;
-    const displayPrice = formatCurrency(TOUR_PRICE);
+
+    const appliedPriceText = formatCurrency(appliedPrice);
+    const taxAmountText = formatCurrency(taxAmount);
+    const finalPriceText = formatCurrency(finalPrice);
 
     document.title = `${title} - TravelTour`;
 
@@ -348,6 +422,16 @@
     const tourPrice = document.getElementById("tour-price");
     const bookingTourPrice = document.getElementById("booking-tour-price");
 
+    const tourBasePriceEl = document.getElementById("tour-base-price");
+    const tourTaxPercentEl = document.getElementById("tour-tax-percent");
+    const tourTaxEl = document.getElementById("tour-tax");
+    const tourFinalPriceEl = document.getElementById("tour-final-price");
+
+    const bookingBasePriceEl = document.getElementById("booking-base-price");
+    const bookingTaxPercentEl = document.getElementById("booking-tax-percent");
+    const bookingTaxEl = document.getElementById("booking-tax");
+    const bookingFinalPriceEl = document.getElementById("booking-final-price");
+
     if (breadcrumbTitle) breadcrumbTitle.textContent = title;
     if (tourTitle) tourTitle.textContent = title;
     if (tourLocation) tourLocation.textContent = location;
@@ -356,8 +440,18 @@
     if (tourDescriptionFull) tourDescriptionFull.textContent = description;
     if (tourDuration) tourDuration.textContent = duration;
     if (tourCapacity) tourCapacity.textContent = capacity;
-    if (tourPrice) tourPrice.textContent = displayPrice;
-    if (bookingTourPrice) bookingTourPrice.textContent = displayPrice;
+    if (tourPrice) tourPrice.textContent = finalPriceText;
+    if (bookingTourPrice) bookingTourPrice.textContent = finalPriceText;
+
+    if (tourBasePriceEl) tourBasePriceEl.textContent = appliedPriceText;
+    if (tourTaxPercentEl) tourTaxPercentEl.textContent = `${taxPercent}%`;
+    if (tourTaxEl) tourTaxEl.textContent = taxAmountText;
+    if (tourFinalPriceEl) tourFinalPriceEl.textContent = finalPriceText;
+
+    if (bookingBasePriceEl) bookingBasePriceEl.textContent = appliedPriceText;
+    if (bookingTaxPercentEl) bookingTaxPercentEl.textContent = `${taxPercent}%`;
+    if (bookingTaxEl) bookingTaxEl.textContent = taxAmountText;
+    if (bookingFinalPriceEl) bookingFinalPriceEl.textContent = finalPriceText;
 
     const includes = safeParseJsonArray(tour.includes);
     const excludes = safeParseJsonArray(tour.excludes);
@@ -399,20 +493,23 @@
     dateInput.value = localDate;
   }
 
- async function init() {
-  try {
-    const tourId = getTourIdFromURL();
+  async function init() {
+    try {
+      const tourId = getTourIdFromURL();
 
-    const tour = await fetchTourDetail(tourId);
+      if (!tourId) {
+        throw new Error("Không tìm thấy id tour trên URL");
+      }
 
-    console.log("TOUR DATA:", tour); // 👈 thêm dòng này
+      const tour = await fetchTourDetail(tourId);
+      console.log("TOUR DATA:", tour);
 
-    renderTourDetail(tour);
-    setupDepartureDate();
-  } catch (error) {
-    console.error("Lỗi tải chi tiết tour:", error);
+      renderTourDetail(tour);
+      setupDepartureDate();
+    } catch (error) {
+      console.error("Lỗi tải chi tiết tour:", error);
+    }
   }
-}
 
   if (adultSelect) {
     adultSelect.addEventListener("change", updateBookingSummary);
@@ -435,37 +532,6 @@
       window.location.href = "./ttkhachhang.html";
     });
   }
-  function renderExtraInfo(tour) {
-  const section = document.getElementById("tour-extra-info-section");
-  const hotelWrap = document.getElementById("hotel-info-wrap");
-  const transportWrap = document.getElementById("transport-info-wrap");
-
-  const hotelEl = document.getElementById("tour-hotel-info");
-  const transportEl = document.getElementById("tour-transport-info");
-
-  if (!section) return;
-
-  const hasHotel = tour.hotel_info && tour.hotel_info.trim() !== "";
-  const hasTransport = tour.transport_info && tour.transport_info.trim() !== "";
-
-  section.style.display = "none";
-  hotelWrap.style.display = "none";
-  transportWrap.style.display = "none";
-
-  if (!hasHotel && !hasTransport) return;
-
-  section.style.display = "block";
-
-  if (hasHotel) {
-    hotelWrap.style.display = "block";
-    hotelEl.innerHTML = tour.hotel_info.replace(/\n/g, "<br>");
-  }
-
-  if (hasTransport) {
-    transportWrap.style.display = "block";
-    transportEl.innerHTML = tour.transport_info.replace(/\n/g, "<br>");
-  }
-}
 
   document.addEventListener("DOMContentLoaded", init);
 })();

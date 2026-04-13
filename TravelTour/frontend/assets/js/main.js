@@ -74,6 +74,43 @@ function getTourImage(tour) {
   return `/uploads/${rawUrl}`;
 }
 
+function getAppliedPrice(tour) {
+  const basePrice = Number(tour?.base_price || 0);
+  const salePrice = Number(tour?.sale_price || 0);
+
+  if (salePrice > 0 && salePrice < basePrice) {
+    return salePrice;
+  }
+
+  return basePrice;
+}
+
+function getTaxPercent(tour) {
+  const p = Number(tour?.tax_percent);
+  return Number.isFinite(p) && p > 0 ? p : 0;
+}
+
+function getTaxAmount(tour) {
+  const taxPercent = getTaxPercent(tour);
+  if (taxPercent <= 0) return 0;
+
+  const tax = Number(tour?.tax || 0);
+  if (tax > 0) return tax;
+
+  const appliedPrice = getAppliedPrice(tour);
+  return Math.round(appliedPrice * (taxPercent / 100));
+}
+
+function getDisplayPrice(tour) {
+  const finalPrice = Number(tour?.final_price || 0);
+  if (finalPrice > 0) return finalPrice;
+
+  const appliedPrice = getAppliedPrice(tour);
+  const tax = getTaxAmount(tour);
+
+  return appliedPrice + tax;
+}
+
 function goToTourList(query = "") {
   const baseUrl = "./pages/tours/dstour.html";
   window.location.href = query ? `${baseUrl}?${query}` : baseUrl;
@@ -159,7 +196,7 @@ function renderDestinationsFromTours(tours) {
         name: location,
         location,
         image: getTourImage(tour),
-        price: formatCurrency(tour.base_price || 0)
+        price: formatCurrency(getDisplayPrice(tour))
       });
     }
   });
@@ -214,8 +251,18 @@ function renderTours(tours) {
 
   container.innerHTML = tours
     .slice(0, 6)
-    .map(
-      (tour) => `
+    .map((tour) => {
+      const appliedPrice = getAppliedPrice(tour);
+      const tax = getTaxAmount(tour);
+      const finalPrice = getDisplayPrice(tour);
+      const vatDetailLine =
+        getTaxPercent(tour) > 0 && tax > 0
+          ? `<p class="muted" style="font-size:12px;margin-top:4px;">
+                Giá áp dụng ${formatCurrency(appliedPrice)} + VAT ${formatCurrency(tax)}
+              </p>`
+          : "";
+
+      return `
       <div class="tour-card">
         <img
           src="${getTourImage(tour)}"
@@ -234,7 +281,8 @@ function renderTours(tours) {
           <div class="tour-bottom">
             <div>
               <p class="muted">Giá từ</p>
-              <p class="price">${formatCurrency(tour.base_price || 0)}</p>
+              <p class="price">${formatCurrency(finalPrice)}</p>
+              ${vatDetailLine}
             </div>
 
             <button
@@ -247,8 +295,8 @@ function renderTours(tours) {
           </div>
         </div>
       </div>
-    `
-    )
+    `;
+    })
     .join("");
 }
 
@@ -315,6 +363,7 @@ function renderPromotionsFromTours(tours) {
       const description =
         (tour.description || "").trim() || "Tour du lịch ưu đãi hấp dẫn từ TravelTour";
       const image = getTourImage(tour);
+      const finalPrice = getDisplayPrice(tour);
 
       return `
       <div class="promo-card" data-tour-id="${tour.id}">
@@ -327,6 +376,9 @@ function renderPromotionsFromTours(tours) {
         <div class="promo-content">
           <h3>${tour.title || "Ưu đãi tour"}</h3>
           <p>${description}</p>
+          <p style="font-weight:700;color:#10a669;margin-top:8px;">
+            Giá sau điều chỉnh: ${formatCurrency(finalPrice)}
+          </p>
           ${
             validUntil
               ? `<p class="muted">Có hiệu lực đến: ${validUntil}</p>`
@@ -534,8 +586,8 @@ async function initHomePage() {
   }
 }
 
-
 document.addEventListener("DOMContentLoaded", initHomePage);
+
 function addChatMessage(role, content) {
   const messages = document.getElementById("chatbotMessages");
   if (!messages) return;
@@ -553,8 +605,6 @@ async function callChatbotApi(message) {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
-      // Nếu API của bạn cần token thì thêm:
-      // "Authorization": "Bearer YOUR_TOKEN"
     },
     body: JSON.stringify({
       message: message,
@@ -568,8 +618,6 @@ async function callChatbotApi(message) {
   }
 
   const result = await response.json();
-
-  // Tùy format API của bạn, chỉnh lại dòng dưới
   return result.reply || result.message || result.data || "Xin lỗi, tôi chưa có phản hồi.";
 }
 

@@ -199,3 +199,13 @@ document.addEventListener("DOMContentLoaded", function () {
   renderUpcomingBookings();
   bindEvents();
 });
+async function loadUpcoming() {
+  const res = await fetch("http://localhost:5000/api/customer/bookings/upcoming", {
+    headers: {
+      Authorization: "Bearer " + localStorage.getItem("token")
+    }
+  });
+
+  const data = await res.json();
+  renderUpcomingBookings(data);
+}

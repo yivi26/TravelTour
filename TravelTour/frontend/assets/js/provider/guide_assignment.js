@@ -1,5 +1,6 @@
 let guidesData = [];
-let bookingsData = [];
+let toursData = [];
+let selectedTourIdFromUrl = null;
 
 function formatDateVN(dateString) {
   if (!dateString) return "--/--/----";
@@ -10,12 +11,13 @@ function formatDateVN(dateString) {
   return date.toLocaleDateString("vi-VN");
 }
 
-function getStatusText(status) {
+function getTourStatusText(status) {
   const map = {
-    pending: "Chờ xác nhận",
-    confirmed: "Đã xác nhận",
-    completed: "Hoàn thành",
-    cancelled: "Đã hủy"
+    draft: "Nháp",
+    active: "Đang mở bán",
+    paused: "Tạm dừng",
+    archived: "Lưu trữ",
+    full: "Đã đủ chỗ"
   };
 
   return map[status] || status || "Không xác định";
@@ -34,16 +36,16 @@ function normalizeGuide(guide) {
   };
 }
 
-function normalizeBooking(booking) {
+function normalizeTour(tour) {
   return {
-    bookingId: Number(booking.booking_id || booking.id),
-    title: booking.tour_title || "Chưa có tên tour",
-    destination: booking.location || "Chưa cập nhật",
-    departureDate: booking.departure_date || null,
-    guests: Number(booking.total_pax || 0),
-    assignedGuideName: booking.guide_name || "",
-    status: booking.booking_status || booking.status || "",
-    guideStatus: booking.guide_status || ""
+    id: Number(tour.id),
+    title: tour.title || "Chưa có tên tour",
+    destination: tour.location || "Chưa cập nhật",
+    departureDate: tour.start_date || null,
+    guests: Number(tour.max_capacity || 0),
+    assignedGuideName: tour.guide_name || "",
+    status: tour.status || "",
+    guideId: tour.guide_id != null ? Number(tour.guide_id) : null
   };
 }
 
@@ -64,31 +66,32 @@ async function fetchGuides() {
   return Array.isArray(data) ? data.map(normalizeGuide) : [];
 }
 
-async function fetchBookings() {
-  const response = await fetch("/api/provider/bookings", {
+async function fetchToursForAssignment() {
+  const response = await fetch("/api/provider/tours/guide-assignment", {
     method: "GET",
     headers: {
       "Content-Type": "application/json"
     }
   });
 
-  const data = await response.json().catch(() => []);
+  const data = await response.json().catch(() => ({}));
 
   if (!response.ok) {
     throw new Error(data.message || "Không thể tải danh sách tour");
   }
 
-  return Array.isArray(data) ? data.map(normalizeBooking) : [];
+  const rows = Array.isArray(data?.data) ? data.data : [];
+  return rows.map(normalizeTour);
 }
 
-async function assignGuideToBooking(bookingId, guideId) {
-  const response = await fetch("/api/provider/assign-guide", {
+async function assignGuideToTour(tourId, guideId) {
+  const response = await fetch("/api/provider/assign-guide-to-tour", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"
     },
     body: JSON.stringify({
-      bookingId,
+      tourId,
       guideId
     })
   });
@@ -146,27 +149,28 @@ function renderTours(data) {
   container.innerHTML = data
     .map((tour) => {
       const isAssigned = Boolean(tour.assignedGuideName);
+      const isFocused = selectedTourIdFromUrl && Number(selectedTourIdFromUrl) === Number(tour.id);
 
       return `
-        <div class="tour-card">
+        <div class="tour-card ${isFocused ? "tour-card-focus" : ""}">
           <div class="tc-title">${tour.title}</div>
 
           <div class="tc-details">
             <p><i class="fa-solid fa-location-dot"></i> ${tour.destination}</p>
             <p><i class="fa-regular fa-calendar"></i> Khởi hành: ${formatDateVN(tour.departureDate)}</p>
-            <p><i class="fa-solid fa-users"></i> ${tour.guests} khách</p>
-            <p><i class="fa-solid fa-ticket"></i> Trạng thái booking: ${getStatusText(tour.status)}</p>
+            <p><i class="fa-solid fa-users"></i> Tối đa: ${tour.guests} khách</p>
+            <p><i class="fa-solid fa-ticket"></i> Trạng thái tour: ${getTourStatusText(tour.status)}</p>
           </div>
 
           <div class="tc-assign-label">Hướng dẫn viên</div>
 
           <div class="tc-assign-row">
-            <select class="tc-select" data-booking-id="${tour.bookingId}">
+            <select class="tc-select" data-tour-id="${tour.id}">
               <option value="">Chọn hướng dẫn viên</option>
               ${guidesData
                 .map(
                   (guide) => `
-                    <option value="${guide.id}">
+                    <option value="${guide.id}" ${tour.guideId === guide.id ? "selected" : ""}>
                       ${guide.name}
                     </option>
                   `
@@ -176,8 +180,8 @@ function renderTours(data) {
 
             <button
               class="btn-action"
-              data-action="assign"
-              data-booking-id="${tour.bookingId}"
+              data-action="assign-tour"
+              data-tour-id="${tour.id}"
             >
               ${isAssigned ? "Cập nhật" : "Phân công"}
             </button>
@@ -197,7 +201,7 @@ function getFilteredData() {
   const input = document.getElementById("globalSearchInput");
   const keyword = (input?.value || "").trim().toLowerCase();
 
-  const filteredGuides = guidesData.filter((guide) => {
+  let filteredGuides = guidesData.filter((guide) => {
     return (
       guide.name.toLowerCase().includes(keyword) ||
       String(guide.languages).toLowerCase().includes(keyword) ||
@@ -206,16 +210,25 @@ function getFilteredData() {
     );
   });
 
-  const filteredTours = bookingsData.filter((tour) => {
+  let filteredTours = toursData.filter((tour) => {
     return (
       tour.title.toLowerCase().includes(keyword) ||
       tour.destination.toLowerCase().includes(keyword) ||
       formatDateVN(tour.departureDate).toLowerCase().includes(keyword) ||
       String(tour.guests).includes(keyword) ||
       String(tour.assignedGuideName).toLowerCase().includes(keyword) ||
-      getStatusText(tour.status).toLowerCase().includes(keyword)
+      getTourStatusText(tour.status).toLowerCase().includes(keyword)
     );
   });
+
+  if (selectedTourIdFromUrl) {
+    const selectedId = Number(selectedTourIdFromUrl);
+    filteredTours = filteredTours.sort((a, b) => {
+      if (a.id === selectedId) return -1;
+      if (b.id === selectedId) return 1;
+      return 0;
+    });
+  }
 
   return { filteredGuides, filteredTours };
 }
@@ -226,8 +239,8 @@ function updateView() {
   renderTours(filteredTours);
 }
 
-async function handleAssign(bookingId) {
-  const select = document.querySelector(`select[data-booking-id="${bookingId}"]`);
+async function handleAssign(tourId) {
+  const select = document.querySelector(`select[data-tour-id="${tourId}"]`);
   if (!select) return;
 
   const guideId = Number(select.value);
@@ -238,10 +251,9 @@ async function handleAssign(bookingId) {
   }
 
   try {
-    await assignGuideToBooking(bookingId, guideId);
-
+    await assignGuideToTour(tourId, guideId);
     await loadPageData();
-    alert("Phân công hướng dẫn viên thành công.");
+    alert("Phân công hướng dẫn viên cho tour thành công.");
   } catch (error) {
     console.error("Lỗi phân công:", error);
     alert(error.message || "Có lỗi xảy ra khi phân công.");
@@ -256,30 +268,36 @@ function bindEvents() {
   }
 
   document.addEventListener("click", function (event) {
-    const button = event.target.closest("[data-action='assign']");
+    const button = event.target.closest("[data-action='assign-tour']");
     if (!button) return;
 
-    const bookingId = Number(button.getAttribute("data-booking-id"));
-    if (!bookingId) return;
+    const tourId = Number(button.getAttribute("data-tour-id"));
+    if (!tourId) return;
 
-    handleAssign(bookingId);
+    handleAssign(tourId);
   });
 }
 
 async function loadPageData() {
-  const [guides, bookings] = await Promise.all([
+  const [guides, tours] = await Promise.all([
     fetchGuides(),
-    fetchBookings()
+    fetchToursForAssignment()
   ]);
 
   guidesData = guides;
-  bookingsData = bookings.filter((item) => item.status !== "cancelled");
+  toursData = tours.filter((item) => item.status !== "archived");
 
   updateView();
 }
 
+function readTourIdFromUrl() {
+  const params = new URLSearchParams(window.location.search);
+  selectedTourIdFromUrl = params.get("tourId");
+}
+
 async function initPage() {
   try {
+    readTourIdFromUrl();
     await loadPageData();
     bindEvents();
   } catch (error) {
