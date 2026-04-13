@@ -1,60 +1,36 @@
-const currentTours = [
-  {
-    id: 1,
-    name: "Tour Hạ Long 3 ngày 2 đêm",
-    customers: 12,
-    startDate: "25/03/2026",
-    endDate: "27/03/2026",
-    duration: "3 ngày 2 đêm",
-    location: "Quảng Ninh",
-    status: "active",
-  },
-  {
-    id: 2,
-    name: "Tour Sapa - Fansipan",
-    customers: 15,
-    startDate: "28/03/2026",
-    endDate: "30/03/2026",
-    duration: "3 ngày 2 đêm",
-    location: "Lào Cai",
-    status: "active",
-  },
-  {
-    id: 3,
-    name: "Tour Phú Quốc 4N3Đ",
-    customers: 20,
-    startDate: "01/04/2026",
-    endDate: "04/04/2026",
-    duration: "4 ngày 3 đêm",
-    location: "Kiên Giang",
-    status: "active",
-  },
-  {
-    id: 4,
-    name: "Tour Đà Nẵng - Hội An",
-    customers: 18,
-    startDate: "20/03/2026",
-    endDate: "22/03/2026",
-    duration: "3 ngày 2 đêm",
-    location: "Đà Nẵng",
-    status: "active",
-  },
-  {
-    id: 5,
-    name: "Tour Nha Trang 3N2Đ",
-    customers: 16,
-    startDate: "10/04/2026",
-    endDate: "12/04/2026",
-    duration: "3 ngày 2 đêm",
-    location: "Khánh Hòa",
-    status: "active",
-  },
-];
+let currentTours = [];
+
+function formatDateVN(dateString) {
+  if (!dateString) return "--/--/----";
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return "--/--/----";
+  return date.toLocaleDateString("vi-VN");
+}
 
 function renderTourCount(count) {
   const tourCountText = document.getElementById("tourCountText");
   if (!tourCountText) return;
   tourCountText.textContent = `Bạn đang có ${count} tour đang hoạt động`;
+}
+
+async function fetchCurrentTours(keyword = "") {
+  const response = await fetch(
+    `/api/guide/current-tours?keyword=${encodeURIComponent(keyword)}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    }
+  );
+
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(result.message || "Không thể tải danh sách tour");
+  }
+
+  return Array.isArray(result.data) ? result.data : [];
 }
 
 function renderTours(keyword = "") {
@@ -85,44 +61,44 @@ function renderTours(keyword = "") {
   tourGrid.innerHTML = filteredTours
     .map(
       (tour) => `
-    <div class="tour-card">
-      <div class="tour-card-top">
-        <h4 class="tour-title">${tour.name}</h4>
-        <span class="tour-status">Đang hoạt động</span>
-      </div>
+        <div class="tour-card">
+          <div class="tour-card-top">
+            <h4 class="tour-title">${tour.name}</h4>
+            <span class="tour-status">${tour.statusText || "Đang hoạt động"}</span>
+          </div>
 
-      <div class="tour-info-list">
-        <div class="tour-info-item">
-          <span class="tour-info-icon">👥</span>
-          <span><strong>${tour.customers}</strong> khách hàng</span>
+          <div class="tour-info-list">
+            <div class="tour-info-item">
+              <span class="tour-info-icon">👥</span>
+              <span><strong>${tour.customers}</strong> khách hàng</span>
+            </div>
+
+            <div class="tour-info-item">
+              <span class="tour-info-icon">📅</span>
+              <span>${formatDateVN(tour.startDate)} - ${formatDateVN(tour.endDate)}</span>
+            </div>
+
+            <div class="tour-info-item">
+              <span class="tour-info-icon">🕒</span>
+              <span>${tour.duration}</span>
+            </div>
+
+            <div class="tour-info-item">
+              <span class="tour-info-icon">📍</span>
+              <span>${tour.location}</span>
+            </div>
+          </div>
+
+          <div class="tour-actions">
+            <button class="btn-detail" data-action="detail" data-id="${tour.id}">
+              Xem chi tiết
+            </button>
+            <button class="btn-contact" data-action="contact" data-id="${tour.id}">
+              Liên hệ khách
+            </button>
+          </div>
         </div>
-
-        <div class="tour-info-item">
-          <span class="tour-info-icon">📅</span>
-          <span>${tour.startDate} - ${tour.endDate}</span>
-        </div>
-
-        <div class="tour-info-item">
-          <span class="tour-info-icon">🕒</span>
-          <span>${tour.duration}</span>
-        </div>
-
-        <div class="tour-info-item">
-          <span class="tour-info-icon">📍</span>
-          <span>${tour.location}</span>
-        </div>
-      </div>
-
-      <div class="tour-actions">
-        <button class="btn-detail" data-action="detail" data-id="${tour.id}">
-          Xem chi tiết
-        </button>
-        <button class="btn-contact" data-action="contact" data-id="${tour.id}">
-          Liên hệ khách
-        </button>
-      </div>
-    </div>
-  `,
+      `
     )
     .join("");
 }
@@ -130,6 +106,7 @@ function renderTours(keyword = "") {
 function bindEvents() {
   const searchInput = document.getElementById("tourSearchInput");
   const logoutBtn = document.getElementById("logoutBtn");
+  const searchBtn = document.getElementById("searchBtn");
 
   if (searchInput) {
     searchInput.addEventListener("input", function () {
@@ -137,9 +114,18 @@ function bindEvents() {
     });
   }
 
+  if (searchBtn) {
+    searchBtn.addEventListener("click", function () {
+      const keyword = document.getElementById("tourSearchInput")?.value || "";
+      renderTours(keyword);
+    });
+  }
+
   if (logoutBtn) {
     logoutBtn.addEventListener("click", function () {
-      alert("Đăng xuất");
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      window.location.href = "http://localhost:3000/login";
     });
   }
 
@@ -151,24 +137,38 @@ function bindEvents() {
     const id = target.getAttribute("data-id");
 
     if (action === "detail") {
-      alert("Xem chi tiết tour ID: " + id);
+      window.location.href = `lichtrinh.html?tourId=${id}`;
     }
 
     if (action === "contact") {
-      alert("Liên hệ khách của tour ID: " + id);
+      alert("Chức năng liên hệ khách sẽ làm ở bước tiếp theo. Tour ID: " + id);
     }
   });
-  const searchBtn = document.getElementById("searchBtn");
+}
 
-  if (searchBtn) {
-    searchBtn.addEventListener("click", function () {
-      const keyword = document.getElementById("tourSearchInput").value;
-      renderTours(keyword);
-    });
+async function initPage() {
+  try {
+    currentTours = await fetchCurrentTours("");
+    renderTours("");
+    bindEvents();
+  } catch (error) {
+    console.error("Lỗi tải tour đang dẫn:", error);
+
+    const tourGrid = document.getElementById("tourGrid");
+    const tourCountText = document.getElementById("tourCountText");
+
+    if (tourCountText) {
+      tourCountText.textContent = "Không tải được dữ liệu tour";
+    }
+
+    if (tourGrid) {
+      tourGrid.innerHTML = `
+        <div class="empty-state">
+          Không tải được danh sách tour đang dẫn.
+        </div>
+      `;
+    }
   }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  renderTours();
-  bindEvents();
-});
+document.addEventListener("DOMContentLoaded", initPage);
