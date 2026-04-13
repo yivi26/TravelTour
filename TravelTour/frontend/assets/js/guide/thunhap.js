@@ -1,142 +1,137 @@
-const incomeStats = [
-  {
-    icon: "💵",
-    iconClass: "icon-green",
-    label: "Tổng thu nhập",
-    value: "260.5M",
-    note: "+12.5% so với tháng trước",
-    noteClass: "positive",
-  },
-  {
-    icon: "📅",
-    iconClass: "icon-blue",
-    label: "Thu nhập tháng này",
-    value: "45.5M",
-    note: "Từ 5 tour đã hoàn thành",
-    noteClass: "",
-  },
-  {
-    icon: "💰",
-    iconClass: "icon-yellow",
-    label: "Thu nhập trung bình/tour",
-    value: "9.1M",
-    note: "Dựa trên 6 tháng gần nhất",
-    noteClass: "",
-  },
-];
-
-const incomeDataMap = {
-  3: [
-    { month: "T4", income: 38 },
-    { month: "T5", income: 52 },
-    { month: "T6", income: 48 },
-  ],
-  6: [
-    { month: "T1", income: 35 },
-    { month: "T2", income: 42 },
-    { month: "T3", income: 45.5 },
-    { month: "T4", income: 38 },
-    { month: "T5", income: 52 },
-    { month: "T6", income: 48 },
-  ],
-  12: [
-    { month: "T7", income: 28 },
-    { month: "T8", income: 32 },
-    { month: "T9", income: 34 },
-    { month: "T10", income: 36 },
-    { month: "T11", income: 30 },
-    { month: "T12", income: 33 },
-    { month: "T1", income: 35 },
-    { month: "T2", income: 42 },
-    { month: "T3", income: 45.5 },
-    { month: "T4", income: 38 },
-    { month: "T5", income: 52 },
-    { month: "T6", income: 48 },
-  ],
-};
-
-const recentTransactions = [
-  {
-    id: 1,
-    tour: "Tour Hạ Long 3N2Đ",
-    date: "15/03/2026",
-    amount: "12.5M",
-    status: "Đã thanh toán",
-  },
-  {
-    id: 2,
-    tour: "Tour Sapa - Fansipan",
-    date: "10/03/2026",
-    amount: "15.0M",
-    status: "Đã thanh toán",
-  },
-  {
-    id: 3,
-    tour: "Tour Phú Quốc 4N3Đ",
-    date: "05/03/2026",
-    amount: "18.0M",
-    status: "Đã thanh toán",
-  },
-];
-
 let barChartInstance = null;
 let lineChartInstance = null;
+let incomeApiData = null;
 
-function renderIncomeStats() {
+function formatMoneyShort(value) {
+  const num = Number(value || 0);
+  if (num >= 1000000) {
+    return `${(num / 1000000).toFixed(1)}M`;
+  }
+  return new Intl.NumberFormat("vi-VN").format(num);
+}
+
+function formatMoneyMillion(value) {
+  return Number((Number(value || 0) / 1000000).toFixed(1));
+}
+
+function formatDateVN(dateString) {
+  if (!dateString) return "--/--/----";
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return "--/--/----";
+  return date.toLocaleDateString("vi-VN");
+}
+
+async function fetchIncomeData(range = 6) {
+  const response = await fetch(`/api/guide/income?range=${encodeURIComponent(range)}`, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json"
+    }
+  });
+
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(result.message || "Không thể tải dữ liệu thu nhập");
+  }
+
+  return result.data || {};
+}
+
+function renderIncomeStats(data) {
   const container = document.getElementById("incomeStatsGrid");
   if (!container) return;
 
-  container.innerHTML = incomeStats
+  const stats = [
+    {
+      icon: "💵",
+      iconClass: "icon-green",
+      label: "Tổng thu nhập",
+      value: formatMoneyShort(data?.stats?.totalIncome || 0),
+      note: "Tổng thu nhập từ các tour đã được giao",
+      noteClass: ""
+    },
+    {
+      icon: "📅",
+      iconClass: "icon-blue",
+      label: "Thu nhập tháng này",
+      value: formatMoneyShort(data?.stats?.monthlyIncome || 0),
+      note: `Từ ${data?.stats?.completedTours || 0} tour đã hoàn thành`,
+      noteClass: ""
+    },
+    {
+      icon: "💰",
+      iconClass: "icon-yellow",
+      label: "Thu nhập trung bình/tour",
+      value: formatMoneyShort(data?.stats?.averageIncomePerTour || 0),
+      note: "Dựa trên dữ liệu các tour gần đây",
+      noteClass: ""
+    }
+  ];
+
+  container.innerHTML = stats
     .map(
       (item) => `
-    <div class="income-stat-card">
-      <div class="income-stat-top">
-        <div class="income-stat-icon-box ${item.iconClass}">
-          ${item.icon}
+        <div class="income-stat-card">
+          <div class="income-stat-top">
+            <div class="income-stat-icon-box ${item.iconClass}">
+              ${item.icon}
+            </div>
+            <div>
+              <p class="income-stat-label">${item.label}</p>
+              <p class="income-stat-value">${item.value}</p>
+            </div>
+          </div>
+          <p class="income-stat-note ${item.noteClass}">${item.note}</p>
         </div>
-        <div>
-          <p class="income-stat-label">${item.label}</p>
-          <p class="income-stat-value">${item.value}</p>
-        </div>
-      </div>
-      <p class="income-stat-note ${item.noteClass}">${item.note}</p>
-    </div>
-  `,
+      `
     )
     .join("");
 }
 
-function renderTransactions() {
+function renderTransactions(data) {
   const container = document.getElementById("transactionList");
   if (!container) return;
 
-  container.innerHTML = recentTransactions
+  const transactions = Array.isArray(data?.recentTransactions)
+    ? data.recentTransactions
+    : [];
+
+  if (!transactions.length) {
+    container.innerHTML = `
+      <div class="empty-state">Chưa có giao dịch gần đây.</div>
+    `;
+    return;
+  }
+
+  container.innerHTML = transactions
     .map(
       (item) => `
-    <div class="transaction-item">
-      <div class="transaction-left">
-        <p>${item.tour}</p>
-        <p class="transaction-date">${item.date}</p>
-      </div>
-      <div class="transaction-right">
-        <div class="transaction-amount">${item.amount}</div>
-        <span class="transaction-status">${item.status}</span>
-      </div>
-    </div>
-  `,
+        <div class="transaction-item">
+          <div class="transaction-left">
+            <p>${item.tour}</p>
+            <p class="transaction-date">${formatDateVN(item.date)}</p>
+          </div>
+          <div class="transaction-right">
+            <div class="transaction-amount">${formatMoneyShort(item.amount)}</div>
+            <span class="transaction-status">${item.status}</span>
+          </div>
+        </div>
+      `
     )
     .join("");
 }
 
-function buildCharts(monthRange = 6) {
-  const data = incomeDataMap[monthRange] || incomeDataMap[6];
-  const labels = data.map((item) => item.month);
-  const values = data.map((item) => item.income);
+function buildCharts(data) {
+  const monthlyIncome = Array.isArray(data?.monthlyIncome) ? data.monthlyIncome : [];
+
+  const labels = monthlyIncome.map((item) => `T${item.monthNumber}`);
+  const values = monthlyIncome.map((item) => formatMoneyMillion(item.income));
 
   const barCtx = document.getElementById("incomeBarChart");
   const lineCtx = document.getElementById("incomeLineChart");
 
-  if (!barCtx || !lineCtx) return;
+  if (!barCtx || !lineCtx || typeof Chart === "undefined") return;
 
   if (barChartInstance) {
     barChartInstance.destroy();
@@ -156,41 +151,41 @@ function buildCharts(monthRange = 6) {
           data: values,
           backgroundColor: "#10b981",
           borderRadius: 8,
-          maxBarThickness: 48,
-        },
-      ],
+          maxBarThickness: 48
+        }
+      ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          display: false,
+          display: false
         },
         tooltip: {
           callbacks: {
             label: function (context) {
               return `${context.raw}M VNĐ`;
-            },
-          },
-        },
+            }
+          }
+        }
       },
       scales: {
         x: {
           grid: {
-            display: false,
-          },
+            display: false
+          }
         },
         y: {
           beginAtZero: true,
           ticks: {
             callback: function (value) {
               return value + "M";
-            },
-          },
-        },
-      },
-    },
+            }
+          }
+        }
+      }
+    }
   });
 
   lineChartInstance = new Chart(lineCtx, {
@@ -208,41 +203,41 @@ function buildCharts(monthRange = 6) {
           pointRadius: 5,
           pointBackgroundColor: "#10b981",
           pointBorderColor: "#ffffff",
-          pointBorderWidth: 2,
-        },
-      ],
+          pointBorderWidth: 2
+        }
+      ]
     },
     options: {
       responsive: true,
       maintainAspectRatio: false,
       plugins: {
         legend: {
-          display: false,
+          display: false
         },
         tooltip: {
           callbacks: {
             label: function (context) {
               return `${context.raw}M VNĐ`;
-            },
-          },
-        },
+            }
+          }
+        }
       },
       scales: {
         x: {
           grid: {
-            display: false,
-          },
+            display: false
+          }
         },
         y: {
           beginAtZero: true,
           ticks: {
             callback: function (value) {
               return value + "M";
-            },
-          },
-        },
-      },
-    },
+            }
+          }
+        }
+      }
+    }
   });
 }
 
@@ -251,21 +246,49 @@ function bindEvents() {
   const logoutBtn = document.getElementById("logoutBtn");
 
   if (rangeSelect) {
-    rangeSelect.addEventListener("change", function () {
-      buildCharts(Number(this.value));
+    rangeSelect.addEventListener("change", async function () {
+      try {
+        incomeApiData = await fetchIncomeData(Number(this.value));
+        renderIncomeStats(incomeApiData);
+        renderTransactions(incomeApiData);
+        buildCharts(incomeApiData);
+      } catch (error) {
+        console.error("Lỗi đổi khoảng thời gian:", error);
+        alert(error.message || "Không thể tải dữ liệu thu nhập");
+      }
     });
   }
 
   if (logoutBtn) {
     logoutBtn.addEventListener("click", function () {
-      alert("Đăng xuất");
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      window.location.href = "http://localhost:3000/login";
     });
   }
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  renderIncomeStats();
-  renderTransactions();
-  buildCharts(6);
-  bindEvents();
-});
+async function initPage() {
+  try {
+    incomeApiData = await fetchIncomeData(6);
+    renderIncomeStats(incomeApiData);
+    renderTransactions(incomeApiData);
+    buildCharts(incomeApiData);
+    bindEvents();
+  } catch (error) {
+    console.error("Lỗi tải dữ liệu thu nhập:", error);
+
+    const statsGrid = document.getElementById("incomeStatsGrid");
+    const transactionList = document.getElementById("transactionList");
+
+    if (statsGrid) {
+      statsGrid.innerHTML = `<div class="empty-state">Không tải được thống kê thu nhập.</div>`;
+    }
+
+    if (transactionList) {
+      transactionList.innerHTML = `<div class="empty-state">Không tải được giao dịch gần đây.</div>`;
+    }
+  }
+}
+
+document.addEventListener("DOMContentLoaded", initPage);
