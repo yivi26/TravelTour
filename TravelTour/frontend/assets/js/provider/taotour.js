@@ -52,7 +52,6 @@ document.addEventListener("DOMContentLoaded", () => {
   const publishTourBtn = document.getElementById("publishTourBtn");
   const saveDraftBtn = document.getElementById("saveDraftBtn");
   const cancelCreateTourBtn = document.getElementById("cancelCreateTourBtn");
-  
 
   const requiredBasicInfo = document.getElementById("requiredBasicInfo");
   const requiredCoverImage = document.getElementById("requiredCoverImage");
@@ -62,6 +61,9 @@ document.addEventListener("DOMContentLoaded", () => {
   const basePriceInput = document.getElementById("tourBasePrice");
   const salePriceInput = document.getElementById("tourSalePrice");
   const discountPercentInput = document.getElementById("discountPercent");
+  const taxPercentInput = document.getElementById("tourTaxPercent");
+  const taxInput = document.getElementById("tourTax");
+  const finalPriceInput = document.getElementById("tourFinalPrice");
 
   const meetingPointInput = document.getElementById("meetingPoint");
 
@@ -101,6 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     renderGalleryPreview();
+    calculateTaxAndFinalPrice();
     updateFormProgress();
   }
 
@@ -147,9 +150,20 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = "./tour_management.html";
     });
 
-    basePriceInput?.addEventListener("input", calculateSalePriceFromDiscount);
-    discountPercentInput?.addEventListener("input", calculateSalePriceFromDiscount);
-    salePriceInput?.addEventListener("input", syncDiscountFromSalePrice);
+    basePriceInput?.addEventListener("input", () => {
+      calculateSalePriceFromDiscount();
+      calculateTaxAndFinalPrice();
+    });
+
+    discountPercentInput?.addEventListener("input", () => {
+      calculateSalePriceFromDiscount();
+      calculateTaxAndFinalPrice();
+    });
+
+    salePriceInput?.addEventListener("input", () => {
+      syncDiscountFromSalePrice();
+      calculateTaxAndFinalPrice();
+    });
 
     document.addEventListener("input", updateFormProgress);
     document.addEventListener("change", updateFormProgress);
@@ -160,47 +174,48 @@ document.addEventListener("DOMContentLoaded", () => {
         searchAddress(this.value);
       }, 500)
     );
+    taxPercentInput?.addEventListener("input", () => {
+      calculateTaxAndFinalPrice();
+    });
 
     importExcelBtn?.addEventListener("click", () => {
       excelFileInput?.click();
     });
 
     excelFileInput?.addEventListener("change", handleExcelFileChange);
-  }
-  showCancelPolicyBtn?.addEventListener("click", () => {
-  const cancelPolicyInput = document.getElementById("cancelPolicy");
-  if (!cancelPolicyInput) return;
 
-  // nếu đang có nội dung → xóa (thu lại)
-  if (cancelPolicyInput.value.trim() !== "") {
-    cancelPolicyInput.value = "";
-  } else {
-    // nếu đang trống → đổ nội dung
-    cancelPolicyInput.value = `- Hủy trước 7 ngày: hoàn 100% giá tour
+    showCancelPolicyBtn?.addEventListener("click", () => {
+      const cancelPolicyInput = document.getElementById("cancelPolicy");
+      if (!cancelPolicyInput) return;
+
+      if (cancelPolicyInput.value.trim() !== "") {
+        cancelPolicyInput.value = "";
+      } else {
+        cancelPolicyInput.value = `- Hủy trước 7 ngày: hoàn 100% giá tour
 - Hủy trước 3 - 6 ngày: hoàn 50% giá tour
 - Hủy trước 1 - 2 ngày: hoàn 30% giá tour
 - Hủy trong ngày khởi hành: không hoàn phí`;
-  }
+      }
 
-  updateFormProgress();
-});
+      updateFormProgress();
+    });
 
-showTermsBtn?.addEventListener("click", () => {
-  const termsConditionsInput = document.getElementById("termsConditions");
-  if (!termsConditionsInput) return;
+    showTermsBtn?.addEventListener("click", () => {
+      const termsConditionsInput = document.getElementById("termsConditions");
+      if (!termsConditionsInput) return;
 
-  if (termsConditionsInput.value.trim() !== "") {
-    termsConditionsInput.value = "";
-  } else {
-    termsConditionsInput.value = `- Quý khách cần cung cấp thông tin cá nhân chính xác khi đăng ký tour
+      if (termsConditionsInput.value.trim() !== "") {
+        termsConditionsInput.value = "";
+      } else {
+        termsConditionsInput.value = `- Quý khách cần cung cấp thông tin cá nhân chính xác khi đăng ký tour
 - Công ty không chịu trách nhiệm nếu khách đến trễ giờ khởi hành
 - Lịch trình có thể thay đổi tùy theo điều kiện thời tiết hoặc tình hình thực tế
 - Quý khách tự bảo quản tư trang cá nhân trong suốt chuyến đi`;
+      }
+
+      updateFormProgress();
+    });
   }
-
-  updateFormProgress();
-});
-
 
   function renderCategories() {
     if (!categorySelect) return;
@@ -263,6 +278,14 @@ showTermsBtn?.addEventListener("click", () => {
       setValue("tourMaxCapacity", tour.max_capacity);
       setValue("tourBasePrice", tour.base_price);
       setValue("tourSalePrice", tour.sale_price);
+      setValue(
+        "tourTaxPercent",
+        tour.tax_percent != null && String(tour.tax_percent).trim() !== ""
+          ? tour.tax_percent
+          : 10
+      );
+      setValue("tourTax", tour.tax || 0);
+      setValue("tourFinalPrice", tour.final_price || 0);
       setValue("tourShortDescription", tour.short_description || tour.description);
       setValue("meetingPoint", tour.meeting_point);
       setValue("hotelInfo", tour.hotel_info);
@@ -272,6 +295,7 @@ showTermsBtn?.addEventListener("click", () => {
       setValue("otherNotes", tour.other_notes);
 
       syncDiscountFromSalePrice();
+      calculateTaxAndFinalPrice();
 
       if (highlightList) {
         highlightList.innerHTML = "";
@@ -506,6 +530,17 @@ showTermsBtn?.addEventListener("click", () => {
     });
   }
 
+  function getAppliedPrice() {
+    const basePrice = Number(basePriceInput?.value || 0);
+    const salePrice = Number(salePriceInput?.value || 0);
+
+    if (salePrice > 0 && salePrice < basePrice) {
+      return salePrice;
+    }
+
+    return basePrice;
+  }
+
   function calculateSalePriceFromDiscount() {
     if (!discountPercentInput || !salePriceInput) return;
 
@@ -514,16 +549,22 @@ showTermsBtn?.addEventListener("click", () => {
 
     if (!basePrice || basePrice <= 0) {
       salePriceInput.value = "";
+      calculateTaxAndFinalPrice();
       return;
     }
 
-    if (!discountPercentInput.value.trim()) return;
+    if (!discountPercentInput.value.trim()) {
+      calculateTaxAndFinalPrice();
+      return;
+    }
 
     const normalizedPercent = Math.min(Math.max(discountPercent, 0), 100);
     discountPercentInput.value = normalizedPercent;
 
     const salePrice = Math.round(basePrice * (1 - normalizedPercent / 100));
     salePriceInput.value = salePrice >= 0 ? salePrice : 0;
+
+    calculateTaxAndFinalPrice();
   }
 
   function syncDiscountFromSalePrice() {
@@ -534,13 +575,40 @@ showTermsBtn?.addEventListener("click", () => {
 
     if (!basePrice || basePrice <= 0 || !salePriceInput.value.trim()) {
       discountPercentInput.value = "";
+      calculateTaxAndFinalPrice();
       return;
     }
 
-    if (salePrice > basePrice) return;
+    if (salePrice > basePrice) {
+      calculateTaxAndFinalPrice();
+      return;
+    }
 
     const discountPercent = ((basePrice - salePrice) / basePrice) * 100;
     discountPercentInput.value = Number(discountPercent.toFixed(2));
+
+    calculateTaxAndFinalPrice();
+  }
+
+  function calculateTaxAndFinalPrice() {
+    if (!taxInput || !finalPriceInput) return;
+
+    const appliedPrice = getAppliedPrice();
+    const rawPct = taxPercentInput?.value;
+    const taxPercent =
+      rawPct === "" || rawPct == null ? 10 : Number(rawPct);
+
+    if (!appliedPrice || appliedPrice <= 0) {
+      taxInput.value = 0;
+      finalPriceInput.value = 0;
+      return;
+    }
+
+    const tax = Math.round(appliedPrice * (taxPercent / 100));
+    const finalPrice = appliedPrice + tax;
+
+    taxInput.value = tax;
+    finalPriceInput.value = finalPrice;
   }
 
   function getInputValue(id) {
@@ -620,6 +688,11 @@ showTermsBtn?.addEventListener("click", () => {
     const maxCapacity = Number(getInputValue("tourMaxCapacity"));
     const basePrice = Number(getInputValue("tourBasePrice"));
     const salePrice = Number(getInputValue("tourSalePrice"));
+    const taxPercentRaw = getInputValue("tourTaxPercent");
+    const taxPercent =
+      taxPercentRaw === "" ? 10 : Number(taxPercentRaw);
+    const tax = Number(getInputValue("tourTax"));
+    const finalPrice = Number(getInputValue("tourFinalPrice"));
     const shortDescription = getInputValue("tourShortDescription");
     const meetingPoint = getInputValue("meetingPoint");
     const hotelInfo = getInputValue("hotelInfo");
@@ -632,7 +705,7 @@ showTermsBtn?.addEventListener("click", () => {
     const included = getCheckedValues("includedServices");
     const excluded = getCheckedValues("excludedServices");
     const itineraryItems = getItineraryItems();
-    
+
     return {
       title,
       code,
@@ -645,6 +718,9 @@ showTermsBtn?.addEventListener("click", () => {
       max_capacity: Number.isFinite(maxCapacity) ? maxCapacity : 0,
       base_price: Number.isFinite(basePrice) ? basePrice : 0,
       sale_price: Number.isFinite(salePrice) && salePrice > 0 ? salePrice : 0,
+      tax_percent: Number.isFinite(taxPercent) ? Math.max(0, taxPercent) : 10,
+      tax: Number.isFinite(tax) ? tax : 0,
+      final_price: Number.isFinite(finalPrice) ? finalPrice : 0,
       short_description: shortDescription,
       description: shortDescription,
       meeting_point: meetingPoint,
@@ -717,6 +793,16 @@ showTermsBtn?.addEventListener("click", () => {
       return false;
     }
 
+    if (data.tax < 0) {
+      alert("Thuế không hợp lệ.");
+      return false;
+    }
+
+    if (data.final_price < 0) {
+      alert("Giá cuối cùng không hợp lệ.");
+      return false;
+    }
+
     if (!data.short_description) {
       alert("Vui lòng nhập mô tả ngắn.");
       return false;
@@ -738,61 +824,71 @@ showTermsBtn?.addEventListener("click", () => {
   }
 
   async function submitTour(status) {
-    try {
-      const formData = collectFormData();
+  try {
+    const formData = collectFormData();
 
-      if (!validateFormData(formData, status)) {
-        return;
-      }
-
-      const payload = {
-        ...formData,
-        status
-      };
-
-      console.log(isEditMode ? "Payload cập nhật tour:" : "Payload tạo tour:", payload);
-
-      const url = isEditMode
-        ? `/api/provider/tours/${tourId}`
-        : "/api/provider/tours";
-
-      const method = isEditMode ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const text = await response.text();
-      let result = {};
-
-      try {
-        result = text ? JSON.parse(text) : {};
-      } catch {
-        result = { message: text || "Response không phải JSON" };
-      }
-
-      if (!response.ok) {
-        console.error("CREATE/UPDATE TOUR ERROR:", result);
-        alert(result.error || result.message || "Lưu tour thất bại.");
-        return;
-      }
-
-      alert(
-        isEditMode
-          ? (status === "draft" ? "Lưu cập nhật nháp thành công!" : "Cập nhật tour thành công!")
-          : (status === "draft" ? "Lưu nháp thành công!" : "Xuất bản tour thành công!")
-      );
-
-      window.location.href = "./tour_management.html";
-    } catch (error) {
-      console.error("Lỗi submit tour:", error);
-      alert(isEditMode ? "Có lỗi xảy ra khi cập nhật tour." : "Có lỗi xảy ra khi tạo tour.");
+    if (!validateFormData(formData, status)) {
+      return;
     }
+
+    const payload = {
+      ...formData,
+      status
+    };
+
+    console.log(isEditMode ? "Payload cập nhật tour:" : "Payload tạo tour:", payload);
+
+    const url = isEditMode
+      ? `/api/provider/tours/${tourId}`
+      : "/api/provider/tours";
+
+    const method = isEditMode ? "PUT" : "POST";
+
+    const response = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const text = await response.text();
+    let result = {};
+
+    try {
+      result = text ? JSON.parse(text) : {};
+    } catch {
+      result = { message: text || "Response không phải JSON" };
+    }
+
+    if (!response.ok) {
+      console.error("CREATE/UPDATE TOUR ERROR:", result);
+      alert(result.error || result.message || "Lưu tour thất bại.");
+      return;
+    }
+
+    alert(
+      isEditMode
+        ? (status === "draft" ? "Lưu cập nhật nháp thành công!" : "Cập nhật tour thành công!")
+        : (status === "draft" ? "Lưu nháp thành công!" : "Xuất bản tour thành công!")
+    );
+
+    const savedTourId =
+  result?.data?.id ||
+  result?.tourId ||
+  result?.id ||
+  tourId;
+
+if (status === "active" && savedTourId) {
+  window.location.href = `./guide_assignment.html?tourId=${savedTourId}`;
+} else {
+  window.location.href = "./tour_management.html";
+}
+  } catch (error) {
+    console.error("Lỗi submit tour:", error);
+    alert(isEditMode ? "Có lỗi xảy ra khi cập nhật tour." : "Có lỗi xảy ra khi tạo tour.");
   }
+}
 
   function updateRequiredStatus(element, isDone) {
     if (!element) return;
@@ -957,6 +1053,7 @@ showTermsBtn?.addEventListener("click", () => {
     if (!parsed) return;
 
     const { mainRow, itineraryRows = [], highlightRows = [], includes = [], excludes = [] } = parsed;
+
     if (mainRow) {
       const title = pickRowValue(mainRow, ["title", "ten tour", "ten", "tour name"]);
       const code = pickRowValue(mainRow, ["code", "ma tour", "tour code"]);
@@ -967,6 +1064,7 @@ showTermsBtn?.addEventListener("click", () => {
       const maxCapacity = toNumberOrEmpty(pickRowValue(mainRow, ["max_capacity", "so nguoi", "so cho", "capacity"]));
       const basePrice = toNumberOrEmpty(pickRowValue(mainRow, ["base_price", "gia goc", "gia tour", "base price"]));
       const salePrice = toNumberOrEmpty(pickRowValue(mainRow, ["sale_price", "gia khuyen mai", "sale price"]));
+      const taxPercent = toNumberOrEmpty(pickRowValue(mainRow, ["tax_percent", "vat", "thue", "vat percent"]));
       const shortDescription = pickRowValue(mainRow, ["short_description", "mo ta ngan", "mo ta", "description"]);
       const meetingPoint = pickRowValue(mainRow, ["meeting_point", "diem gap", "meeting point"]);
       const hotelInfo = pickRowValue(mainRow, ["hotel_info", "khach san", "hotel"]);
@@ -984,6 +1082,7 @@ showTermsBtn?.addEventListener("click", () => {
       if (maxCapacity !== "") setValue("tourMaxCapacity", maxCapacity);
       if (basePrice !== "") setValue("tourBasePrice", basePrice);
       if (salePrice !== "") setValue("tourSalePrice", salePrice);
+      if (taxPercent !== "") setValue("tourTaxPercent", taxPercent);
       if (shortDescription) setValue("tourShortDescription", shortDescription);
       if (meetingPoint) setValue("meetingPoint", meetingPoint);
       if (hotelInfo) setValue("hotelInfo", hotelInfo);
@@ -992,7 +1091,6 @@ showTermsBtn?.addEventListener("click", () => {
       if (termsConditions) setValue("termsConditions", termsConditions);
       if (otherNotes) setValue("otherNotes", otherNotes);
 
-      // category_id: cho phép nhập ID hoặc tên danh mục
       const categoryRaw = pickRowValue(mainRow, ["category_id", "danh muc id", "category", "danh muc"]);
       if (categoryRaw) {
         const categoryId = Number(categoryRaw);
@@ -1006,10 +1104,10 @@ showTermsBtn?.addEventListener("click", () => {
       }
     }
 
-    // highlights: hỗ trợ 1 cột hoặc list
     const highlightFromMain = mainRow
       ? splitList(pickRowValue(mainRow, ["highlights", "diem noi bat", "highlight"]))
       : [];
+
     const highlightValues = [
       ...highlightFromMain,
       ...highlightRows
@@ -1017,12 +1115,12 @@ showTermsBtn?.addEventListener("click", () => {
         .map(s => s.trim())
         .filter(Boolean)
     ];
+
     if (highlightList && highlightValues.length > 0) {
       highlightList.innerHTML = "";
       highlightValues.forEach(v => addHighlightRow(v));
     }
 
-    // itinerary: hỗ trợ sheet có cột day/title/description hoặc cột "itinerary" dạng text
     if (itineraryList && itineraryRows.length > 0) {
       itineraryList.innerHTML = "";
       itineraryRows
@@ -1041,7 +1139,6 @@ showTermsBtn?.addEventListener("click", () => {
       reindexItineraryDays();
     }
 
-    // dịch vụ: set checkbox theo text
     const includesFromMain = mainRow ? splitList(pickRowValue(mainRow, ["includes", "dich vu bao gom", "included"])) : [];
     const excludesFromMain = mainRow ? splitList(pickRowValue(mainRow, ["excludes", "dich vu khong bao gom", "excluded"])) : [];
     const includesAll = [...includesFromMain, ...includes].map(s => normalizeExcelHeader(s));
@@ -1052,6 +1149,7 @@ showTermsBtn?.addEventListener("click", () => {
         input.checked = includesAll.includes(normalizeExcelHeader(input.value));
       });
     }
+
     if (excludesAll.length > 0) {
       document.querySelectorAll('input[name="excludedServices"]').forEach(input => {
         input.checked = excludesAll.includes(normalizeExcelHeader(input.value));
@@ -1059,6 +1157,7 @@ showTermsBtn?.addEventListener("click", () => {
     }
 
     syncDiscountFromSalePrice();
+    calculateTaxAndFinalPrice();
     updateFormProgress();
   }
 
@@ -1077,7 +1176,7 @@ showTermsBtn?.addEventListener("click", () => {
 
     parsedSheets.forEach(s => sheets.push({ name: s.name, rows: s.rows, headers: s.headers }));
 
-    const findSheet = (candidates) => {
+    const findSheet = candidates => {
       for (const c of candidates) {
         const norm = normalizeExcelHeader(c);
         const found = parsedSheets.find(s => s.normalizedName === norm);

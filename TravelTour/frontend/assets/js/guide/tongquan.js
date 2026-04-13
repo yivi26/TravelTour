@@ -142,13 +142,16 @@ function renderQuickActions() {
 }
 
 function bindEvents() {
-  const logoutBtn = document.getElementById("logoutBtn");
+if (logoutBtn) {
+  logoutBtn.addEventListener("click", function () {
+    // Xóa session
+    localStorage.removeItem("user");
+    localStorage.removeItem("token");
 
-  if (logoutBtn) {
-    logoutBtn.addEventListener("click", function () {
-      alert("Đăng xuất");
-    });
-  }
+    // Redirect về login đúng URL của bạn
+    window.location.href = "http://localhost:3000/login";
+  });
+}
 
   document.addEventListener("click", function (event) {
     const button = event.target.closest("[data-action]");

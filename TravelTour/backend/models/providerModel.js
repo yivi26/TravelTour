@@ -21,6 +21,39 @@ function createSlug(text = "") {
     .replace(/-+/g, "-");
 }
 
+function resolvePublicTourPricing(row) {
+  const basePrice = Number(row.base_price || 0);
+  const salePrice = Number(row.sale_price || 0);
+  const appliedPrice = salePrice > 0 && salePrice < basePrice ? salePrice : basePrice;
+  const taxPercent = Math.max(0, Number(row.tax_percent ?? 0));
+  const hasVat = taxPercent > 0;
+
+  let tax = Math.max(0, Number(row.tax ?? 0));
+  let finalPrice = Math.max(0, Number(row.final_price ?? 0));
+
+  if (!hasVat) {
+    return {
+      tax_percent: 0,
+      tax: 0,
+      final_price: finalPrice > 0 ? finalPrice : appliedPrice
+    };
+  }
+
+  if (!tax) {
+    tax = Math.round(appliedPrice * (taxPercent / 100));
+  }
+
+  if (!finalPrice) {
+    finalPrice = appliedPrice + tax;
+  }
+
+  return {
+    tax_percent: taxPercent,
+    tax,
+    final_price: finalPrice
+  };
+}
+
 async function isTourCodeExists(providerId, code, excludeId = null) {
   if (!code) return false;
 
@@ -82,8 +115,11 @@ export async function getToursByProvider(providerId) {
 export async function getTourById(providerId, id) {
   const [rows] = await db.query(
     `
-    SELECT t.*
+    SELECT
+      t.*,
+      g.full_name AS guide_name
     FROM tours t
+    LEFT JOIN users g ON g.id = t.guide_id
     WHERE t.provider_id = ?
       AND t.id = ?
     LIMIT 1
@@ -150,6 +186,9 @@ export async function createTour(providerId, data) {
     longitude,
     base_price,
     sale_price,
+    tax_percent,
+    tax,
+    final_price,
     duration_days,
     duration_text,
     max_capacity,
@@ -221,6 +260,9 @@ export async function createTour(providerId, data) {
         longitude,
         base_price,
         sale_price,
+        tax_percent,
+        tax,
+        final_price,
         duration_days,
         duration_text,
         max_capacity,
@@ -234,9 +276,10 @@ export async function createTour(providerId, data) {
         cancel_policy,
         terms_conditions,
         other_notes,
-        status
+        status,
+        guide_id
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         providerId,
@@ -252,6 +295,9 @@ export async function createTour(providerId, data) {
         longitude ?? null,
         base_price || 0,
         sale_price || 0,
+        Number(tax_percent) >= 0 ? Number(tax_percent) : 0,
+        Number(tax) >= 0 ? Number(tax) : 0,
+        Number(final_price) >= 0 ? Number(final_price) : 0,
         duration_days || 1,
         duration_text || null,
         max_capacity || 1,
@@ -265,7 +311,8 @@ export async function createTour(providerId, data) {
         cancel_policy || null,
         terms_conditions || null,
         other_notes || null,
-        finalStatus
+        finalStatus,
+        null
       ]
     );
 
@@ -334,6 +381,9 @@ export async function updateTour(providerId, id, data) {
     longitude,
     base_price,
     sale_price,
+    tax_percent,
+    tax,
+    final_price,
     duration_days,
     duration_text,
     max_capacity,
@@ -405,6 +455,9 @@ export async function updateTour(providerId, id, data) {
         longitude = ?,
         base_price = ?,
         sale_price = ?,
+        tax_percent = ?,
+        tax = ?,
+        final_price = ?,
         duration_days = ?,
         duration_text = ?,
         max_capacity = ?,
@@ -435,6 +488,9 @@ export async function updateTour(providerId, id, data) {
         longitude ?? null,
         base_price || 0,
         sale_price || 0,
+        Number(tax_percent) >= 0 ? Number(tax_percent) : 0,
+        Number(tax) >= 0 ? Number(tax) : 0,
+        Number(final_price) >= 0 ? Number(final_price) : 0,
         duration_days || 1,
         duration_text || null,
         max_capacity || 1,
@@ -551,7 +607,9 @@ export async function updateBookingStatus(bookingId, status) {
 export async function getGuides(providerId) {
   const [rows] = await db.query(
     `
-    SELECT g.*, u.full_name
+    SELECT
+      g.*,
+      u.full_name
     FROM guides g
     JOIN users u ON g.user_id = u.id
     WHERE g.provider_id = ?
@@ -561,11 +619,97 @@ export async function getGuides(providerId) {
   return rows;
 }
 
-export async function assignGuide(bookingId, guideId) {
-  await db.query(
-    `INSERT INTO guide_assignments (booking_id, guide_id) VALUES (?, ?)`,
-    [bookingId, guideId]
+export async function getToursForGuideAssignment(providerId) {
+  const [rows] = await db.query(
+    `
+    SELECT
+      t.id,
+      t.title,
+      t.location,
+      t.start_date,
+      t.max_capacity,
+      t.status,
+      t.guide_id,
+      u.full_name AS guide_name
+    FROM tours t
+    LEFT JOIN guides g ON g.id = t.guide_id
+    LEFT JOIN users u ON u.id = g.user_id
+    WHERE t.provider_id = ?
+      AND t.status IN ('draft', 'active', 'paused', 'full')
+    ORDER BY
+      CASE WHEN t.start_date IS NULL THEN 1 ELSE 0 END,
+      t.start_date ASC,
+      t.id DESC
+    `,
+    [providerId]
   );
+
+  return rows;
+}
+
+export async function assignGuideToTour(providerId, tourId, guideId) {
+  const [tourRows] = await db.query(
+    `
+    SELECT id
+    FROM tours
+    WHERE id = ?
+      AND provider_id = ?
+    LIMIT 1
+    `,
+    [tourId, providerId]
+  );
+
+  if (!tourRows.length) {
+    throw new Error("Không tìm thấy tour");
+  }
+
+  const [guideRows] = await db.query(
+    `
+    SELECT id
+    FROM guides
+    WHERE id = ?
+      AND provider_id = ?
+    LIMIT 1
+    `,
+    [guideId, providerId]
+  );
+
+  if (!guideRows.length) {
+    throw new Error("Không tìm thấy hướng dẫn viên");
+  }
+
+  await db.query(
+    `
+    UPDATE tours
+    SET guide_id = ?
+    WHERE id = ?
+      AND provider_id = ?
+    `,
+    [guideId, tourId, providerId]
+  );
+
+  const [rows] = await db.query(
+    `
+    SELECT
+      t.id,
+      t.title,
+      t.location,
+      t.start_date,
+      t.max_capacity,
+      t.status,
+      t.guide_id,
+      u.full_name AS guide_name
+    FROM tours t
+    LEFT JOIN guides g ON g.id = t.guide_id
+    LEFT JOIN users u ON u.id = g.user_id
+    WHERE t.id = ?
+      AND t.provider_id = ?
+    LIMIT 1
+    `,
+    [tourId, providerId]
+  );
+
+  return rows[0] || null;
 }
 
 export async function getProviderProfile(providerId) {
@@ -714,7 +858,6 @@ export async function updateProviderProfile(providerId, data) {
   return getProviderProfile(providerId);
 }
 
-/* Các hàm dashboard + public tours giữ nguyên nếu đang chạy ổn */
 export async function getDashboardDataByProvider(providerId) {
   const [[totalToursRow]] = await db.query(
     `SELECT COUNT(*) AS totalTours FROM tours WHERE provider_id = ?`,
@@ -773,6 +916,10 @@ export async function getPublicFeaturedTours(limit = 6) {
       t.latitude,
       t.longitude,
       t.base_price,
+      t.sale_price,
+      t.tax_percent,
+      t.tax,
+      t.final_price,
       t.duration_days,
       t.max_capacity,
       t.thumbnail_url,
@@ -788,7 +935,10 @@ export async function getPublicFeaturedTours(limit = 6) {
     [Number(limit)]
   );
 
-  return rows;
+  return rows.map(row => {
+    const pricing = resolvePublicTourPricing(row);
+    return { ...row, ...pricing };
+  });
 }
 
 export async function getPublicTours(filters = {}) {
@@ -841,6 +991,9 @@ export async function getPublicDiscountedTours(limit = 6) {
       t.location,
       t.base_price,
       t.sale_price,
+      t.tax_percent,
+      t.tax,
+      t.final_price,
       t.thumbnail_url,
       t.start_date,
       t.end_date,
@@ -858,7 +1011,10 @@ export async function getPublicDiscountedTours(limit = 6) {
     [Number(limit)]
   );
 
-  return rows;
+  return rows.map(row => {
+    const pricing = resolvePublicTourPricing(row);
+    return { ...row, ...pricing };
+  });
 }
 
 export async function getPublicTourById(tourId) {
@@ -875,6 +1031,9 @@ export async function getPublicTourById(tourId) {
       t.longitude,
       t.base_price,
       t.sale_price,
+      t.tax_percent,
+      t.tax,
+      t.final_price,
       t.duration_days,
       t.duration_text,
       t.max_capacity,
@@ -904,6 +1063,7 @@ export async function getPublicTourById(tourId) {
   if (!rows.length) return null;
 
   const tour = rows[0];
+  const pricing = resolvePublicTourPricing(tour);
 
   const [imageRows] = await db.query(
     `
@@ -917,6 +1077,7 @@ export async function getPublicTourById(tourId) {
 
   return {
     ...tour,
+    ...pricing,
     cancel_policy: tour.cancel_policy || "",
     terms_conditions: tour.terms_conditions || "",
     other_notes: tour.other_notes || "",

@@ -16,7 +16,16 @@ export async function findUserByEmail(email) {
   return rows[0];
 }
 
-export async function createLocalUser(fullName, email, passwordHash, phone = null) {
+export async function createLocalUser(
+  fullName,
+  email,
+  passwordHash,
+  phone = null,
+  role = "customer"
+) {
+  const allowedRoles = ["customer", "provider", "guide", "admin"];
+  const finalRole = allowedRoles.includes(role) ? role : "customer";
+
   const [result] = await db.query(
     `
     INSERT INTO users (
@@ -31,7 +40,7 @@ export async function createLocalUser(fullName, email, passwordHash, phone = nul
     )
     VALUES (?, ?, ?, ?, ?, ?, ?, NULL)
     `,
-    [email, passwordHash, fullName, phone, "customer", true, false]
+    [email, passwordHash, fullName, phone, finalRole, true, false]
   );
 
   const [rows] = await db.query(
