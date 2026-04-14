@@ -1,4 +1,5 @@
 import db from "../config/db.js";
+import bcrypt from "bcryptjs";
 
 export async function findUserByEmail(email) {
   const [rows] = await db.query(
@@ -121,5 +122,35 @@ export async function updateLastLogin(id) {
     WHERE id = ?
     `,
     [id]
+  );
+}
+
+export async function ensureDefaultAdmin() {
+  const adminEmail = String(process.env.DEFAULT_ADMIN_EMAIL || "admin").trim();
+  const adminPassword = String(process.env.DEFAULT_ADMIN_PASSWORD || "admin1");
+
+  if (!adminEmail || !adminPassword) return;
+
+  const existing = await findUserByEmail(adminEmail);
+  if (existing) return;
+
+  const passwordHash = await bcrypt.hash(adminPassword, 10);
+
+  await db.query(
+    `
+    INSERT INTO users (
+      email,
+      password_hash,
+      full_name,
+      phone,
+      avatar_url,
+      role,
+      is_active,
+      email_verified,
+      last_login_at
+    )
+    VALUES (?, ?, ?, NULL, NULL, 'admin', 1, 1, NULL)
+    `,
+    [adminEmail, passwordHash, "TravelTour Admin"]
   );
 }

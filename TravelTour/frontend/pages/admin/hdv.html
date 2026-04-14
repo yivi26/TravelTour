@@ -246,7 +246,7 @@
           sidebarNav.querySelectorAll(".nav-item").forEach((link) => {
             const linkPath = new URL(
               link.getAttribute("href") || "#",
-              window.location.origin,
+              window.location.href,
             ).pathname;
             link.classList.toggle("active", currentPath === linkPath);
           });
