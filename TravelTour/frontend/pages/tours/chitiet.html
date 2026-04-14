@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Chi tiết tour - TravelTour</title>
 
+    <link rel="stylesheet" href="../../assets/css/navbar.css" />
     <link rel="stylesheet" href="../../assets/css/tours/chitiet.css" />
     <link
       rel="stylesheet"
@@ -113,24 +114,26 @@
       }
     </style>
   </head>
-  <body class="tour-detail-page">
-    <header class="site-header">
-      <div class="site-header__inner">
-        <div class="site-header__left">
-          <a class="brand" href="../../index.html">TravelTour</a>
-          <nav class="site-nav" aria-label="Điều hướng chính">
-            <a class="site-nav__link" href="../../index.html">Trang chủ</a>
-            <a class="site-nav__link site-nav__link--active" href="./dstour.html">Tours</a>
-          </nav>
-        </div>
+  <body class="tour-detail-page has-public-navbar">
+    <nav class="navbar">
+      <div class="container nav-container">
+        <div class="logo">TravelTour</div>
 
-        <div class="site-header__actions">
-          <a class="login-button" href="/login">
-            <span>Đăng xuất</span>
-          </a>
+        <ul class="nav-menu">
+          <li><a href="../../index.html">Trang chủ</a></li>
+          <li><a href="../../index.html#about">Giới thiệu</a></li>
+          <li><a href="./dstour.html">Điểm đến</a></li>
+        </ul>
+
+        <div class="nav-actions">
+          <button type="button" class="btn btn-primary">Đặt tour</button>
+          <button type="button" class="btn btn-outline" id="btnLogout">
+            Đăng xuất
+          </button>
+          <a href="../customer/customer.html" class="user-icon">👤</a>
         </div>
       </div>
-    </header>
+    </nav>
 
     <main class="page-main">
       <div class="detail-shell">

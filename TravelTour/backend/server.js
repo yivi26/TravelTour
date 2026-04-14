@@ -6,8 +6,7 @@ import { fileURLToPath } from "url";
 
 import authRoutes from "./routes/auth.js";
 import providerRoutes from "./routes/provider.js";
-
-dotenv.config();
+import { ensureDefaultAdmin } from "./models/userModel.js";
 
 const app = express();
 
@@ -17,12 +16,17 @@ const app = express();
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
+dotenv.config({ path: path.join(__dirname, ".env") });
+
 /* =========================
    MIDDLEWARE
 ========================= */
 app.use(cors());
 app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true }));
+
+// Tránh log lỗi 404 favicon trong trình duyệt
+app.get("/favicon.ico", (req, res) => res.status(204).end());
 
 /* =========================
    SERVE FILE TĨNH FRONTEND
@@ -108,6 +112,14 @@ app.use((err, req, res, next) => {
 ========================= */
 const PORT = Number(process.env.PORT || 3000);
 
-app.listen(PORT, () => {
-  console.log(`✅ Server chạy tại: http://localhost:${PORT}`);
-});
+(async () => {
+  try {
+    await ensureDefaultAdmin();
+  } catch (err) {
+    console.warn("⚠️ Không seed được admin:", err?.message || err);
+  }
+
+  app.listen(PORT, () => {
+    console.log(`✅ Server chạy tại: http://localhost:${PORT}`);
+  });
+})();

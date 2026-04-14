@@ -1,14 +1,14 @@
 window.quanLyNguoiDungData = {
   nav: [
     { label: "Tổng quan", href: "tongquan.html" },
-    { label: "Quản lý người dùng", href: "quanlinguoidung.html", active: true },
-    { label: "Quản lý nhà cung cấp tour", href: "quanlinhacungcaptour.html" },
+    { label: "Quản lý người dùng", href: "qlinguoidung.html", active: true },
+    { label: "Quản lý nhà cung cấp tour", href: "qlinhacungcap.html" },
     { label: "Quản lý hướng dẫn viên", href: "hdv.html" },
-    { label: "Quản lý tour", href: "#" },
-    { label: "Quản lý booking", href: "#" },
-    { label: "Quản lý đánh giá", href: "#" },
-    { label: "Báo cáo & thống kê", href: "#" },
-    { label: "Cài đặt hệ thống", href: "#" },
+    { label: "Quản lý tour", href: "qlitour.html" },
+    { label: "Quản lý booking", href: "qlibooking.html" },
+    { label: "Quản lý đánh giá", href: "qlidanhgia.html" },
+    { label: "Báo cáo & thống kê", href: "baocao.html" },
+    { label: "Cài đặt hệ thống", href: "caidat.html" },
   ],
   user: { name: "Admin User", email: "admin@traveltour.vn", initials: "AD" },
   stats: [

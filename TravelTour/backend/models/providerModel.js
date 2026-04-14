@@ -22,25 +22,9 @@ function createSlug(text = "") {
 }
 
 async function isTourCodeExists(providerId, code, excludeId = null) {
-  if (!code) return false;
-
-  let sql = `
-    SELECT id
-    FROM tours
-    WHERE provider_id = ?
-      AND code = ?
-  `;
-  const params = [providerId, code];
-
-  if (excludeId) {
-    sql += ` AND id <> ? `;
-    params.push(excludeId);
-  }
-
-  sql += ` LIMIT 1 `;
-
-  const [rows] = await db.query(sql, params);
-  return rows.length > 0;
+  // Current DB schema (database_schema.sql) does not have tours.code column.
+  // Keep this helper as a no-op for backward compatibility with existing controller logic.
+  return false;
 }
 
 async function isTourSlugExists(providerId, slug, excludeId = null) {
@@ -145,13 +129,10 @@ export async function createTour(providerId, data) {
     description,
     short_description,
     location,
-    meeting_point,
     latitude,
     longitude,
     base_price,
-    sale_price,
     duration_days,
-    duration_text,
     max_capacity,
     thumbnail_url,
     includes,
@@ -160,15 +141,8 @@ export async function createTour(providerId, data) {
     category_id,
     itinerary,
     gallery_images,
-    highlights,
-    start_date,
-    end_date,
     code,
-    hotel_info,
-    transport_info,
-    cancel_policy,
-    terms_conditions,
-    other_notes
+    highlights
   } = data;
 
   const finalStatus = ["draft", "active", "paused", "archived", "full"].includes(status)
@@ -178,10 +152,6 @@ export async function createTour(providerId, data) {
   let finalSlug = slug || createSlug(title);
   if (!finalSlug) {
     finalSlug = `tour-${Date.now()}`;
-  }
-
-  if (await isTourCodeExists(providerId, code)) {
-    throw new Error("Mã tour đã tồn tại");
   }
 
   if (await isTourSlugExists(providerId, finalSlug)) {
@@ -197,9 +167,6 @@ export async function createTour(providerId, data) {
   const finalExcludes =
     Array.isArray(excludes) && excludes.length > 0 ? JSON.stringify(excludes) : null;
 
-  const finalHighlights =
-    Array.isArray(highlights) && highlights.length > 0 ? JSON.stringify(highlights) : null;
-
   const conn = await db.getConnection();
 
   try {
@@ -211,60 +178,36 @@ export async function createTour(providerId, data) {
         provider_id,
         title,
         slug,
-        code,
         description,
-        highlights,
         itinerary,
         location,
-        meeting_point,
         latitude,
         longitude,
         base_price,
-        sale_price,
         duration_days,
-        duration_text,
         max_capacity,
         thumbnail_url,
         includes,
         excludes,
-        start_date,
-        end_date,
-        hotel_info,
-        transport_info,
-        cancel_policy,
-        terms_conditions,
-        other_notes,
         status
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         providerId,
         title || null,
         finalSlug,
-        code || null,
         short_description || description || null,
-        finalHighlights,
         finalItinerary,
         location || null,
-        meeting_point || null,
         latitude ?? null,
         longitude ?? null,
         base_price || 0,
-        sale_price || 0,
         duration_days || 1,
-        duration_text || null,
         max_capacity || 1,
         thumbnail_url || null,
         finalIncludes,
         finalExcludes,
-        start_date || null,
-        end_date || null,
-        hotel_info || null,
-        transport_info || null,
-        cancel_policy || null,
-        terms_conditions || null,
-        other_notes || null,
         finalStatus
       ]
     );
@@ -329,13 +272,10 @@ export async function updateTour(providerId, id, data) {
     description,
     short_description,
     location,
-    meeting_point,
     latitude,
     longitude,
     base_price,
-    sale_price,
     duration_days,
-    duration_text,
     max_capacity,
     thumbnail_url,
     includes,
@@ -344,15 +284,8 @@ export async function updateTour(providerId, id, data) {
     category_id,
     itinerary,
     gallery_images,
-    highlights,
-    start_date,
-    end_date,
     code,
-    hotel_info,
-    transport_info,
-    cancel_policy,
-    terms_conditions,
-    other_notes
+    highlights
   } = data;
 
   const finalStatus = ["draft", "active", "paused", "archived", "full"].includes(status)
@@ -362,10 +295,6 @@ export async function updateTour(providerId, id, data) {
   let finalSlug = slug || createSlug(title);
   if (!finalSlug) {
     finalSlug = `tour-${id}`;
-  }
-
-  if (await isTourCodeExists(providerId, code, id)) {
-    throw new Error("Mã tour đã tồn tại");
   }
 
   if (await isTourSlugExists(providerId, finalSlug, id)) {
@@ -381,9 +310,6 @@ export async function updateTour(providerId, id, data) {
   const finalExcludes =
     Array.isArray(excludes) && excludes.length > 0 ? JSON.stringify(excludes) : null;
 
-  const finalHighlights =
-    Array.isArray(highlights) && highlights.length > 0 ? JSON.stringify(highlights) : null;
-
   const conn = await db.getConnection();
 
   try {
@@ -395,29 +321,17 @@ export async function updateTour(providerId, id, data) {
       SET
         title = ?,
         slug = ?,
-        code = ?,
         description = ?,
-        highlights = ?,
         itinerary = ?,
         location = ?,
-        meeting_point = ?,
         latitude = ?,
         longitude = ?,
         base_price = ?,
-        sale_price = ?,
         duration_days = ?,
-        duration_text = ?,
         max_capacity = ?,
         thumbnail_url = ?,
         includes = ?,
         excludes = ?,
-        start_date = ?,
-        end_date = ?,
-        hotel_info = ?,
-        transport_info = ?,
-        cancel_policy = ?,
-        terms_conditions = ?,
-        other_notes = ?,
         status = ?
       WHERE provider_id = ?
         AND id = ?
@@ -425,29 +339,17 @@ export async function updateTour(providerId, id, data) {
       [
         title || null,
         finalSlug,
-        code || null,
         short_description || description || null,
-        finalHighlights,
         finalItinerary,
         location || null,
-        meeting_point || null,
         latitude ?? null,
         longitude ?? null,
         base_price || 0,
-        sale_price || 0,
         duration_days || 1,
-        duration_text || null,
         max_capacity || 1,
         thumbnail_url || null,
         finalIncludes,
         finalExcludes,
-        start_date || null,
-        end_date || null,
-        hotel_info || null,
-        transport_info || null,
-        cancel_policy || null,
-        terms_conditions || null,
-        other_notes || null,
         finalStatus,
         providerId,
         id
@@ -769,7 +671,6 @@ export async function getPublicFeaturedTours(limit = 6) {
       t.slug,
       t.description,
       t.location,
-      t.meeting_point,
       t.latitude,
       t.longitude,
       t.base_price,
@@ -801,7 +702,6 @@ export async function getPublicTours(filters = {}) {
       t.slug,
       t.description,
       t.location,
-      t.meeting_point,
       t.latitude,
       t.longitude,
       t.base_price,
@@ -839,7 +739,6 @@ export async function getPublicTourById(tourId) {
       t.slug,
       t.description,
       t.location,
-      t.meeting_point,
       t.latitude,
       t.longitude,
       t.base_price,
