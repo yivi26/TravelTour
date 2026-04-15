@@ -1665,3 +1665,30 @@ button {
     right: 12px;
   }
 }
+.extra-info-grid {
+  display: grid;
+  gap: 16px;
+}
+
+.extra-info-item {
+  display: flex;
+  gap: 12px;
+  padding: 14px;
+  border-radius: 10px;
+  background: #f9fafb;
+}
+
+.extra-info-icon {
+  font-size: 22px;
+}
+
+.extra-info-content h3 {
+  margin: 0 0 4px;
+  font-size: 16px;
+}
+
+.extra-info-content p {
+  margin: 0;
+  color: #555;
+  line-height: 1.6;
+}

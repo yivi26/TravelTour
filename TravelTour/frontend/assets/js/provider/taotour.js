@@ -61,11 +61,20 @@ document.addEventListener("DOMContentLoaded", () => {
   const basePriceInput = document.getElementById("tourBasePrice");
   const salePriceInput = document.getElementById("tourSalePrice");
   const discountPercentInput = document.getElementById("discountPercent");
+  const taxPercentInput = document.getElementById("tourTaxPercent");
+  const taxInput = document.getElementById("tourTax");
+  const finalPriceInput = document.getElementById("tourFinalPrice");
 
   const meetingPointInput = document.getElementById("meetingPoint");
 
   const pageTitle = document.getElementById("pageTitle");
   const pageDesc = document.getElementById("pageDesc");
+
+  const showCancelPolicyBtn = document.getElementById("showCancelPolicyBtn");
+  const showTermsBtn = document.getElementById("showTermsBtn");
+
+  const importExcelBtn = document.getElementById("importExcelBtn");
+  const excelFileInput = document.getElementById("excelFileInput");
 
   let selectedCoverImage = null;
   let selectedGalleryImages = [];
@@ -74,6 +83,8 @@ document.addEventListener("DOMContentLoaded", () => {
   let marker = null;
   let selectedLatitude = null;
   let selectedLongitude = null;
+
+  let excelImportedData = null;
 
   init();
 
@@ -92,6 +103,7 @@ document.addEventListener("DOMContentLoaded", () => {
     }
 
     renderGalleryPreview();
+    calculateTaxAndFinalPrice();
     updateFormProgress();
   }
 
@@ -138,9 +150,20 @@ document.addEventListener("DOMContentLoaded", () => {
       window.location.href = "./tour_management.html";
     });
 
-    basePriceInput?.addEventListener("input", calculateSalePriceFromDiscount);
-    discountPercentInput?.addEventListener("input", calculateSalePriceFromDiscount);
-    salePriceInput?.addEventListener("input", syncDiscountFromSalePrice);
+    basePriceInput?.addEventListener("input", () => {
+      calculateSalePriceFromDiscount();
+      calculateTaxAndFinalPrice();
+    });
+
+    discountPercentInput?.addEventListener("input", () => {
+      calculateSalePriceFromDiscount();
+      calculateTaxAndFinalPrice();
+    });
+
+    salePriceInput?.addEventListener("input", () => {
+      syncDiscountFromSalePrice();
+      calculateTaxAndFinalPrice();
+    });
 
     document.addEventListener("input", updateFormProgress);
     document.addEventListener("change", updateFormProgress);
@@ -151,6 +174,47 @@ document.addEventListener("DOMContentLoaded", () => {
         searchAddress(this.value);
       }, 500)
     );
+    taxPercentInput?.addEventListener("input", () => {
+      calculateTaxAndFinalPrice();
+    });
+
+    importExcelBtn?.addEventListener("click", () => {
+      excelFileInput?.click();
+    });
+
+    excelFileInput?.addEventListener("change", handleExcelFileChange);
+
+    showCancelPolicyBtn?.addEventListener("click", () => {
+      const cancelPolicyInput = document.getElementById("cancelPolicy");
+      if (!cancelPolicyInput) return;
+
+      if (cancelPolicyInput.value.trim() !== "") {
+        cancelPolicyInput.value = "";
+      } else {
+        cancelPolicyInput.value = `- Hủy trước 7 ngày: hoàn 100% giá tour
+- Hủy trước 3 - 6 ngày: hoàn 50% giá tour
+- Hủy trước 1 - 2 ngày: hoàn 30% giá tour
+- Hủy trong ngày khởi hành: không hoàn phí`;
+      }
+
+      updateFormProgress();
+    });
+
+    showTermsBtn?.addEventListener("click", () => {
+      const termsConditionsInput = document.getElementById("termsConditions");
+      if (!termsConditionsInput) return;
+
+      if (termsConditionsInput.value.trim() !== "") {
+        termsConditionsInput.value = "";
+      } else {
+        termsConditionsInput.value = `- Quý khách cần cung cấp thông tin cá nhân chính xác khi đăng ký tour
+- Công ty không chịu trách nhiệm nếu khách đến trễ giờ khởi hành
+- Lịch trình có thể thay đổi tùy theo điều kiện thời tiết hoặc tình hình thực tế
+- Quý khách tự bảo quản tư trang cá nhân trong suốt chuyến đi`;
+      }
+
+      updateFormProgress();
+    });
   }
 
   function renderCategories() {
@@ -214,6 +278,14 @@ document.addEventListener("DOMContentLoaded", () => {
       setValue("tourMaxCapacity", tour.max_capacity);
       setValue("tourBasePrice", tour.base_price);
       setValue("tourSalePrice", tour.sale_price);
+      setValue(
+        "tourTaxPercent",
+        tour.tax_percent != null && String(tour.tax_percent).trim() !== ""
+          ? tour.tax_percent
+          : 10
+      );
+      setValue("tourTax", tour.tax || 0);
+      setValue("tourFinalPrice", tour.final_price || 0);
       setValue("tourShortDescription", tour.short_description || tour.description);
       setValue("meetingPoint", tour.meeting_point);
       setValue("hotelInfo", tour.hotel_info);
@@ -223,6 +295,7 @@ document.addEventListener("DOMContentLoaded", () => {
       setValue("otherNotes", tour.other_notes);
 
       syncDiscountFromSalePrice();
+      calculateTaxAndFinalPrice();
 
       if (highlightList) {
         highlightList.innerHTML = "";
@@ -457,6 +530,17 @@ document.addEventListener("DOMContentLoaded", () => {
     });
   }
 
+  function getAppliedPrice() {
+    const basePrice = Number(basePriceInput?.value || 0);
+    const salePrice = Number(salePriceInput?.value || 0);
+
+    if (salePrice > 0 && salePrice < basePrice) {
+      return salePrice;
+    }
+
+    return basePrice;
+  }
+
   function calculateSalePriceFromDiscount() {
     if (!discountPercentInput || !salePriceInput) return;
 
@@ -465,16 +549,22 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!basePrice || basePrice <= 0) {
       salePriceInput.value = "";
+      calculateTaxAndFinalPrice();
       return;
     }
 
-    if (!discountPercentInput.value.trim()) return;
+    if (!discountPercentInput.value.trim()) {
+      calculateTaxAndFinalPrice();
+      return;
+    }
 
     const normalizedPercent = Math.min(Math.max(discountPercent, 0), 100);
     discountPercentInput.value = normalizedPercent;
 
     const salePrice = Math.round(basePrice * (1 - normalizedPercent / 100));
     salePriceInput.value = salePrice >= 0 ? salePrice : 0;
+
+    calculateTaxAndFinalPrice();
   }
 
   function syncDiscountFromSalePrice() {
@@ -485,13 +575,40 @@ document.addEventListener("DOMContentLoaded", () => {
 
     if (!basePrice || basePrice <= 0 || !salePriceInput.value.trim()) {
       discountPercentInput.value = "";
+      calculateTaxAndFinalPrice();
       return;
     }
 
-    if (salePrice > basePrice) return;
+    if (salePrice > basePrice) {
+      calculateTaxAndFinalPrice();
+      return;
+    }
 
     const discountPercent = ((basePrice - salePrice) / basePrice) * 100;
     discountPercentInput.value = Number(discountPercent.toFixed(2));
+
+    calculateTaxAndFinalPrice();
+  }
+
+  function calculateTaxAndFinalPrice() {
+    if (!taxInput || !finalPriceInput) return;
+
+    const appliedPrice = getAppliedPrice();
+    const rawPct = taxPercentInput?.value;
+    const taxPercent =
+      rawPct === "" || rawPct == null ? 10 : Number(rawPct);
+
+    if (!appliedPrice || appliedPrice <= 0) {
+      taxInput.value = 0;
+      finalPriceInput.value = 0;
+      return;
+    }
+
+    const tax = Math.round(appliedPrice * (taxPercent / 100));
+    const finalPrice = appliedPrice + tax;
+
+    taxInput.value = tax;
+    finalPriceInput.value = finalPrice;
   }
 
   function getInputValue(id) {
@@ -571,6 +688,11 @@ document.addEventListener("DOMContentLoaded", () => {
     const maxCapacity = Number(getInputValue("tourMaxCapacity"));
     const basePrice = Number(getInputValue("tourBasePrice"));
     const salePrice = Number(getInputValue("tourSalePrice"));
+    const taxPercentRaw = getInputValue("tourTaxPercent");
+    const taxPercent =
+      taxPercentRaw === "" ? 10 : Number(taxPercentRaw);
+    const tax = Number(getInputValue("tourTax"));
+    const finalPrice = Number(getInputValue("tourFinalPrice"));
     const shortDescription = getInputValue("tourShortDescription");
     const meetingPoint = getInputValue("meetingPoint");
     const hotelInfo = getInputValue("hotelInfo");
@@ -596,6 +718,9 @@ document.addEventListener("DOMContentLoaded", () => {
       max_capacity: Number.isFinite(maxCapacity) ? maxCapacity : 0,
       base_price: Number.isFinite(basePrice) ? basePrice : 0,
       sale_price: Number.isFinite(salePrice) && salePrice > 0 ? salePrice : 0,
+      tax_percent: Number.isFinite(taxPercent) ? Math.max(0, taxPercent) : 10,
+      tax: Number.isFinite(tax) ? tax : 0,
+      final_price: Number.isFinite(finalPrice) ? finalPrice : 0,
       short_description: shortDescription,
       description: shortDescription,
       meeting_point: meetingPoint,
@@ -668,6 +793,16 @@ document.addEventListener("DOMContentLoaded", () => {
       return false;
     }
 
+    if (data.tax < 0) {
+      alert("Thuế không hợp lệ.");
+      return false;
+    }
+
+    if (data.final_price < 0) {
+      alert("Giá cuối cùng không hợp lệ.");
+      return false;
+    }
+
     if (!data.short_description) {
       alert("Vui lòng nhập mô tả ngắn.");
       return false;
@@ -689,61 +824,71 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   async function submitTour(status) {
-    try {
-      const formData = collectFormData();
+  try {
+    const formData = collectFormData();
 
-      if (!validateFormData(formData, status)) {
-        return;
-      }
-
-      const payload = {
-        ...formData,
-        status
-      };
-
-      console.log(isEditMode ? "Payload cập nhật tour:" : "Payload tạo tour:", payload);
-
-      const url = isEditMode
-        ? `/api/provider/tours/${tourId}`
-        : "/api/provider/tours";
-
-      const method = isEditMode ? "PUT" : "POST";
-
-      const response = await fetch(url, {
-        method,
-        headers: {
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify(payload)
-      });
-
-      const text = await response.text();
-      let result = {};
-
-      try {
-        result = text ? JSON.parse(text) : {};
-      } catch {
-        result = { message: text || "Response không phải JSON" };
-      }
-
-      if (!response.ok) {
-        console.error("CREATE/UPDATE TOUR ERROR:", result);
-        alert(result.error || result.message || "Lưu tour thất bại.");
-        return;
-      }
-
-      alert(
-        isEditMode
-          ? (status === "draft" ? "Lưu cập nhật nháp thành công!" : "Cập nhật tour thành công!")
-          : (status === "draft" ? "Lưu nháp thành công!" : "Xuất bản tour thành công!")
-      );
-
-      window.location.href = "./tour_management.html";
-    } catch (error) {
-      console.error("Lỗi submit tour:", error);
-      alert(isEditMode ? "Có lỗi xảy ra khi cập nhật tour." : "Có lỗi xảy ra khi tạo tour.");
+    if (!validateFormData(formData, status)) {
+      return;
     }
+
+    const payload = {
+      ...formData,
+      status
+    };
+
+    console.log(isEditMode ? "Payload cập nhật tour:" : "Payload tạo tour:", payload);
+
+    const url = isEditMode
+      ? `/api/provider/tours/${tourId}`
+      : "/api/provider/tours";
+
+    const method = isEditMode ? "PUT" : "POST";
+
+    const response = await fetch(url, {
+      method,
+      headers: {
+        "Content-Type": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    const text = await response.text();
+    let result = {};
+
+    try {
+      result = text ? JSON.parse(text) : {};
+    } catch {
+      result = { message: text || "Response không phải JSON" };
+    }
+
+    if (!response.ok) {
+      console.error("CREATE/UPDATE TOUR ERROR:", result);
+      alert(result.error || result.message || "Lưu tour thất bại.");
+      return;
+    }
+
+    alert(
+      isEditMode
+        ? (status === "draft" ? "Lưu cập nhật nháp thành công!" : "Cập nhật tour thành công!")
+        : (status === "draft" ? "Lưu nháp thành công!" : "Xuất bản tour thành công!")
+    );
+
+    const savedTourId =
+  result?.data?.id ||
+  result?.tourId ||
+  result?.id ||
+  tourId;
+
+if (status === "active" && savedTourId) {
+  window.location.href = `./guide_assignment.html?tourId=${savedTourId}`;
+} else {
+  window.location.href = "./tour_management.html";
+}
+  } catch (error) {
+    console.error("Lỗi submit tour:", error);
+    alert(isEditMode ? "Có lỗi xảy ra khi cập nhật tour." : "Có lỗi xảy ra khi tạo tour.");
   }
+}
 
   function updateRequiredStatus(element, isDone) {
     if (!element) return;
@@ -866,5 +1011,250 @@ document.addEventListener("DOMContentLoaded", () => {
       .replaceAll(">", "&gt;")
       .replaceAll('"', "&quot;")
       .replaceAll("'", "&#039;");
+  }
+
+  function normalizeExcelHeader(value) {
+    return String(value || "")
+      .trim()
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[\u0300-\u036f]/g, "")
+      .replace(/đ/g, "d")
+      .replace(/\s+/g, " ");
+  }
+
+  function pickRowValue(row, keys) {
+    if (!row) return "";
+    const normalizedMap = new Map();
+    Object.keys(row).forEach(k => {
+      normalizedMap.set(normalizeExcelHeader(k), row[k]);
+    });
+    for (const k of keys) {
+      const v = normalizedMap.get(normalizeExcelHeader(k));
+      if (v != null && String(v).trim() !== "") return v;
+    }
+    return "";
+  }
+
+  function toNumberOrEmpty(value) {
+    const n = Number(String(value ?? "").replaceAll(",", "").trim());
+    return Number.isFinite(n) ? n : "";
+  }
+
+  function splitList(value) {
+    if (value == null) return [];
+    return String(value)
+      .split(/[,;|]/)
+      .map(s => s.trim())
+      .filter(Boolean);
+  }
+
+  function applyExcelToForm(parsed) {
+    if (!parsed) return;
+
+    const { mainRow, itineraryRows = [], highlightRows = [], includes = [], excludes = [] } = parsed;
+
+    if (mainRow) {
+      const title = pickRowValue(mainRow, ["title", "ten tour", "ten", "tour name"]);
+      const code = pickRowValue(mainRow, ["code", "ma tour", "tour code"]);
+      const location = pickRowValue(mainRow, ["location", "diem den", "dia diem", "noi den"]);
+      const durationText = pickRowValue(mainRow, ["duration_text", "thoi gian", "thoi gian tour", "duration"]);
+      const startDate = pickRowValue(mainRow, ["start_date", "ngay khoi hanh", "start date"]);
+      const endDate = pickRowValue(mainRow, ["end_date", "ngay ket thuc", "end date"]);
+      const maxCapacity = toNumberOrEmpty(pickRowValue(mainRow, ["max_capacity", "so nguoi", "so cho", "capacity"]));
+      const basePrice = toNumberOrEmpty(pickRowValue(mainRow, ["base_price", "gia goc", "gia tour", "base price"]));
+      const salePrice = toNumberOrEmpty(pickRowValue(mainRow, ["sale_price", "gia khuyen mai", "sale price"]));
+      const taxPercent = toNumberOrEmpty(pickRowValue(mainRow, ["tax_percent", "vat", "thue", "vat percent"]));
+      const shortDescription = pickRowValue(mainRow, ["short_description", "mo ta ngan", "mo ta", "description"]);
+      const meetingPoint = pickRowValue(mainRow, ["meeting_point", "diem gap", "meeting point"]);
+      const hotelInfo = pickRowValue(mainRow, ["hotel_info", "khach san", "hotel"]);
+      const transportInfo = pickRowValue(mainRow, ["transport_info", "phuong tien", "transport"]);
+      const cancelPolicy = pickRowValue(mainRow, ["cancel_policy", "chinh sach huy", "cancel policy"]);
+      const termsConditions = pickRowValue(mainRow, ["terms_conditions", "dieu khoan", "terms"]);
+      const otherNotes = pickRowValue(mainRow, ["other_notes", "ghi chu", "note"]);
+
+      if (title) setValue("tourTitle", title);
+      if (code) setValue("tourCode", code);
+      if (location) setValue("tourLocation", location);
+      if (durationText) setValue("tourDurationText", durationText);
+      if (startDate) setValue("tourStartDate", formatDateForInput(startDate));
+      if (endDate) setValue("tourEndDate", formatDateForInput(endDate));
+      if (maxCapacity !== "") setValue("tourMaxCapacity", maxCapacity);
+      if (basePrice !== "") setValue("tourBasePrice", basePrice);
+      if (salePrice !== "") setValue("tourSalePrice", salePrice);
+      if (taxPercent !== "") setValue("tourTaxPercent", taxPercent);
+      if (shortDescription) setValue("tourShortDescription", shortDescription);
+      if (meetingPoint) setValue("meetingPoint", meetingPoint);
+      if (hotelInfo) setValue("hotelInfo", hotelInfo);
+      if (transportInfo) setValue("transportInfo", transportInfo);
+      if (cancelPolicy) setValue("cancelPolicy", cancelPolicy);
+      if (termsConditions) setValue("termsConditions", termsConditions);
+      if (otherNotes) setValue("otherNotes", otherNotes);
+
+      const categoryRaw = pickRowValue(mainRow, ["category_id", "danh muc id", "category", "danh muc"]);
+      if (categoryRaw) {
+        const categoryId = Number(categoryRaw);
+        if (Number.isFinite(categoryId)) {
+          setValue("categorySelect", categoryId);
+        } else {
+          const normalized = normalizeExcelHeader(categoryRaw);
+          const found = categoryOptions.find(c => normalizeExcelHeader(c.name) === normalized);
+          if (found) setValue("categorySelect", found.id);
+        }
+      }
+    }
+
+    const highlightFromMain = mainRow
+      ? splitList(pickRowValue(mainRow, ["highlights", "diem noi bat", "highlight"]))
+      : [];
+
+    const highlightValues = [
+      ...highlightFromMain,
+      ...highlightRows
+        .map(r => String(pickRowValue(r, ["highlight", "diem noi bat", "noi bat", "value"]) || ""))
+        .map(s => s.trim())
+        .filter(Boolean)
+    ];
+
+    if (highlightList && highlightValues.length > 0) {
+      highlightList.innerHTML = "";
+      highlightValues.forEach(v => addHighlightRow(v));
+    }
+
+    if (itineraryList && itineraryRows.length > 0) {
+      itineraryList.innerHTML = "";
+      itineraryRows
+        .map(r => {
+          const day = toNumberOrEmpty(pickRowValue(r, ["day", "ngay", "so ngay"]));
+          const title = pickRowValue(r, ["title", "tieu de", "ten ngay"]);
+          const description = pickRowValue(r, ["description", "noi dung", "chi tiet"]);
+          return {
+            day: day === "" ? null : Number(day),
+            title: String(title || "").trim(),
+            description: String(description || "").trim()
+          };
+        })
+        .filter(d => d.title || d.description)
+        .forEach(d => addItineraryDay(d));
+      reindexItineraryDays();
+    }
+
+    const includesFromMain = mainRow ? splitList(pickRowValue(mainRow, ["includes", "dich vu bao gom", "included"])) : [];
+    const excludesFromMain = mainRow ? splitList(pickRowValue(mainRow, ["excludes", "dich vu khong bao gom", "excluded"])) : [];
+    const includesAll = [...includesFromMain, ...includes].map(s => normalizeExcelHeader(s));
+    const excludesAll = [...excludesFromMain, ...excludes].map(s => normalizeExcelHeader(s));
+
+    if (includesAll.length > 0) {
+      document.querySelectorAll('input[name="includedServices"]').forEach(input => {
+        input.checked = includesAll.includes(normalizeExcelHeader(input.value));
+      });
+    }
+
+    if (excludesAll.length > 0) {
+      document.querySelectorAll('input[name="excludedServices"]').forEach(input => {
+        input.checked = excludesAll.includes(normalizeExcelHeader(input.value));
+      });
+    }
+
+    syncDiscountFromSalePrice();
+    calculateTaxAndFinalPrice();
+    updateFormProgress();
+  }
+
+  function parseExcelWorkbook(workbook) {
+    const sheetNames = workbook.SheetNames || [];
+    const warnings = [];
+    const sheets = [];
+
+    const parsedSheets = sheetNames.map(name => {
+      const ws = workbook.Sheets[name];
+      const rows = XLSX.utils.sheet_to_json(ws, { defval: "" });
+      const headers = rows.length > 0 ? Object.keys(rows[0]) : [];
+      const normalizedName = normalizeExcelHeader(name);
+      return { name, normalizedName, rows, headers };
+    });
+
+    parsedSheets.forEach(s => sheets.push({ name: s.name, rows: s.rows, headers: s.headers }));
+
+    const findSheet = candidates => {
+      for (const c of candidates) {
+        const norm = normalizeExcelHeader(c);
+        const found = parsedSheets.find(s => s.normalizedName === norm);
+        if (found) return found;
+      }
+      return null;
+    };
+
+    const mainSheet =
+      findSheet(["tour", "thong tin tour", "thong tin", "main"]) ||
+      parsedSheets[0] ||
+      null;
+
+    const itinerarySheet = findSheet(["itinerary", "lich trinh", "schedule"]);
+    const highlightSheet = findSheet(["highlights", "diem noi bat", "highlight"]);
+    const servicesSheet = findSheet(["services", "dich vu", "service"]);
+
+    const mainRow = mainSheet?.rows?.[0] || null;
+
+    let itineraryRows = [];
+    if (itinerarySheet?.rows?.length) {
+      itineraryRows = itinerarySheet.rows;
+    } else if (mainSheet?.rows?.length) {
+      const hasItineraryCols = mainSheet.headers.some(h =>
+        ["day", "ngay", "tieu de", "title", "description", "noi dung"].includes(normalizeExcelHeader(h))
+      );
+      if (hasItineraryCols && mainSheet.rows.length > 1) itineraryRows = mainSheet.rows;
+    }
+
+    const highlightRows = highlightSheet?.rows || [];
+
+    let includes = [];
+    let excludes = [];
+    if (servicesSheet?.rows?.length) {
+      servicesSheet.rows.forEach(r => {
+        const includeVal = pickRowValue(r, ["include", "included", "bao gom", "includedServices"]);
+        const excludeVal = pickRowValue(r, ["exclude", "excluded", "khong bao gom", "excludedServices"]);
+        includes.push(...splitList(includeVal));
+        excludes.push(...splitList(excludeVal));
+      });
+    }
+
+    if (!mainRow) warnings.push("Không tìm thấy dòng dữ liệu chính (main row) để đổ vào form.");
+    if (!window.XLSX) warnings.push("Thiếu thư viện XLSX trên trang (SheetJS).");
+
+    return {
+      sheets,
+      warnings,
+      mainRow,
+      itineraryRows,
+      highlightRows,
+      includes,
+      excludes
+    };
+  }
+
+  async function handleExcelFileChange(event) {
+    try {
+      const file = event.target.files?.[0];
+      if (!file) return;
+
+      if (typeof XLSX === "undefined") {
+        alert("Chưa load được thư viện đọc Excel (XLSX).");
+        return;
+      }
+
+      const buffer = await file.arrayBuffer();
+      const workbook = XLSX.read(buffer, { type: "array" });
+
+      const parsed = parseExcelWorkbook(workbook);
+      excelImportedData = parsed;
+
+      applyExcelToForm(parsed);
+
+      event.target.value = "";
+    } catch (error) {
+      console.error("Lỗi import Excel:", error);
+      alert("Có lỗi xảy ra khi đọc file Excel. Vui lòng kiểm tra định dạng file.");
+    }
   }
 });

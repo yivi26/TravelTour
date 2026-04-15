@@ -1,78 +1,58 @@
-const customers = [
-  {
-    id: 1,
-    name: "Nguyễn Thị Hương",
-    phone: "0901234567",
-    email: "huong.nguyen@email.com",
-    tour: "Tour Hạ Long 3N2Đ",
-    tourDate: "25/03/2026",
-  },
-  {
-    id: 2,
-    name: "Trần Văn Minh",
-    phone: "0912345678",
-    email: "minh.tran@email.com",
-    tour: "Tour Sapa - Fansipan",
-    tourDate: "28/03/2026",
-  },
-  {
-    id: 3,
-    name: "Lê Thị Mai",
-    phone: "0923456789",
-    email: "mai.le@email.com",
-    tour: "Tour Phú Quốc 4N3Đ",
-    tourDate: "01/04/2026",
-  },
-  {
-    id: 4,
-    name: "Phạm Hoàng Long",
-    phone: "0934567890",
-    email: "long.pham@email.com",
-    tour: "Tour Đà Nẵng - Hội An",
-    tourDate: "20/03/2026",
-  },
-  {
-    id: 5,
-    name: "Võ Thị Lan",
-    phone: "0945678901",
-    email: "lan.vo@email.com",
-    tour: "Tour Nha Trang 3N2Đ",
-    tourDate: "15/03/2026",
-  },
-  {
-    id: 6,
-    name: "Đặng Văn Tùng",
-    phone: "0956789012",
-    email: "tung.dang@email.com",
-    tour: "Tour Hạ Long 3N2Đ",
-    tourDate: "25/03/2026",
-  },
-  {
-    id: 7,
-    name: "Bùi Thị Nga",
-    phone: "0967890123",
-    email: "nga.bui@email.com",
-    tour: "Tour Sapa - Fansipan",
-    tourDate: "28/03/2026",
-  },
-  {
-    id: 8,
-    name: "Hoàng Văn Hải",
-    phone: "0978901234",
-    email: "hai.hoang@email.com",
-    tour: "Tour Phú Quốc 4N3Đ",
-    tourDate: "01/04/2026",
-  },
-];
+let customers = [];
 
 function getInitial(name) {
-  return name.trim().charAt(0).toUpperCase();
+  return String(name || "").trim().charAt(0).toUpperCase() || "?";
+}
+
+function formatDateVN(dateString) {
+  if (!dateString) return "--/--/----";
+  const date = new Date(dateString);
+  if (Number.isNaN(date.getTime())) return "--/--/----";
+  return date.toLocaleDateString("vi-VN");
 }
 
 function renderCustomerCount(count) {
   const customerCountText = document.getElementById("customerCountText");
   if (!customerCountText) return;
   customerCountText.textContent = `Tổng số ${count} khách hàng`;
+}
+
+async function fetchCustomers(keyword = "", selectedTour = "all") {
+  const response = await fetch(
+    `/api/guide/customers?keyword=${encodeURIComponent(keyword)}&tour=${encodeURIComponent(selectedTour)}`,
+    {
+      method: "GET",
+      headers: {
+        "Content-Type": "application/json"
+      }
+    }
+  );
+
+  const result = await response.json().catch(() => ({}));
+
+  if (!response.ok) {
+    throw new Error(result.message || "Không thể tải danh sách khách hàng");
+  }
+
+  return Array.isArray(result.data) ? result.data : [];
+}
+
+function fillTourFilterFromData(data) {
+  const tourFilter = document.getElementById("tourFilter");
+  if (!tourFilter) return;
+
+  const currentValue = tourFilter.value || "all";
+  const uniqueTours = [...new Set(data.map((item) => item.tour).filter(Boolean))];
+
+  tourFilter.innerHTML = `
+    <option value="all">Tất cả tour</option>
+    ${uniqueTours
+      .map((tour) => `<option value="${tour}">${tour}</option>`)
+      .join("")}
+  `;
+
+  const hasOldValue = uniqueTours.includes(currentValue);
+  tourFilter.value = hasOldValue ? currentValue : "all";
 }
 
 function renderCustomers(keyword = "", selectedTour = "all") {
@@ -89,7 +69,7 @@ function renderCustomers(keyword = "", selectedTour = "all") {
       customer.tour.toLowerCase().includes(normalizedKeyword);
 
     const matchTour =
-      selectedTour === "all" || customer.tour.includes(selectedTour);
+      selectedTour === "all" || customer.tour === selectedTour;
 
     return matchKeyword && matchTour;
   });
@@ -108,46 +88,46 @@ function renderCustomers(keyword = "", selectedTour = "all") {
   tableBody.innerHTML = filteredCustomers
     .map(
       (customer) => `
-    <tr>
-      <td>
-        <div class="customer-name-wrap">
-          <div class="customer-avatar">${getInitial(customer.name)}</div>
-          <span class="customer-name">${customer.name}</span>
-        </div>
-      </td>
+        <tr>
+          <td>
+            <div class="customer-name-wrap">
+              <div class="customer-avatar">${getInitial(customer.name)}</div>
+              <span class="customer-name">${customer.name}</span>
+            </div>
+          </td>
 
-      <td>
-        <div class="customer-info-inline">
-          <span class="info-icon">📞</span>
-          <span>${customer.phone}</span>
-        </div>
-      </td>
+          <td>
+            <div class="customer-info-inline">
+              <span class="info-icon">📞</span>
+              <span>${customer.phone}</span>
+            </div>
+          </td>
 
-      <td>
-        <div class="customer-info-inline">
-          <span class="info-icon">✉️</span>
-          <span>${customer.email}</span>
-        </div>
-      </td>
+          <td>
+            <div class="customer-info-inline">
+              <span class="info-icon">✉️</span>
+              <span>${customer.email}</span>
+            </div>
+          </td>
 
-      <td>
-        <div class="customer-info-inline">
-          <span class="info-icon">📍</span>
-          <span>${customer.tour}</span>
-        </div>
-      </td>
+          <td>
+            <div class="customer-info-inline">
+              <span class="info-icon">📍</span>
+              <span>${customer.tour}</span>
+            </div>
+          </td>
 
-      <td>
-        <span class="customer-info-inline">${customer.tourDate}</span>
-      </td>
+          <td>
+            <span class="customer-info-inline">${formatDateVN(customer.tourDate)}</span>
+          </td>
 
-      <td>
-        <button class="contact-btn" data-id="${customer.id}">
-          Liên hệ
-        </button>
-      </td>
-    </tr>
-  `,
+          <td>
+            <button class="contact-btn" data-id="${customer.id}">
+              Liên hệ
+            </button>
+          </td>
+        </tr>
+      `
     )
     .join("");
 }
@@ -173,7 +153,9 @@ function bindEvents() {
 
   if (logoutBtn) {
     logoutBtn.addEventListener("click", function () {
-      alert("Đăng xuất");
+      localStorage.removeItem("user");
+      localStorage.removeItem("token");
+      window.location.href = "http://localhost:3000/login";
     });
   }
 
@@ -182,11 +164,34 @@ function bindEvents() {
     if (!contactBtn) return;
 
     const id = contactBtn.getAttribute("data-id");
-    alert("Liên hệ khách hàng ID: " + id);
+    alert("Chức năng liên hệ khách sẽ làm ở bước tiếp theo. Booking ID: " + id);
   });
 }
 
-document.addEventListener("DOMContentLoaded", function () {
-  renderCustomers();
-  bindEvents();
-});
+async function initPage() {
+  try {
+    customers = await fetchCustomers("", "all");
+    fillTourFilterFromData(customers);
+    renderCustomers("", "all");
+    bindEvents();
+  } catch (error) {
+    console.error("Lỗi tải khách hàng:", error);
+
+    const tableBody = document.getElementById("customerTableBody");
+    const customerCountText = document.getElementById("customerCountText");
+
+    if (customerCountText) {
+      customerCountText.textContent = "Không tải được dữ liệu khách hàng";
+    }
+
+    if (tableBody) {
+      tableBody.innerHTML = `
+        <tr class="empty-state-row">
+          <td colspan="6">Không tải được danh sách khách hàng.</td>
+        </tr>
+      `;
+    }
+  }
+}
+
+document.addEventListener("DOMContentLoaded", initPage);

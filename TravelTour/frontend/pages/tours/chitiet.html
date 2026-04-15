@@ -88,7 +88,6 @@
         padding: 16px;
       }
 
-      /* FIX LEAFLET */
       .leaflet-container {
         width: 100%;
         height: 100%;
@@ -154,6 +153,7 @@
                 <span>📍</span>
                 <span id="tour-location">Đang cập nhật</span>
               </div>
+
               <div class="hero-meta__item">
                 <span>🏢</span>
                 <span id="tour-provider">Đang cập nhật</span>
@@ -181,6 +181,30 @@
         <div class="detail-sections">
           <section class="section-card">
             <h2>Tổng quan về tour</h2>
+              
+            <section class="section-card" id="tour-extra-info-section" style="display: none;">
+  <div class="extra-info-grid">
+
+    <!-- Khách sạn -->
+    <div class="extra-info-item" id="hotel-info-wrap" style="display: none;">
+      <div class="extra-info-icon">🏨</div>
+      <div class="extra-info-content">
+        <h3>Khách sạn</h3>
+        <p id="tour-hotel-info"></p>
+      </div>
+    </div>
+
+    <!-- Di chuyển -->
+    <div class="extra-info-item" id="transport-info-wrap" style="display: none;">
+      <div class="extra-info-icon">🚗</div>
+      <div class="extra-info-content">
+        <h3>Phương tiện di chuyển</h3>
+        <p id="tour-transport-info"></p>
+      </div>
+    </div>
+
+  </div>
+</section>
 
             <div class="overview-stats">
               <article class="overview-stat">
@@ -206,9 +230,7 @@
             </div>
 
             <div class="section-copy">
-              <p id="tour-description-full">
-                Đang tải nội dung chi tiết...
-              </p>
+              <p id="tour-description-full">Đang tải nội dung chi tiết...</p>
             </div>
           </section>
 
@@ -238,6 +260,33 @@
             <h2>Lịch trình tour</h2>
             <div id="tour-itinerary">
               <p>Đang tải lịch trình...</p>
+            </div>
+          </section>
+
+          <section class="section-card" id="tour-policy-section" style="display: none;">
+            <h2>Chính sách & Điều khoản</h2>
+
+            <div class="section-copy" id="cancel-policy-wrap" style="display: none;">
+              <h3>Chính sách hủy tour</h3>
+              <p id="tour-cancel-policy"></p>
+            </div>
+
+            <div
+              class="section-copy"
+              id="terms-conditions-wrap"
+              style="display: none; margin-top: 16px;"
+            >
+              <h3>Điều khoản & Điều kiện</h3>
+              <p id="tour-terms-conditions"></p>
+            </div>
+
+            <div
+              class="section-copy"
+              id="other-notes-wrap"
+              style="display: none; margin-top: 16px;"
+            >
+              <h3>Ghi chú</h3>
+              <p id="tour-other-notes"></p>
             </div>
           </section>
 
@@ -289,6 +338,7 @@
                     <span id="booking-line-label">--</span>
                     <strong id="booking-line-total">--</strong>
                   </div>
+
                   <div class="booking-summary__row booking-summary__row--total">
                     <span>Tổng cộng</span>
                     <strong id="booking-grand-total">--</strong>

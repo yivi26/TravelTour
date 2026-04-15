@@ -74,6 +74,43 @@ function getTourImage(tour) {
   return `/uploads/${rawUrl}`;
 }
 
+function getAppliedPrice(tour) {
+  const basePrice = Number(tour?.base_price || 0);
+  const salePrice = Number(tour?.sale_price || 0);
+
+  if (salePrice > 0 && salePrice < basePrice) {
+    return salePrice;
+  }
+
+  return basePrice;
+}
+
+function getTaxPercent(tour) {
+  const p = Number(tour?.tax_percent);
+  return Number.isFinite(p) && p > 0 ? p : 0;
+}
+
+function getTaxAmount(tour) {
+  const taxPercent = getTaxPercent(tour);
+  if (taxPercent <= 0) return 0;
+
+  const tax = Number(tour?.tax || 0);
+  if (tax > 0) return tax;
+
+  const appliedPrice = getAppliedPrice(tour);
+  return Math.round(appliedPrice * (taxPercent / 100));
+}
+
+function getDisplayPrice(tour) {
+  const finalPrice = Number(tour?.final_price || 0);
+  if (finalPrice > 0) return finalPrice;
+
+  const appliedPrice = getAppliedPrice(tour);
+  const tax = getTaxAmount(tour);
+
+  return appliedPrice + tax;
+}
+
 function goToTourList(query = "") {
   const baseUrl = "./pages/tours/dstour.html";
   window.location.href = query ? `${baseUrl}?${query}` : baseUrl;
@@ -95,6 +132,39 @@ async function fetchFeaturedTours() {
 
   const result = await response.json();
   return result.data || [];
+}
+
+async function fetchDiscountedTours(limit = 6) {
+  const response = await fetch(
+    `http://localhost:3000/api/provider/public/discounted-tours?limit=${encodeURIComponent(
+      String(limit)
+    )}`
+  );
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Không thể lấy tour ưu đãi");
+  }
+
+  const result = await response.json();
+  return result.data || [];
+}
+
+function computeDiscountPercent(basePrice, salePrice) {
+  const base = Number(basePrice) || 0;
+  const sale = Number(salePrice) || 0;
+  if (base <= 0 || sale <= 0 || sale >= base) return 0;
+  return Math.round(((base - sale) / base) * 100);
+}
+
+function formatDateVi(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  const dd = String(date.getDate()).padStart(2, "0");
+  const mm = String(date.getMonth() + 1).padStart(2, "0");
+  const yyyy = String(date.getFullYear());
+  return `${dd}/${mm}/${yyyy}`;
 }
 
 function renderDestinationsFromTours(tours) {
@@ -126,7 +196,7 @@ function renderDestinationsFromTours(tours) {
         name: location,
         location,
         image: getTourImage(tour),
-        price: formatCurrency(tour.base_price || 0)
+        price: formatCurrency(getDisplayPrice(tour))
       });
     }
   });
@@ -181,8 +251,18 @@ function renderTours(tours) {
 
   container.innerHTML = tours
     .slice(0, 6)
-    .map(
-      (tour) => `
+    .map((tour) => {
+      const appliedPrice = getAppliedPrice(tour);
+      const tax = getTaxAmount(tour);
+      const finalPrice = getDisplayPrice(tour);
+      const vatDetailLine =
+        getTaxPercent(tour) > 0 && tax > 0
+          ? `<p class="muted" style="font-size:12px;margin-top:4px;">
+                Giá áp dụng ${formatCurrency(appliedPrice)} + VAT ${formatCurrency(tax)}
+              </p>`
+          : "";
+
+      return `
       <div class="tour-card">
         <img
           src="${getTourImage(tour)}"
@@ -201,7 +281,8 @@ function renderTours(tours) {
           <div class="tour-bottom">
             <div>
               <p class="muted">Giá từ</p>
-              <p class="price">${formatCurrency(tour.base_price || 0)}</p>
+              <p class="price">${formatCurrency(finalPrice)}</p>
+              ${vatDetailLine}
             </div>
 
             <button
@@ -214,8 +295,8 @@ function renderTours(tours) {
           </div>
         </div>
       </div>
-    `
-    )
+    `;
+    })
     .join("");
 }
 
@@ -265,6 +346,59 @@ function renderPromotions() {
     .join("");
 }
 
+function renderPromotionsFromTours(tours) {
+  const container = document.getElementById("promotions-list");
+  if (!container) return;
+
+  if (!Array.isArray(tours) || tours.length === 0) {
+    renderPromotions();
+    return;
+  }
+
+  container.innerHTML = tours
+    .slice(0, 2)
+    .map((tour) => {
+      const discountPercent = computeDiscountPercent(tour.base_price, tour.sale_price);
+      const validUntil = formatDateVi(tour.end_date);
+      const description =
+        (tour.description || "").trim() || "Tour du lịch ưu đãi hấp dẫn từ TravelTour";
+      const image = getTourImage(tour);
+      const finalPrice = getDisplayPrice(tour);
+
+      return `
+      <div class="promo-card" data-tour-id="${tour.id}">
+        <div class="promo-badge">-${discountPercent || 0}%</div>
+        <img
+          src="${image}"
+          alt="${tour.title || "Ưu đãi tour"}"
+          onerror="this.onerror=null;this.src='https://images.unsplash.com/photo-1500530855697-b586d89ba3ee?auto=format&fit=crop&w=1200&q=80';"
+        >
+        <div class="promo-content">
+          <h3>${tour.title || "Ưu đãi tour"}</h3>
+          <p>${description}</p>
+          <p style="font-weight:700;color:#10a669;margin-top:8px;">
+            Giá sau điều chỉnh: ${formatCurrency(finalPrice)}
+          </p>
+          ${
+            validUntil
+              ? `<p class="muted">Có hiệu lực đến: ${validUntil}</p>`
+              : `<p class="muted">Số lượng ưu đãi có hạn</p>`
+          }
+          <button
+            type="button"
+            class="btn btn-primary btn-book-now"
+            data-tour-id="${tour.id}"
+            style="margin-top:16px;"
+          >
+            Xem chi tiết
+          </button>
+        </div>
+      </div>
+    `;
+    })
+    .join("");
+}
+
 function bindNavbarBookingButton() {
   const bookingButton = document.querySelector(".nav-actions .btn.btn-primary");
   if (!bookingButton) return;
@@ -278,13 +412,7 @@ function bindDestinationCards() {
   const destinationCards = document.querySelectorAll(".destination-card");
 
   destinationCards.forEach((card) => {
-    card.addEventListener("click", () => {
-      const destination = card.dataset.destination || "";
-      const query = new URLSearchParams({ destination }).toString();
-      goToTourList(query);
-    });
-
-    card.style.cursor = "pointer";
+    card.style.cursor = "default";
   });
 }
 
@@ -301,12 +429,35 @@ function bindTourDetailButtons() {
 }
 
 function bindPromotionButtons() {
-  const bookNowButtons = document.querySelectorAll(".btn-book-now");
+  document.addEventListener("click", function (e) {
+    const bookNowBtn = e.target.closest(".btn-book-now");
+    if (bookNowBtn) {
+      e.preventDefault();
+      e.stopPropagation();
 
-  bookNowButtons.forEach((button) => {
-    button.addEventListener("click", () => {
+      const tourId = bookNowBtn.dataset.tourId;
+      if (tourId) {
+        goToTourDetail(tourId);
+        return;
+      }
+
       goToTourList();
-    });
+      return;
+    }
+
+    const promoCard = e.target.closest(".promo-card");
+    if (!promoCard) return;
+
+    const tourId = promoCard.dataset.tourId;
+    if (tourId) {
+      goToTourDetail(tourId);
+      return;
+    }
+  });
+
+  const promoCards = document.querySelectorAll(".promo-card");
+  promoCards.forEach((card) => {
+    card.style.cursor = "pointer";
   });
 }
 
@@ -396,12 +547,15 @@ function bindLogoutButton() {
 
 async function initHomePage() {
   try {
-    const tours = await fetchFeaturedTours();
+    const [tours, discountedTours] = await Promise.all([
+      fetchFeaturedTours(),
+      fetchDiscountedTours(6).catch(() => [])
+    ]);
 
     renderDestinationsFromTours(tours);
     renderTours(tours);
     renderFeatures();
-    renderPromotions();
+    renderPromotionsFromTours(discountedTours);
 
     bindNavbarBookingButton();
     bindDestinationCards();
@@ -411,6 +565,7 @@ async function initHomePage() {
     bindHeaderMenu();
     bindUserIcon();
     bindLogoutButton();
+    bindChatbot();
   } catch (error) {
     console.error("Lỗi tải dữ liệu trang chủ:", error);
 
@@ -427,7 +582,99 @@ async function initHomePage() {
     bindHeaderMenu();
     bindUserIcon();
     bindLogoutButton();
+    bindChatbot();
   }
 }
 
 document.addEventListener("DOMContentLoaded", initHomePage);
+
+function addChatMessage(role, content) {
+  const messages = document.getElementById("chatbotMessages");
+  if (!messages) return;
+
+  const messageEl = document.createElement("div");
+  messageEl.className = `chatbot-message ${role}`;
+  messageEl.textContent = content;
+  messages.appendChild(messageEl);
+
+  messages.scrollTop = messages.scrollHeight;
+}
+
+async function callChatbotApi(message) {
+  const response = await fetch("http://localhost:3000/api/chatbot", {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      message: message,
+      userId: "guest_user"
+    })
+  });
+
+  if (!response.ok) {
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(errorData.message || "Không gọi được chatbot API");
+  }
+
+  const result = await response.json();
+  return result.reply || result.message || result.data || "Xin lỗi, tôi chưa có phản hồi.";
+}
+
+function bindChatbot() {
+  const chatbotToggle = document.getElementById("chatbotToggle");
+  const chatbotClose = document.getElementById("chatbotClose");
+  const chatbotBox = document.getElementById("chatbotBox");
+  const chatbotSend = document.getElementById("chatbotSend");
+  const chatbotInput = document.getElementById("chatbotInput");
+
+  if (!chatbotToggle || !chatbotClose || !chatbotBox || !chatbotSend || !chatbotInput) {
+    return;
+  }
+
+  chatbotToggle.addEventListener("click", () => {
+    chatbotBox.classList.toggle("open");
+  });
+
+  chatbotClose.addEventListener("click", () => {
+    chatbotBox.classList.remove("open");
+  });
+
+  async function handleSendMessage() {
+    const userMessage = chatbotInput.value.trim();
+    if (!userMessage) return;
+
+    addChatMessage("user", userMessage);
+    chatbotInput.value = "";
+
+    addChatMessage("bot", "Đang trả lời...");
+
+    try {
+      const messages = document.getElementById("chatbotMessages");
+      const loadingMessage = messages.lastElementChild;
+
+      const botReply = await callChatbotApi(userMessage);
+
+      if (loadingMessage) {
+        loadingMessage.textContent = botReply;
+      }
+    } catch (error) {
+      console.error("Chatbot error:", error);
+
+      const messages = document.getElementById("chatbotMessages");
+      const loadingMessage = messages.lastElementChild;
+
+      if (loadingMessage) {
+        loadingMessage.textContent = "Xin lỗi, hệ thống chatbot đang bận. Vui lòng thử lại sau.";
+      }
+    }
+  }
+
+  chatbotSend.addEventListener("click", handleSendMessage);
+
+  chatbotInput.addEventListener("keypress", (event) => {
+    if (event.key === "Enter") {
+      handleSendMessage();
+    }
+  });
+}
