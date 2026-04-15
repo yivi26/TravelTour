@@ -8,12 +8,14 @@ import {
   getBookingsByProvider,
   updateBookingStatus,
   getGuides,
-  assignGuide,
+  getToursForGuideAssignment,
+  assignGuideToTour,
   getProviderProfile,
   updateProviderProfile,
   getDashboardDataByProvider,
   getPublicFeaturedTours,
   getPublicTours,
+  getPublicDiscountedTours,
   getPublicTourById
 } from "../models/providerModel.js";
 
@@ -41,6 +43,9 @@ function normalizeTourPayload(body = {}) {
 
     base_price: Number(body.base_price || 0),
     sale_price: Number(body.sale_price || 0),
+    tax_percent: Math.max(0, Number(body.tax_percent ?? 0)),
+    tax: Math.max(0, Number(body.tax ?? 0)),
+    final_price: Math.max(0, Number(body.final_price ?? 0)),
     duration_days: Number(body.duration_days || 1),
     duration_text: String(body.duration_text || "").trim(),
     max_capacity: Number(body.max_capacity || 0),
@@ -146,6 +151,24 @@ export async function getPublicToursController(req, res) {
     console.error("❌ PUBLIC TOURS ERROR:", err);
     return res.status(500).json({
       message: "Lỗi lấy danh sách tour",
+      error: err.sqlMessage || err.message
+    });
+  }
+}
+
+export async function getPublicDiscountedToursController(req, res) {
+  try {
+    const limit = Number(req.query.limit || 6);
+    const tours = await getPublicDiscountedTours(limit);
+
+    return res.status(200).json({
+      message: "Lấy danh sách tour ưu đãi thành công",
+      data: tours
+    });
+  } catch (err) {
+    console.error("❌ PUBLIC DISCOUNTED TOURS ERROR:", err);
+    return res.status(500).json({
+      message: "Lỗi lấy tour ưu đãi",
       error: err.sqlMessage || err.message
     });
   }
@@ -304,7 +327,9 @@ export async function createNewTour(req, res) {
 
     return res.status(201).json({
       message: "Tạo tour thành công",
-      tourId
+      data: {
+        id: tourId
+      }
     });
   } catch (err) {
     console.error("❌ CREATE TOUR ERROR:", err);
@@ -445,6 +470,23 @@ export async function updateTourStatusController(req, res) {
   }
 }
 
+export async function getToursForGuideAssignmentController(req, res) {
+  try {
+    const tours = await getToursForGuideAssignment(PROVIDER_ID);
+
+    return res.status(200).json({
+      message: "Lấy danh sách tour để phân công HDV thành công",
+      data: tours
+    });
+  } catch (err) {
+    console.error("❌ GET TOURS FOR GUIDE ASSIGNMENT ERROR:", err);
+    return res.status(500).json({
+      message: "Lỗi lấy danh sách tour để phân công HDV",
+      error: err.sqlMessage || err.message
+    });
+  }
+}
+
 /* =========================
    PROVIDER BOOKINGS
 ========================= */
@@ -501,25 +543,30 @@ export async function getAllGuides(req, res) {
   }
 }
 
-export async function assignGuideController(req, res) {
+export async function assignGuideToTourController(req, res) {
   try {
-    const { bookingId, guideId } = req.body;
+    const { tourId, guideId } = req.body;
 
-    if (!bookingId || !guideId) {
+    if (!tourId || !guideId) {
       return res.status(400).json({
-        message: "Thiếu bookingId hoặc guideId"
+        message: "Thiếu tourId hoặc guideId"
       });
     }
 
-    await assignGuide(bookingId, guideId);
+    const updatedTour = await assignGuideToTour(
+      PROVIDER_ID,
+      Number(tourId),
+      Number(guideId)
+    );
 
     return res.status(200).json({
-      message: "Phân công thành công"
+      message: "Phân công thành công",
+      data: updatedTour
     });
   } catch (err) {
-    console.error("❌ ASSIGN GUIDE ERROR:", err);
+    console.error("❌ ASSIGN GUIDE TO TOUR ERROR:", err);
     return res.status(500).json({
-      message: "Lỗi assign guide",
+      message: err.message || "Lỗi phân công guide cho tour",
       error: err.sqlMessage || err.message
     });
   }

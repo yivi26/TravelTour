@@ -66,7 +66,8 @@ export async function getToursByProvider(providerId) {
 export async function getTourById(providerId, id) {
   const [rows] = await db.query(
     `
-    SELECT t.*
+    SELECT
+      t.*
     FROM tours t
     WHERE t.provider_id = ?
       AND t.id = ?
@@ -108,11 +109,6 @@ export async function getTourById(providerId, id) {
     ...tour,
     category_id: categoryRows.length ? Number(categoryRows[0].category_id) : null,
     short_description: tour.description || "",
-    hotel_info: tour.hotel_info || "",
-    transport_info: tour.transport_info || "",
-    cancel_policy: tour.cancel_policy || "",
-    terms_conditions: tour.terms_conditions || "",
-    other_notes: tour.other_notes || "",
     highlights: safeJsonParse(tour.highlights, []),
     includes: safeJsonParse(tour.includes, []),
     excludes: safeJsonParse(tour.excludes, []),
@@ -453,7 +449,9 @@ export async function updateBookingStatus(bookingId, status) {
 export async function getGuides(providerId) {
   const [rows] = await db.query(
     `
-    SELECT g.*, u.full_name
+    SELECT
+      g.*,
+      u.full_name
     FROM guides g
     JOIN users u ON g.user_id = u.id
     WHERE g.provider_id = ?
@@ -463,10 +461,32 @@ export async function getGuides(providerId) {
   return rows;
 }
 
-export async function assignGuide(bookingId, guideId) {
-  await db.query(
-    `INSERT INTO guide_assignments (booking_id, guide_id) VALUES (?, ?)`,
-    [bookingId, guideId]
+export async function getToursForGuideAssignment(providerId) {
+  // Current DB schema does not have tours.guide_id/start_date.
+  const [rows] = await db.query(
+    `
+    SELECT
+      t.id,
+      t.title,
+      t.location,
+      t.max_capacity,
+      t.status
+    FROM tours t
+    WHERE t.provider_id = ?
+      AND t.status IN ('draft', 'active', 'paused', 'archived')
+    ORDER BY t.id DESC
+    `,
+    [providerId]
+  );
+
+  return rows.map((r) => ({ ...r, guide_id: null, guide_name: null, start_date: null }));
+}
+
+export async function assignGuideToTour(providerId, tourId, guideId) {
+  // Current DB schema does not support assigning guide directly to tours.
+  // Use guide_assignments via bookings instead (future improvement).
+  throw new Error(
+    "Hệ thống hiện tại chưa hỗ trợ gán hướng dẫn viên trực tiếp cho tour (thiếu cột tours.guide_id trong DB)."
   );
 }
 
@@ -616,7 +636,6 @@ export async function updateProviderProfile(providerId, data) {
   return getProviderProfile(providerId);
 }
 
-/* Các hàm dashboard + public tours giữ nguyên nếu đang chạy ổn */
 export async function getDashboardDataByProvider(providerId) {
   const [[totalToursRow]] = await db.query(
     `SELECT COUNT(*) AS totalTours FROM tours WHERE provider_id = ?`,
@@ -688,7 +707,6 @@ export async function getPublicFeaturedTours(limit = 6) {
     `,
     [Number(limit)]
   );
-
   return rows;
 }
 
@@ -728,6 +746,11 @@ export async function getPublicTours(filters = {}) {
 
   const [rows] = await db.query(sql, params);
   return rows;
+}
+
+export async function getPublicDiscountedTours(limit = 6) {
+  // Current DB schema does not have sale_price; return featured tours as fallback.
+  return await getPublicFeaturedTours(limit);
 }
 
 export async function getPublicTourById(tourId) {
