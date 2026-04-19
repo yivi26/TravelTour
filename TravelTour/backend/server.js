@@ -9,6 +9,8 @@ import providerRoutes from "./routes/provider.js";
 import { ensureDefaultAdmin } from "./models/userModel.js";
 import chatbotRoutes from "./routes/chatbot.js";
 import guideRoutes from "./routes/guide.js";
+import settingsRoutes from "./routes/settings.js";
+import adminDashboardRoutes from "./routes/adminDashboard.js";
 
 const app = express();
 
@@ -79,6 +81,8 @@ app.use("/api/auth", authRoutes);
 app.use("/api/provider", providerRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/guide", guideRoutes);
+app.use("/api/settings", settingsRoutes);
+app.use("/api/admin", adminDashboardRoutes);
 /* =========================
    404 API
 ========================= */

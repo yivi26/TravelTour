@@ -10,7 +10,7 @@
     <!-- Navbar -->
     <nav class="navbar">
       <div class="container nav-container">
-        <div class="logo">TravelTour</div>
+        <div class="logo" data-setting-text="platform_name">TravelTour</div>
 
         <ul class="nav-menu">
           <li><a href="#">Trang chủ</a></li>
@@ -32,8 +32,11 @@
     <section class="hero">
       <div class="hero-overlay"></div>
       <div class="container hero-content">
-        <h1>Khám phá thế giới cùng TravelTour</h1>
-        <p>Trải nghiệm du lịch sinh thái bền vững</p>
+        <h1>
+          Khám phá thế giới cùng
+          <span data-setting-text="platform_name">TravelTour</span>
+        </h1>
+        <p data-setting-text="slogan">Trải nghiệm du lịch sinh thái bền vững</p>
 
       
       </div>
@@ -86,8 +89,8 @@
     <footer class="footer">
       <div class="container footer-grid">
         <div>
-          <h3>TravelTour</h3>
-          <p>Du lịch sinh thái bền vững</p>
+          <h3 data-setting-text="platform_name">TravelTour</h3>
+          <p data-setting-text="slogan">Du lịch sinh thái bền vững</p>
         </div>
 
         <div>
@@ -107,7 +110,7 @@
       </div>
 
       <div class="footer-bottom">
-        <p>&copy; 2026 TravelTour</p>
+        <p>&copy; 2026 <span data-setting-text="platform_name">TravelTour</span></p>
       </div>
     </footer>
     <!-- Chatbot Widget -->
@@ -137,6 +140,7 @@
   </div>
 </div>
 
+    <script src="./assets/js/caidat.js"></script>
     <script src="./assets/js/main.js"></script>
   </body>
 </html>
