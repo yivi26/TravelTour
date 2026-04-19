@@ -348,6 +348,10 @@ a {
   background: #fff4e5;
   color: #b96900;
 }
+.status.locked {
+  background: #f2f4f7;
+  color: #364153;
+}
 
 .actions-table {
   display: flex;

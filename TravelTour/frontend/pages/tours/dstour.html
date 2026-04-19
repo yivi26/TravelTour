@@ -17,7 +17,7 @@
   <body class="has-public-navbar">
     <nav class="navbar">
       <div class="container nav-container">
-        <div class="logo">TravelTour</div>
+        <div class="logo" data-setting-text="platform_name">TravelTour</div>
 
         <ul class="nav-menu">
           <li><a href="../../index.html">Trang chủ</a></li>
@@ -39,8 +39,11 @@
       <section class="hero">
         <div class="hero-overlay"></div>
         <div class="container hero-content">
-          <h1>Khám phá thế giới cùng TravelTour</h1>
-          <p>Trải nghiệm du lịch sinh thái bền vững</p>
+          <h1>
+            Khám phá thế giới cùng
+            <span data-setting-text="platform_name">TravelTour</span>
+          </h1>
+          <p data-setting-text="slogan">Trải nghiệm du lịch sinh thái bền vững</p>
 
           <div class="search-box">
             <div class="search-item">
@@ -1036,6 +1039,7 @@
         <p>© 2024 TravelTour. All rights reserved.</p>
       </div>
     </footer>
+    <script defer src="../../assets/js/caidat.js"></script>
     <script defer src="../../assets/js/tours/dstour.js"></script>
   </body>
 </html>

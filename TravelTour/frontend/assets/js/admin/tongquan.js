@@ -1,95 +1,5 @@
-window.tongQuanData = {
-  stats: [
-    {
-      title: "Tổng số booking",
-      value: "8,234",
-      change: "+23%",
-      icon: "booking",
-    },
-    {
-      title: "Doanh thu hệ thống",
-      value: "45.8 tỷ VNĐ",
-      change: "+18%",
-      icon: "money",
-    },
-    { title: "Tổng số tour", value: "342", change: "+23%", icon: "tour" },
-    {
-      title: "Tổng số người dùng",
-      value: "12,458",
-      change: "+12%",
-      icon: "users",
-    },
-  ],
-  highlights: [
-    {
-      title: "Nhà cung cấp đang hoạt động",
-      value: "87",
-      note: "+5 nhà cung cấp mới tháng này",
-      tone: "green",
-    },
-    {
-      title: "Hướng dẫn viên hoạt động",
-      value: "234",
-      note: "Đang phụ trách 342 tour",
-      tone: "blue",
-    },
-    {
-      title: "Đánh giá trung bình",
-      value: "4.8/5.0",
-      note: "Từ 3,245 đánh giá",
-      tone: "purple",
-    },
-  ],
-  bookings: [
-    {
-      name: "Nguyễn Văn A",
-      tour: "Đà Lạt 3N2Đ",
-      date: "2026-03-20",
-      status: "Đã xác nhận",
-      statusType: "success",
-    },
-    {
-      name: "Trần Thị B",
-      tour: "Phú Quốc 4N3Đ",
-      date: "2026-03-22",
-      status: "Chờ xử lý",
-      statusType: "warning",
-    },
-    {
-      name: "Lê Văn C",
-      tour: "Hạ Long 2N1Đ",
-      date: "2026-03-25",
-      status: "Đã xác nhận",
-      statusType: "success",
-    },
-    {
-      name: "Phạm Thị D",
-      tour: "Sapa 3N2Đ",
-      date: "2026-03-28",
-      status: "Đã hoàn thành",
-      statusType: "info",
-    },
-    {
-      name: "Hoàng Văn E",
-      tour: "Nha Trang 5N4Đ",
-      date: "2026-03-30",
-      status: "Đã xác nhận",
-      statusType: "success",
-    },
-  ],
-  popularTours: [
-    { rank: 1, name: "Đà Lạt 3N2Đ", bookings: 145, revenue: "2.1 tỷ" },
-    { rank: 2, name: "Phú Quốc 4N3Đ", bookings: 132, revenue: "3.5 tỷ" },
-    { rank: 3, name: "Hạ Long 2N1Đ", bookings: 128, revenue: "1.8 tỷ" },
-    { rank: 4, name: "Sapa 3N2Đ", bookings: 98, revenue: "1.2 tỷ" },
-    { rank: 5, name: "Nha Trang 5N4Đ", bookings: 87, revenue: "2.9 tỷ" },
-  ],
-  user: {
-    name: "Admin User",
-    email: "admin@traveltour.vn",
-    initials: "AD",
-  },
-  nav: [
+(async function () {
+  const DEFAULT_NAV = [
     { label: "Tổng quan", href: "tongquan.html", active: true },
     { label: "Quản lý người dùng", href: "qlinguoidung.html" },
     { label: "Quản lý nhà cung cấp tour", href: "qlinhacungcap.html" },
@@ -98,12 +8,32 @@ window.tongQuanData = {
     { label: "Quản lý booking", href: "qlibooking.html" },
     { label: "Quản lý đánh giá", href: "qlidanhgia.html" },
     { label: "Báo cáo & thống kê", href: "baocao.html" },
-    { label: "Cài đặt hệ thống", href: "caidat.html" },
-  ],
-};
+    { label: "Cài đặt hệ thống", href: "caidat.html" }
+  ];
 
-(function () {
-  const data = window.tongQuanData || {};
+  const DEFAULT_USER = {
+    name: "Admin User",
+    email: "admin@traveltour.vn",
+    initials: "AD"
+  };
+
+  async function fetchDashboardData() {
+    const res = await fetch("/api/admin/dashboard", { method: "GET" });
+    const json = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(json?.message || "Không tải được dữ liệu tổng quan");
+    return json?.data || {};
+  }
+
+  let data = {};
+  try {
+    data = await fetchDashboardData();
+  } catch (err) {
+    console.error("Không lấy được dashboard:", err?.message || err);
+    data = window.tongQuanData || {};
+  }
+
+  if (!Array.isArray(data.nav)) data.nav = DEFAULT_NAV;
+  if (!data.user) data.user = DEFAULT_USER;
 
   const navIcons = {
     grid: '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M7.5 2.5H3.333A.833.833 0 0 0 2.5 3.333v5.834c0 .46.373.833.833.833H7.5c.46 0 .833-.373.833-.833V3.333A.833.833 0 0 0 7.5 2.5Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.667 2.5H12.5a.833.833 0 0 0-.833.833v2.5c0 .46.373.834.833.834h4.167c.46 0 .833-.373.833-.834v-2.5a.833.833 0 0 0-.833-.833Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M16.667 10h-4.167a.833.833 0 0 0-.833.833v5.834c0 .46.373.833.833.833h4.167c.46 0 .833-.373.833-.833v-5.834A.833.833 0 0 0 16.667 10Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M7.5 13.333H3.333A.833.833 0 0 0 2.5 14.167v2.5c0 .46.373.833.833.833H7.5c.46 0 .833-.373.833-.833v-2.5a.833.833 0 0 0-.833-.834Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
@@ -178,6 +108,7 @@ window.tongQuanData = {
         const negative = (item.change || "").trim().startsWith("-");
         const arrow = negative ? "↓" : "↑";
         const changeClass = negative ? "negative" : "positive";
+        const hasChange = Boolean((item.change || "").trim());
         return `<div class="stat-card">
               <div class="stat-header">
                 <div>
@@ -186,11 +117,15 @@ window.tongQuanData = {
                 </div>
                 <div class="stat-icon ${item.icon || ""}">${statIcons[item.icon] || statIcons.default}</div>
               </div>
-              <div class="stat-change ${changeClass}">
-                <span>${arrow}</span>
-                <span>${item.change || ""}</span>
-                <small>so với tháng trước</small>
-              </div>
+              ${
+                hasChange
+                  ? `<div class="stat-change ${changeClass}">
+                      <span>${arrow}</span>
+                      <span>${item.change || ""}</span>
+                      <small>so với tháng trước</small>
+                    </div>`
+                  : `<div class="stat-change muted"><small>&nbsp;</small></div>`
+              }
             </div>`;
       })
       .join("");
