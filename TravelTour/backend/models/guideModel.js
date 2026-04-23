@@ -33,7 +33,7 @@ export async function getGuideDashboardData(guideId) {
 
   const [[incomeRow]] = await db.query(
     `
-    SELECT COALESCE(SUM(final_price), 0) AS total
+    SELECT COALESCE(SUM(COALESCE(final_price, 0)), 0) AS total
     FROM tours
     WHERE guide_id = ?
       AND start_date IS NOT NULL
@@ -220,6 +220,14 @@ export async function getGuideIncomeData(guideId, monthRange = 6) {
     ? Number(monthRange)
     : 6;
 
+  const fromDate = new Date();
+  fromDate.setHours(0, 0, 0, 0);
+  fromDate.setMonth(fromDate.getMonth() - safeMonthRange);
+
+  const fromDateString = `${fromDate.getFullYear()}-${String(
+    fromDate.getMonth() + 1
+  ).padStart(2, "0")}-${String(fromDate.getDate()).padStart(2, "0")}`;
+
   const [[totalIncomeRow]] = await db.query(
     `
     SELECT COALESCE(SUM(COALESCE(final_price, 0)), 0) AS total
@@ -259,32 +267,34 @@ export async function getGuideIncomeData(guideId, monthRange = 6) {
     FROM tours
     WHERE guide_id = ?
       AND start_date IS NOT NULL
-      AND start_date >= DATE_SUB(CURDATE(), INTERVAL 6 MONTH)
+      AND start_date >= ?
       AND status = 'archived'
     `,
-    [guideId]
+    [guideId, fromDateString]
   );
 
   const [monthlyRows] = await db.query(
     `
     SELECT
-      YEAR(start_date) AS year_number,
-      MONTH(start_date) AS month_number,
-      CONCAT(
-        LPAD(MONTH(start_date), 2, '0'),
-        '/',
-        YEAR(start_date)
-      ) AS month_key,
-      COALESCE(SUM(COALESCE(final_price, 0)), 0) AS income
-    FROM tours
-    WHERE guide_id = ?
-      AND start_date IS NOT NULL
-      AND start_date >= DATE_SUB(CURDATE(), INTERVAL ? MONTH)
-      AND status = 'archived'
-    GROUP BY YEAR(start_date), MONTH(start_date)
-    ORDER BY YEAR(start_date) ASC, MONTH(start_date) ASC
+      temp.year_number,
+      temp.month_number,
+      CONCAT(LPAD(temp.month_number, 2, '0'), '/', temp.year_number) AS month_key,
+      temp.income
+    FROM (
+      SELECT
+        YEAR(start_date) AS year_number,
+        MONTH(start_date) AS month_number,
+        COALESCE(SUM(COALESCE(final_price, 0)), 0) AS income
+      FROM tours
+      WHERE guide_id = ?
+        AND start_date IS NOT NULL
+        AND start_date >= ?
+        AND status = 'archived'
+      GROUP BY YEAR(start_date), MONTH(start_date)
+    ) AS temp
+    ORDER BY temp.year_number ASC, temp.month_number ASC
     `,
-    [guideId, safeMonthRange]
+    [guideId, fromDateString]
   );
 
   const [recentTransactions] = await db.query(
@@ -311,21 +321,26 @@ export async function getGuideIncomeData(guideId, monthRange = 6) {
       averageIncomePerTour: Number(avgIncomeRow?.avg_income || 0),
       completedTours: Number(completedToursRow?.total || 0)
     },
-    monthlyIncome: monthlyRows.map((row) => ({
-      monthKey: row.month_key,
-      monthNumber: Number(row.month_number),
-      yearNumber: Number(row.year_number),
-      income: Number(row.income || 0)
-    })),
-    recentTransactions: recentTransactions.map((row) => ({
-      id: Number(row.id),
-      tour: row.title || "Chưa có tên tour",
-      date: row.start_date || null,
-      amount: Number(row.final_price || 0),
-      status: row.status || ""
-    }))
+    monthlyIncome: Array.isArray(monthlyRows)
+      ? monthlyRows.map((row) => ({
+          monthKey: row.month_key,
+          monthNumber: Number(row.month_number || 0),
+          yearNumber: Number(row.year_number || 0),
+          income: Number(row.income || 0)
+        }))
+      : [],
+    recentTransactions: Array.isArray(recentTransactions)
+      ? recentTransactions.map((row) => ({
+          id: Number(row.id),
+          tour: row.title || "Chưa có tên tour",
+          date: row.start_date || null,
+          amount: Number(row.final_price || 0),
+          status: row.status || ""
+        }))
+      : []
   };
 }
+
 export async function getGuideProfileData(guideId) {
   const [[guideRow]] = await db.query(
     `
@@ -353,31 +368,37 @@ export async function getGuideProfileData(guideId) {
   if (!guideRow) return null;
 
   const [[tourCountRow]] = await db.query(
-    `SELECT COUNT(*) AS total FROM tours WHERE guide_id = ?`,
+    `
+    SELECT COUNT(*) AS total
+    FROM tours
+    WHERE guide_id = ?
+    `,
     [guideId]
   );
 
   const [[completedRow]] = await db.query(
-    `SELECT COUNT(*) AS total FROM tours WHERE guide_id = ? AND status = 'archived'`,
+    `
+    SELECT COUNT(*) AS total
+    FROM tours
+    WHERE guide_id = ?
+      AND status = 'archived'
+    `,
     [guideId]
   );
 
-  // parse languages
   const languages = guideRow.languages
-    ? guideRow.languages.split(",").map((l) => ({
-        name: l.trim(),
+    ? guideRow.languages.split(",").map((item) => ({
+        name: item.trim(),
         level: "Chưa cập nhật"
       }))
     : [];
 
-  // parse specialties
   const specialties = guideRow.specialty
-    ? guideRow.specialty.split(",").map((s) => s.trim())
+    ? guideRow.specialty.split(",").map((item) => item.trim())
     : [];
 
-  // parse certificates
   const certificates = guideRow.certification
-    ? guideRow.certification.split(",").map((c) => c.trim())
+    ? guideRow.certification.split(",").map((item) => item.trim())
     : [];
 
   return {
@@ -391,7 +412,7 @@ export async function getGuideProfileData(guideId) {
     role: "Hướng dẫn viên du lịch",
     badgeText: "Hướng dẫn viên chuyên nghiệp",
     rating: Number(guideRow.rating_avg || 0),
-    reviewCount: guideRow.rating_count || 0,
+    reviewCount: Number(guideRow.rating_count || 0),
     experienceYears: Number(guideRow.experience_years || 0),
     bio: guideRow.bio || "",
     certificates,

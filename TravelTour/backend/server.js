@@ -4,11 +4,16 @@ import path from "path";
 import dotenv from "dotenv";
 import { fileURLToPath } from "url";
 
+dotenv.config();
+
 import authRoutes from "./routes/auth.js";
 import providerRoutes from "./routes/provider.js";
 import chatbotRoutes from "./routes/chatbot.js";
 import guideRoutes from "./routes/guide.js";
-dotenv.config();
+
+console.log("=== ENV DEBUG ===");
+console.log("KEY EXISTS:", !!process.env.OPENROUTER_API_KEY);
+console.log("=================");
 
 const app = express();
 
@@ -74,6 +79,7 @@ app.use("/api/auth", authRoutes);
 app.use("/api/provider", providerRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/guide", guideRoutes);
+
 /* =========================
    404 API
 ========================= */
