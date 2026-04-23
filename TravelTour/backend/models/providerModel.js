@@ -109,7 +109,20 @@ export async function getToursByProvider(providerId) {
     [providerId]
   );
 
-  return rows;
+  return rows.map(row => {
+    const pricing = resolvePublicTourPricing(row);
+
+    return {
+      ...row,
+      display_price: pricing.final_price,     // giá cuối cùng để hiển thị
+      applied_price:
+        row.sale_price > 0 && row.sale_price < row.base_price
+          ? Number(row.sale_price)
+          : Number(row.base_price || 0),
+      tax_resolved: pricing.tax,
+      final_price_resolved: pricing.final_price
+    };
+  });
 }
 
 export async function getTourById(providerId, id) {
