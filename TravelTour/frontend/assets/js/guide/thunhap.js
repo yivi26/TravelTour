@@ -31,10 +31,9 @@ async function fetchIncomeData(range = 6) {
 
   const result = await response.json().catch(() => ({}));
 
-  if (!response.ok) {
-    throw new Error(result.message || "Không thể tải dữ liệu thu nhập");
-  }
-
+ if (!response.ok) {
+  throw new Error(result.error || result.message || "Không thể tải dữ liệu thu nhập");
+}
   return result.data || {};
 }
 

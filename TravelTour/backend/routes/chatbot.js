@@ -6,9 +6,15 @@ router.post("/", async (req, res) => {
   try {
     const { message } = req.body;
 
-    if (!message) {
+    if (!message || !message.trim()) {
       return res.status(400).json({
         message: "Thiếu message"
+      });
+    }
+
+    if (!process.env.OPENROUTER_API_KEY) {
+      return res.status(500).json({
+        message: "Chưa có OPENROUTER_API_KEY trong file .env"
       });
     }
 
@@ -19,7 +25,7 @@ router.post("/", async (req, res) => {
         Authorization: `Bearer ${process.env.OPENROUTER_API_KEY}`
       },
       body: JSON.stringify({
-        model: "openai/gpt-4o-mini",
+        model: "openrouter/free",
         messages: [
           {
             role: "system",
@@ -36,7 +42,6 @@ router.post("/", async (req, res) => {
     const data = await response.json();
 
     if (!response.ok) {
-      console.error("OpenRouter error:", data);
       return res.status(response.status).json({
         message: "Lỗi gọi OpenRouter",
         error: data
@@ -47,7 +52,7 @@ router.post("/", async (req, res) => {
       reply: data?.choices?.[0]?.message?.content || "Bot chưa có phản hồi"
     });
   } catch (error) {
-    console.error("❌ Chatbot route error:", error);
+    console.error("Chatbot route error:", error);
 
     return res.status(500).json({
       message: "Lỗi chatbot server",
