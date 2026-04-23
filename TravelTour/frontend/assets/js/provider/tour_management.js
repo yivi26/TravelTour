@@ -57,7 +57,7 @@ function renderTable(data) {
       <tr>
         <td>${escapeHtml(t.title || "")}</td>
         <td>${escapeHtml(t.location || "")}</td>
-        <td>${formatMoney(t.base_price)}</td>
+        <td>${formatMoney(t.display_price ?? t.final_price ?? t.base_price)}</td>
         <td>${Number(t.max_capacity || 0)}</td>
         <td>${renderStatus(t.status)}</td>
         <td>
