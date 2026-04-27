@@ -36,18 +36,20 @@
               <p>Chào mừng trở lại! Vui lòng đăng nhập để tiếp tục</p>
             </div>
 
-            <form id="loginForm" class="login-form">
+            <form id="loginForm" class="login-form" novalidate>
               
               <!-- Email -->
               <div class="form-group">
-                <label for="email">Email</label>
+                <label for="email">Email / Tên đăng nhập</label>
                 <div class="input-wrap">
                   <span class="input-icon">✉️</span>
                   <input
                     id="email"
                     name="email"
-                    type="email"
-                    placeholder="name@example.com"
+                    type="text"
+                    inputmode="email"
+                    autocomplete="username"
+                    placeholder="admin hoặc name@example.com"
                   />
                 </div>
               </div>

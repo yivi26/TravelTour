@@ -159,9 +159,30 @@ export async function googleLogin(req, res) {
     });
   } catch (error) {
     console.error("Google login error:", error);
+
+    // Token Google không hợp lệ / bị chặn do cấu hình OAuth → trả 401 thay vì 500
+    const msg = String(error?.message || "");
+    const isAuthError =
+      msg.includes("Wrong number of segments") ||
+      msg.includes("Invalid token") ||
+      msg.includes("No pem found") ||
+      msg.includes("audience") ||
+      msg.includes("invalid_grant") ||
+      msg.includes("Token used too late") ||
+      msg.includes("issuer") ||
+      msg.toLowerCase().includes("jwt");
+
+    if (isAuthError) {
+      return res.status(401).json({
+        message:
+          "Token Google không hợp lệ. Hãy kiểm tra cấu hình OAuth (Authorized JavaScript origins) và thử lại.",
+        error: msg
+      });
+    }
+
     return res.status(500).json({
       message: "Đăng nhập Google thất bại",
-      error: error.message
+      error: msg
     });
   }
 }

@@ -66,7 +66,8 @@
       }
 
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailPattern.test(email)) {
+      const isDefaultAdminLogin = email === "admin";
+      if (!emailPattern.test(email) && !isDefaultAdminLogin) {
         showMessage("Email không đúng định dạng.", "error");
         return;
       }

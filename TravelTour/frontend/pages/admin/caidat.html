@@ -19,7 +19,7 @@
           <div class="brand-sub">Admin Dashboard</div>
         </div>
         <nav class="sidebar-nav">
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="tongquan.html">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -33,7 +33,7 @@
             </svg>
             Tổng quan
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="qlinguoidung.html">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -45,7 +45,7 @@
             </svg>
             Quản lý người dùng
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="qlinhacungcap.html">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -56,7 +56,7 @@
             </svg>
             Quản lý nhà cung cấp tour
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="hdv.html">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -68,7 +68,7 @@
             </svg>
             Quản lý hướng dẫn viên
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="qlitour.html">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -82,7 +82,7 @@
             </svg>
             Quản lý tour
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="qlibooking.html">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -95,7 +95,7 @@
             </svg>
             Quản lý booking
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="qlidanhgia.html">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -108,7 +108,7 @@
             </svg>
             Quản lý đánh giá
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="baocao.html">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -119,7 +119,7 @@
             </svg>
             Báo cáo &amp; thống kê
           </a>
-          <a class="nav-item active" href="#">
+          <a class="nav-item active" href="caidat.html">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -204,15 +204,19 @@
               </div>
               <div class="field">
                 <label>Tên nền tảng</label>
-                <input type="text" value="TravelTour" />
+                <input type="text" data-setting-key="platform_name" value="TravelTour" />
               </div>
               <div class="field">
                 <label>Slogan</label>
-                <input type="text" value="Khám phá Việt Nam cùng TravelTour" />
+                <input
+                  type="text"
+                  data-setting-key="slogan"
+                  value="Khám phá Việt Nam cùng TravelTour"
+                />
               </div>
               <div class="field">
                 <label>Múi giờ</label>
-                <input type="text" value="" />
+                <input type="text" data-setting-key="timezone" value="" />
               </div>
             </div>
 
@@ -236,11 +240,15 @@
               </div>
               <div class="field">
                 <label>Email gửi đi</label>
-                <input type="text" value="noreply@traveltour.vn" />
+                <input type="text" data-setting-key="email_from" value="noreply@traveltour.vn" />
               </div>
               <div class="field">
                 <label>Email hỗ trợ</label>
-                <input type="text" value="support@traveltour.vn" />
+                <input
+                  type="text"
+                  data-setting-key="email_support"
+                  value="support@traveltour.vn"
+                />
               </div>
               <div
                 class="field-row"
@@ -252,7 +260,7 @@
               >
                 <span class="field-row-label">Gửi email xác nhận booking</span>
                 <label class="toggle">
-                  <input type="checkbox" checked />
+                  <input type="checkbox" data-setting-key="send_booking_confirmation_email" checked />
                   <span class="toggle-slider"></span>
                 </label>
               </div>
@@ -278,7 +286,7 @@
               <div class="field-row">
                 <span class="field-row-label">Booking mới</span>
                 <label class="toggle"
-                  ><input type="checkbox" checked /><span
+                  ><input type="checkbox" data-setting-key="notify_new_booking" checked /><span
                     class="toggle-slider"
                   ></span
                 ></label>
@@ -286,7 +294,7 @@
               <div class="field-row">
                 <span class="field-row-label">Đánh giá mới</span>
                 <label class="toggle"
-                  ><input type="checkbox" checked /><span
+                  ><input type="checkbox" data-setting-key="notify_new_review" checked /><span
                     class="toggle-slider"
                   ></span
                 ></label>
@@ -294,7 +302,7 @@
               <div class="field-row">
                 <span class="field-row-label">Nhà cung cấp mới</span>
                 <label class="toggle"
-                  ><input type="checkbox" checked /><span
+                  ><input type="checkbox" data-setting-key="notify_new_provider" checked /><span
                     class="toggle-slider"
                   ></span
                 ></label>
@@ -302,65 +310,11 @@
               <div class="field-row">
                 <span class="field-row-label">Tour cần phê duyệt</span>
                 <label class="toggle"
-                  ><input type="checkbox" checked /><span
+                  ><input type="checkbox" data-setting-key="notify_pending_tour" checked /><span
                     class="toggle-slider"
                   ></span
                 ></label>
               </div>
-            </div>
-
-            <!-- 4. Bảo mật -->
-            <div class="card">
-              <div class="card-header">
-                <div class="card-icon red">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" />
-                  </svg>
-                </div>
-                <div class="card-title">Bảo mật</div>
-              </div>
-              <div class="field-row">
-                <span class="field-row-label">Xác thực 2 yếu tố (2FA)</span>
-                <label class="toggle"
-                  ><input type="checkbox" /><span class="toggle-slider"></span
-                ></label>
-              </div>
-              <div class="field" style="margin-top: 12px">
-                <label>Thời gian hết phiên (phút)</label>
-                <input type="number" value="30" style="max-width: 90px" />
-              </div>
-              <button class="btn-red">Đổi mật khẩu admin</button>
-            </div>
-
-            <!-- 5. Cơ sở dữ liệu -->
-            <div class="card">
-              <div class="card-header">
-                <div class="card-icon yellow">
-                  <svg
-                    viewBox="0 0 24 24"
-                    fill="none"
-                    stroke="currentColor"
-                    stroke-width="2"
-                  >
-                    <ellipse cx="12" cy="5" rx="9" ry="3" />
-                    <path d="M21 12c0 1.66-4 3-9 3s-9-1.34-9-3" />
-                    <path d="M3 5v14c0 1.66 4 3 9 3s9-1.34 9-3V5" />
-                  </svg>
-                </div>
-                <div class="card-title">Cơ sở dữ liệu</div>
-              </div>
-              <div class="storage-label">Dung lượng đã sử dụng</div>
-              <div class="storage-value">2.4 GB / 10 GB</div>
-              <div class="progress-bar">
-                <div class="progress-fill"></div>
-              </div>
-              <button class="btn-outline green">Sao lưu dữ liệu</button>
-              <button class="btn-outline blue">Khôi phục từ bản sao lưu</button>
             </div>
 
             <!-- 6. Giao diện -->
@@ -382,21 +336,26 @@
                 <div class="card-title">Giao diện</div>
               </div>
               <div class="swatch-label">Màu chủ đạo</div>
-              <div class="swatches">
-                <div class="swatch selected" style="background: #00a63e"></div>
-                <div class="swatch" style="background: #2563eb"></div>
-                <div class="swatch" style="background: #7c3aed"></div>
-                <div class="swatch" style="background: #ea580c"></div>
+              <div class="swatches" data-setting-key="theme_primary_color">
+                <div class="swatch selected" data-color="#00a63e" style="background: #00a63e"></div>
+                <div class="swatch" data-color="#2563eb" style="background: #2563eb"></div>
+                <div class="swatch" data-color="#7c3aed" style="background: #7c3aed"></div>
+                <div class="swatch" data-color="#ea580c" style="background: #ea580c"></div>
               </div>
               <div class="swatch-label">Logo nền tảng</div>
-              <div class="logo-upload">Nhập để tải lên logo mới</div>
+              <input
+                class="logo-upload"
+                data-setting-key="logo_url"
+                type="url"
+                placeholder="Nhập URL logo (https://...)"
+              />
             </div>
           </div>
           <!-- end grid -->
 
           <!-- SAVE -->
           <div class="save-bar">
-            <button class="btn-save" onclick="alert('Đã lưu thay đổi!')">
+            <button class="btn-save" id="btn-save" type="button">
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -418,5 +377,127 @@
       <!-- end main -->
     </div>
     <!-- end app -->
+    <script>
+      (function () {
+        const API = "/api/settings";
+
+        function setSaving(isSaving) {
+          const btn = document.getElementById("btn-save");
+          if (!btn) return;
+          btn.disabled = Boolean(isSaving);
+          btn.style.opacity = isSaving ? "0.7" : "";
+          btn.style.cursor = isSaving ? "not-allowed" : "";
+        }
+
+        function setValueForKey(key, value) {
+          const input = document.querySelector(`[data-setting-key="${key}"]`);
+          if (input && (input.tagName === "INPUT" || input.tagName === "TEXTAREA")) {
+            if (input.type === "checkbox") input.checked = Boolean(value);
+            else input.value = value == null ? "" : String(value);
+            return;
+          }
+
+          if (key === "theme_primary_color") {
+            const wrap = document.querySelector(`.swatches[data-setting-key="theme_primary_color"]`);
+            if (!wrap) return;
+            const swatches = Array.from(wrap.querySelectorAll(".swatch"));
+            for (const sw of swatches) {
+              const color = sw.getAttribute("data-color");
+              sw.classList.toggle("selected", Boolean(color && String(color).toLowerCase() === String(value || "").toLowerCase()));
+            }
+          }
+        }
+
+        function getPayloadFromForm() {
+          const payload = {};
+          const fields = Array.from(document.querySelectorAll("[data-setting-key]"));
+
+          for (const el of fields) {
+            const key = el.getAttribute("data-setting-key");
+            if (!key) continue;
+
+            if (el.classList.contains("swatches") && key === "theme_primary_color") {
+              const selected = el.querySelector(".swatch.selected");
+              payload[key] = selected?.getAttribute("data-color") || "#00a63e";
+              continue;
+            }
+
+            if (el.tagName === "INPUT" || el.tagName === "TEXTAREA") {
+              if (el.type === "checkbox") payload[key] = Boolean(el.checked);
+              else if (el.type === "url") payload[key] = String(el.value || "").trim() || null;
+              else payload[key] = String(el.value || "").trim();
+            }
+          }
+
+          return payload;
+        }
+
+        async function apiGet() {
+          const res = await fetch(API, { method: "GET" });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data?.message || "Không tải được cài đặt");
+          return data?.data || {};
+        }
+
+        async function apiPut(payload) {
+          const res = await fetch(API, {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify(payload)
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data?.message || "Lưu cài đặt thất bại");
+          return data?.data || {};
+        }
+
+        function wireSwatches() {
+          const wrap = document.querySelector(`.swatches[data-setting-key="theme_primary_color"]`);
+          if (!wrap) return;
+
+          wrap.addEventListener("click", (e) => {
+            const sw = e.target && e.target.closest ? e.target.closest(".swatch") : null;
+            if (!sw) return;
+            for (const el of wrap.querySelectorAll(".swatch")) el.classList.remove("selected");
+            sw.classList.add("selected");
+          });
+        }
+
+        async function init() {
+          wireSwatches();
+
+          try {
+            setSaving(true);
+            const settings = await apiGet();
+            for (const [k, v] of Object.entries(settings)) setValueForKey(k, v);
+          } catch (err) {
+            console.error(err);
+            alert(err?.message || "Không tải được cài đặt hệ thống");
+          } finally {
+            setSaving(false);
+          }
+
+          const btn = document.getElementById("btn-save");
+          if (btn) {
+            btn.addEventListener("click", async () => {
+              try {
+                setSaving(true);
+                const payload = getPayloadFromForm();
+                const updated = await apiPut(payload);
+                for (const [k, v] of Object.entries(updated)) setValueForKey(k, v);
+                alert("Đã lưu thay đổi!");
+              } catch (err) {
+                console.error(err);
+                alert(err?.message || "Lưu cài đặt thất bại");
+              } finally {
+                setSaving(false);
+              }
+            });
+          }
+        }
+
+        document.addEventListener("DOMContentLoaded", init);
+      })();
+    </script>
+    <script src="../../assets/js/admin/thongbao.js"></script>
   </body>
 </html>

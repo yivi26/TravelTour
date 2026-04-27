@@ -483,6 +483,8 @@ button {
   color: #2f3948;
   font-size: 1.15rem;
   text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .summary-card__total {
@@ -497,6 +499,8 @@ button {
   font-size: 1.8rem;
   line-height: 1.05;
   text-align: right;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
 }
 
 .summary-card__note {

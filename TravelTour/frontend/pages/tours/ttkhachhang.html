@@ -10,17 +10,29 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="../../assets/css/navbar.css" />
     <link rel="stylesheet" href="../../assets/css/tours/ttkhachhang.css" />
   </head>
-  <body class="booking-page">
-    <header class="booking-header">
-      <div class="booking-header__inner">
-        <a class="booking-header__brand" href="../../index.html">TravelTour</a>
-        <div class="booking-header__support">
-          Hỗ trợ: <strong>1900 1234</strong>
+  <body class="booking-page has-public-navbar">
+    <nav class="navbar">
+      <div class="container nav-container">
+        <div class="logo">TravelTour</div>
+
+        <ul class="nav-menu">
+          <li><a href="../../index.html">Trang chủ</a></li>
+          <li><a href="../../index.html#about">Giới thiệu</a></li>
+          <li><a href="./dstour.html">Điểm đến</a></li>
+        </ul>
+
+        <div class="nav-actions">
+          <button type="button" class="btn btn-primary">Đặt tour</button>
+          <button type="button" class="btn btn-outline" id="btnLogout">
+            Đăng xuất
+          </button>
+          <a href="../customer/customer.html" class="user-icon">👤</a>
         </div>
       </div>
-    </header>
+    </nav>
 
     <main class="booking-main">
       <div class="booking-shell">
@@ -258,8 +270,8 @@
             <h2>Tổng kết đặt tour</h2>
             <div class="summary-card__rows">
               <div class="summary-card__row">
-                <span>Giá tour ×<br />1 khách</span>
-                <strong>8.500.<br />000 ₫</strong>
+                <span>Giá tour × 1 khách</span>
+                <strong>8.500.000 ₫</strong>
               </div>
               <div class="summary-card__row">
                 <span>Phí dịch vụ</span>
@@ -267,8 +279,8 @@
               </div>
             </div>
             <div class="summary-card__total">
-              <span>Tổng<br />thanh toán</span>
-              <strong>9.000.<br />000 ₫</strong>
+              <span>Tổng thanh toán</span>
+              <strong>9.000.000 ₫</strong>
             </div>
             <div class="summary-card__note">
               <span class="summary-card__note-icon">i</span>
