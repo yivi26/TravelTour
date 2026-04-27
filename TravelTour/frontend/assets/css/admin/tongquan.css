@@ -521,3 +521,18 @@ a {
 .stat-change.negative {
   color: #dc2626;
 }
+.sidebar-logout {
+  margin: 16px;
+  padding: 12px 14px;
+  border: none;
+  border-radius: 10px;
+  background: #ef4444;
+  color: white;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.sidebar-logout:hover {
+  background: #dc2626;
+}

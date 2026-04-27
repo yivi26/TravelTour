@@ -10,159 +10,66 @@
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+    <link rel="stylesheet" href="../../assets/css/navbar.css" />
     <link rel="stylesheet" href="../../assets/css/tours/dstour.css" />
+    <link rel="stylesheet" href="../../assets/css/hero-search.css" />
   </head>
-  <body>
-    <header class="site-header">
-      <div class="container header-container">
-        <a class="brand" href="#" aria-label="TravelTour">
-          <span class="brand__icon" aria-hidden="true">
-            <svg viewBox="0 0 24 24" fill="none">
-              <path
-                d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2Z"
-                fill="currentColor"
-              />
-              <path
-                d="M3.5 12H20.5M12 2.5C14.7 5.2 16.25 8.75 16.25 12C16.25 15.25 14.7 18.8 12 21.5C9.3 18.8 7.75 15.25 7.75 12C7.75 8.75 9.3 5.2 12 2.5ZM4.4 7.5H19.6M4.4 16.5H19.6"
-                stroke="#F9FAFB"
-                stroke-width="1.2"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
-          </span>
-          <span class="brand__text">TravelTour</span>
-        </a>
+  <body class="has-public-navbar">
+    <nav class="navbar">
+      <div class="container nav-container">
+        <div class="logo" data-setting-text="platform_name">TravelTour</div>
 
-        <nav class="site-nav" aria-label="Điều hướng chính">
-          <a class="site-nav__link" href="#">Trang chủ</a>
-          <a class="site-nav__link" href="#">Giới thiệu</a>
-          <a class="site-nav__link site-nav__link--active" href="#">Điểm đến</a>
-        </nav>
+        <ul class="nav-menu">
+          <li><a href="../../index.html">Trang chủ</a></li>
+          <li><a href="../../index.html#about">Giới thiệu</a></li>
+          <li><a href="./dstour.html">Điểm đến</a></li>
+        </ul>
 
-        <div class="header-actions">
-          <button class="header-favorite" type="button" aria-label="Yêu thích">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M12 20.25L4.5 13.2717C3.18629 12.0515 2.25 10.3393 2.25 8.54503V8.40374C2.25 5.38733 4.39194 2.8003 7.35531 2.23431C9.04156 1.90931 10.7662 2.29813 12.14 3.26502C12.5252 3.53877 12.8848 3.8554 13.21 4.21993C13.3898 4.01423 13.5826 3.82579 13.7881 3.65016C13.9462 3.51308 14.1088 3.38459 14.28 3.26502C15.6538 2.29813 17.3784 1.90931 19.0647 2.22994C22.0281 2.79593 24.17 5.38733 24.17 8.40374V8.54503C24.17 10.3393 23.2337 12.0515 21.92 13.2717L14.42 20.2456C14.0687 20.5713 13.6057 20.7555 13.1259 20.7555C12.6461 20.7555 12.1831 20.5757 11.8319 20.25H12Z"
-                transform="translate(-1.21 -1.5) scale(0.92)"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linejoin="round"
-              />
-            </svg>
-            <span>Yêu thích</span>
+        <div class="nav-actions">
+          <button type="button" class="btn btn-primary">Đặt tour</button>
+          <button type="button" class="btn btn-outline" id="btnLogout">
+            Đăng xuất
           </button>
-          <button class="header-user" type="button" aria-label="Tài khoản">
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <path
-                d="M12 12C14.4853 12 16.5 9.98528 16.5 7.5C16.5 5.01472 14.4853 3 12 3C9.51472 3 7.5 5.01472 7.5 7.5C7.5 9.98528 9.51472 12 12 12Z"
-                fill="currentColor"
-              />
-              <path
-                d="M4 20.25C4 17.0744 6.57436 14.5 9.75 14.5H14.25C17.4256 14.5 20 17.0744 20 20.25V21H4V20.25Z"
-                fill="currentColor"
-              />
-            </svg>
-          </button>
+          <a href="../customer/customer.html" class="user-icon">👤</a>
         </div>
       </div>
-    </header>
+    </nav>
 
     <main class="site-main">
       <section class="hero">
-        <div class="container">
-          <div class="hero-banner">
-            <h1 class="hero-title">Khám phá thế giới cùng chúng tôi</h1>
+        <div class="hero-overlay"></div>
+        <div class="container hero-content">
+          <h1>
+            Khám phá thế giới cùng
+            <span data-setting-text="platform_name">TravelTour</span>
+          </h1>
+          <p data-setting-text="slogan">Trải nghiệm du lịch sinh thái bền vững</p>
 
-            <form class="search-card" action="#" method="get">
-              <div class="search-card__row">
-                <label class="search-field">
-                  <span class="search-field__label">Điểm đến</span>
-                  <span
-                    class="search-field__control search-field__control--text"
-                  >
-                    <svg viewBox="0 0 12 16" fill="none" aria-hidden="true">
-                      <path
-                        d="M6.74062 15.6C8.34375 13.5938 12 8.73125 12 6C12 2.6875 9.3125 0 6 0C2.6875 0 0 2.6875 0 6C0 8.73125 3.65625 13.5938 5.25938 15.6C5.64375 16.0781 6.35625 16.0781 6.74062 15.6ZM6 4C6.53043 4 7.03914 4.21071 7.41421 4.58579C7.78929 4.96086 8 5.46957 8 6C8 6.53043 7.78929 7.03914 7.41421 7.41421C7.03914 7.78929 6.53043 8 6 8C5.46957 8 4.96086 7.78929 4.58579 7.41421C4.21071 7.03914 4 6.53043 4 6C4 5.46957 4.21071 4.96086 4.58579 4.58579C4.96086 4.21071 5.46957 4 6 4Z"
-                        fill="#10B981"
-                      />
-                    </svg>
-                    <input
-                      type="text"
-                      name="destination"
-                      placeholder="Bạn muốn đi đâu?"
-                      aria-label="Điểm đến"
-                    />
-                  </span>
-                </label>
+          <div class="search-box">
+            <div class="search-item">
+              <label>Điểm đến</label>
+              <input type="text" placeholder="Bạn muốn đi đâu?" />
+            </div>
 
-                <label class="search-field">
-                  <span class="search-field__label">Ngày khởi hành</span>
-                  <span
-                    class="search-field__control search-field__control--text"
-                  >
-                    <svg viewBox="0 0 14 16" fill="none" aria-hidden="true">
-                      <path
-                        d="M4.75 0.75C4.75 0.334375 4.41563 0 4 0C3.58437 0 3.25 0.334375 3.25 0.75V2H2C0.896875 2 0 2.89687 0 4V14C0 15.1031 0.896875 16 2 16H12C13.1031 16 14 15.1031 14 14V4C14 2.89687 13.1031 2 12 2H10.75V0.75C10.75 0.334375 10.4156 0 10 0C9.58438 0 9.25 0.334375 9.25 0.75V2H4.75V0.75ZM1.5 6H12.5V14C12.5 14.275 12.275 14.5 12 14.5H2C1.725 14.5 1.5 14.275 1.5 14V6Z"
-                        fill="#10B981"
-                      />
-                    </svg>
-                    <input
-                      type="text"
-                      name="departure-date"
-                      value="mm/dd/yyyy"
-                      aria-label="Ngày khởi hành"
-                    />
-                    <svg
-                      class="search-field__suffix"
-                      viewBox="0 0 24 24"
-                      fill="none"
-                      aria-hidden="true"
-                    >
-                      <path
-                        d="M6.75 3V5.25M17.25 3V5.25M3 18.75V7.5C3 6.90326 3.23705 6.33097 3.65901 5.90901C4.08097 5.48705 4.65326 5.25 5.25 5.25H18.75C19.3467 5.25 19.919 5.48705 20.341 5.90901C20.7629 6.33097 21 6.90326 21 7.5V18.75M3 18.75C3 19.3467 3.23705 19.919 3.65901 20.341C4.08097 20.7629 4.65326 21 5.25 21H18.75C19.3467 21 19.919 20.7629 20.341 20.341C20.7629 19.919 21 19.3467 21 18.75M3 18.75V11.25C3 10.6533 3.23705 10.081 3.65901 9.65901C4.08097 9.23705 4.65326 9 5.25 9H18.75C19.3467 9 19.919 9.23705 20.341 9.65901C20.7629 10.081 21 10.6533 21 11.25V18.75"
-                        stroke="currentColor"
-                        stroke-width="1.5"
-                        stroke-linecap="round"
-                        stroke-linejoin="round"
-                      />
-                    </svg>
-                  </span>
-                </label>
+            <div class="search-item">
+              <label>Thời gian</label>
+              <input type="date" />
+            </div>
 
-                <div class="search-field">
-                  <span class="search-field__label">Số khách</span>
-                  <button
-                    class="search-field__control search-field__control--button"
-                    type="button"
-                    aria-label="Số khách"
-                  >
-                    <svg viewBox="0 0 20 16" fill="none" aria-hidden="true">
-                      <path
-                        d="M3 4C3 2.93913 3.42143 1.92172 4.17157 1.17157C4.92172 0.421427 5.93913 0 7 0C8.06087 0 9.07828 0.421427 9.82843 1.17157C10.5786 1.92172 11 2.93913 11 4C11 5.06087 10.5786 6.07828 9.82843 6.82843C9.07828 7.57857 8.06087 8 7 8C5.93913 8 4.92172 7.57857 4.17157 6.82843C3.42143 6.07828 3 5.06087 3 4ZM0 15.0719C0 11.9937 2.49375 9.5 5.57188 9.5H8.42813C11.5063 9.5 14 11.9937 14 15.0719C14 15.5844 13.5844 16 13.0719 16H0.928125C0.415625 16 0 15.5844 0 15.0719ZM19.0406 16H14.7312C14.9 15.7063 15 15.3656 15 15V14.75C15 12.8531 14.1531 11.15 12.8188 10.0063C12.8938 10.0031 12.9656 10 13.0406 10H14.9594C17.7437 10 20 12.2562 20 15.0406C20 15.5719 19.5688 16 19.0406 16ZM13.5 8C12.5312 8 11.6562 7.60625 11.0219 6.97188C11.6375 6.14062 12 5.1125 12 4C12 3.1625 11.7938 2.37188 11.4281 1.67813C12.0094 1.25312 12.725 1 13.5 1C15.4344 1 17 2.56562 17 4.5C17 6.43437 15.4344 8 13.5 8Z"
-                        fill="#10B981"
-                      />
-                    </svg>
-                    <span>1 người</span>
-                  </button>
-                </div>
+            <div class="search-item">
+              <label>Hành khách</label>
+              <select>
+                <option>1 người</option>
+                <option>2 người</option>
+                <option>3 người</option>
+                <option>4 người</option>
+                <option>5+ người</option>
+              </select>
+            </div>
 
-                <button
-                  class="search-submit"
-                  type="submit"
-                  aria-label="Tìm kiếm"
-                >
-                  <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                    <path
-                      d="M13 6.5C13 7.93437 12.5344 9.25938 11.75 10.3344L15.7063 14.2937C16.0969 14.6844 16.0969 15.3188 15.7063 15.7094C15.3156 16.1 14.6812 16.1 14.2906 15.7094L10.3344 11.75C9.25938 12.5375 7.93437 13 6.5 13C2.90937 13 0 10.0906 0 6.5C0 2.90937 2.90937 0 6.5 0C10.0906 0 13 2.90937 13 6.5ZM6.5 11C7.09095 11 7.67611 10.8836 8.22208 10.6575C8.76804 10.4313 9.26412 10.0998 9.68198 9.68198C10.0998 9.26412 10.4313 8.76804 10.6575 8.22208C10.8836 7.67611 11 7.09095 11 6.5C11 5.90905 10.8836 5.32389 10.6575 4.77792C10.4313 4.23196 10.0998 3.73588 9.68198 3.31802C9.26412 2.90016 8.76804 2.56869 8.22208 2.34254C7.67611 2.1164 7.09095 2 6.5 2C5.90905 2 5.32389 2.1164 4.77792 2.34254C4.23196 2.56869 3.73588 2.90016 3.31802 3.31802C2.90016 3.73588 2.56869 4.23196 2.34254 4.77792C2.1164 5.32389 2 5.90905 2 6.5C2 7.09095 2.1164 7.67611 2.34254 8.22208C2.56869 8.76804 2.90016 9.26412 3.31802 9.68198C3.73588 10.0998 4.23196 10.4313 4.77792 10.6575C5.32389 10.8836 5.90905 11 6.5 11Z"
-                      fill="currentColor"
-                    />
-                  </svg>
-                  <span>Tìm kiếm</span>
-                </button>
-              </div>
-            </form>
+            <div class="search-btn-wrap">
+              <button class="btn-search" type="button">Tìm kiếm</button>
+            </div>
           </div>
         </div>
       </section>
@@ -1132,6 +1039,7 @@
         <p>© 2024 TravelTour. All rights reserved.</p>
       </div>
     </footer>
+    <script defer src="../../assets/js/caidat.js"></script>
     <script defer src="../../assets/js/tours/dstour.js"></script>
   </body>
 </html>

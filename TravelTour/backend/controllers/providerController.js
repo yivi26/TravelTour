@@ -70,10 +70,8 @@ function normalizeTourPayload(body = {}) {
 
 function validateTourPayload(payload) {
   if (!payload.title) return "Vui lòng nhập tên tour";
-  if (!payload.code) return "Vui lòng nhập mã tour";
   if (!payload.category_id) return "Vui lòng chọn danh mục";
   if (!payload.location) return "Vui lòng nhập điểm đến";
-  if (!payload.duration_text) return "Vui lòng nhập thời gian tour";
 
   if (!Number.isFinite(payload.max_capacity) || payload.max_capacity <= 0) {
     return "Số người tối đa không hợp lệ";
@@ -337,6 +335,14 @@ export async function createNewTour(req, res) {
     console.error("❌ CREATE TOUR ERROR:", err);
     console.error("❌ SQL MESSAGE:", err.sqlMessage);
     console.error("❌ SQL CODE:", err.code);
+
+    if (err?.code === "ER_NO_REFERENCED_ROW_2") {
+      return res.status(400).json({
+        message:
+          "Không thể tạo tour vì provider_id không tồn tại trong bảng providers. Hãy tạo dữ liệu provider trước (hoặc đăng nhập provider để lấy đúng provider_id).",
+        error: err.sqlMessage || err.message
+      });
+    }
 
     return res.status(500).json({
       message: "Lỗi tạo tour",

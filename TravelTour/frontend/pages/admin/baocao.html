@@ -20,7 +20,7 @@
           <div class="brand-sub">Admin Dashboard</div>
         </div>
         <nav class="sidebar-nav">
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="tongquan.html">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -34,7 +34,7 @@
             </svg>
             Tổng quan
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="qlinguoidung.html">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -46,7 +46,7 @@
             </svg>
             Quản lý người dùng
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="qlinhacungcap.html">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -57,7 +57,7 @@
             </svg>
             Quản lý nhà cung cấp tour
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="hdv.html">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -69,7 +69,7 @@
             </svg>
             Quản lý hướng dẫn viên
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="qlitour.html">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -83,7 +83,7 @@
             </svg>
             Quản lý tour
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="qlibooking.html">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -96,7 +96,7 @@
             </svg>
             Quản lý booking
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="qlidanhgia.html">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -109,7 +109,7 @@
             </svg>
             Quản lý đánh giá
           </a>
-          <a class="nav-item active" href="#">
+          <a class="nav-item active" href="baocao.html">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -120,7 +120,7 @@
             </svg>
             Báo cáo &amp; thống kê
           </a>
-          <a class="nav-item" href="#">
+          <a class="nav-item" href="caidat.html">
             <svg
               viewBox="0 0 24 24"
               fill="none"
@@ -202,8 +202,8 @@
                   </svg>
                 </span>
               </div>
-              <div class="stat-value">45.8 tỷ</div>
-              <div class="stat-sub">+18% so với năm trước</div>
+              <div class="stat-value" id="statTotalRevenue">0</div>
+              <div class="stat-sub" id="statTotalRevenueSub">-</div>
             </div>
             <div class="stat-card blue">
               <div class="stat-top">
@@ -222,8 +222,8 @@
                   </svg>
                 </span>
               </div>
-              <div class="stat-value">8,234</div>
-              <div class="stat-sub">+23% so với năm trước</div>
+              <div class="stat-value" id="statTotalBookings">0</div>
+              <div class="stat-sub" id="statTotalBookingsSub">-</div>
             </div>
             <div class="stat-card purple">
               <div class="stat-top">
@@ -242,8 +242,8 @@
                   </svg>
                 </span>
               </div>
-              <div class="stat-value">2,458</div>
-              <div class="stat-sub">+12% so với năm trước</div>
+              <div class="stat-value" id="statNewUsers">0</div>
+              <div class="stat-sub" id="statNewUsersSub">-</div>
             </div>
             <div class="stat-card orange">
               <div class="stat-top">
@@ -260,8 +260,8 @@
                   </svg>
                 </span>
               </div>
-              <div class="stat-value">+28%</div>
-              <div class="stat-sub">Tăng trưởng trung bình</div>
+              <div class="stat-value" id="statGrowth">0%</div>
+              <div class="stat-sub" id="statGrowthSub">-</div>
             </div>
           </div>
 
@@ -299,43 +299,7 @@
             <!-- Top Tour list -->
             <div class="top-card">
               <div class="top-card-title">Top Tour</div>
-              <div class="top-tour-list">
-                <div class="top-tour-item">
-                  <div class="top-rank rank-1">1</div>
-                  <div>
-                    <div class="top-tour-name">Đà Lạt</div>
-                    <div class="top-tour-count">145 bookings</div>
-                  </div>
-                </div>
-                <div class="top-tour-item">
-                  <div class="top-rank rank-2">2</div>
-                  <div>
-                    <div class="top-tour-name">Phú Quốc</div>
-                    <div class="top-tour-count">132 bookings</div>
-                  </div>
-                </div>
-                <div class="top-tour-item">
-                  <div class="top-rank rank-3">3</div>
-                  <div>
-                    <div class="top-tour-name">Hạ Long</div>
-                    <div class="top-tour-count">128 bookings</div>
-                  </div>
-                </div>
-                <div class="top-tour-item">
-                  <div class="top-rank rank-4">4</div>
-                  <div>
-                    <div class="top-tour-name">Sapa</div>
-                    <div class="top-tour-count">98 bookings</div>
-                  </div>
-                </div>
-                <div class="top-tour-item">
-                  <div class="top-rank rank-5">5</div>
-                  <div>
-                    <div class="top-tour-name">Nha Trang</div>
-                    <div class="top-tour-count">87 bookings</div>
-                  </div>
-                </div>
-              </div>
+              <div class="top-tour-list" id="topTourList"></div>
             </div>
           </div>
 
@@ -363,6 +327,7 @@
     </div>
     <!-- end app -->
 
-    <script src="../../assets/js/report.js"></script>
+    <script src="../../assets/js/admin/baocao.js"></script>
+    <script src="../../assets/js/admin/thongbao.js"></script>
   </body>
 </html>
