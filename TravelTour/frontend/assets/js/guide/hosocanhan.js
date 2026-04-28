@@ -42,30 +42,50 @@ async function fetchGuideProfile() {
 }
 
 function renderHeader(data) {
+  const fullName = data.fullName || data.full_name || "Chưa cập nhật";
+  const role = data.role || "Hướng dẫn viên du lịch";
+
+  const topbarUserName = document.getElementById("topbarUserName");
+  const topbarUserRole = document.getElementById("topbarUserRole");
+  const topbarUserAvatar = document.getElementById("topbarUserAvatar");
+
   const profileAvatarText = document.getElementById("profileAvatarText");
   const profileFullName = document.getElementById("profileFullName");
   const profileRole = document.getElementById("profileRole");
   const profileBadgeText = document.getElementById("profileBadgeText");
   const profileRatingText = document.getElementById("profileRatingText");
 
+  if (topbarUserName) topbarUserName.textContent = fullName;
+  if (topbarUserRole) topbarUserRole.textContent = role;
+
+  if (topbarUserAvatar) {
+    topbarUserAvatar.src =
+      data.avatarUrl ||
+      `https://ui-avatars.com/api/?name=${encodeURIComponent(fullName)}&background=16a34a&color=fff`;
+    topbarUserAvatar.alt = fullName;
+  }
+
   if (profileAvatarText) {
-    profileAvatarText.textContent = getInitials(data.fullName);
+    profileAvatarText.textContent = getInitials(fullName);
   }
 
   if (profileFullName) {
-    profileFullName.textContent = data.fullName || "Chưa có tên";
+    profileFullName.textContent = fullName;
   }
 
   if (profileRole) {
-    profileRole.textContent = data.role || "Hướng dẫn viên du lịch";
+    profileRole.textContent = role;
   }
 
   if (profileBadgeText) {
-    profileBadgeText.textContent = data.badgeText || "Hướng dẫn viên chuyên nghiệp";
+    profileBadgeText.textContent =
+      data.badgeText || "Hướng dẫn viên chuyên nghiệp";
   }
 
   if (profileRatingText) {
-    profileRatingText.textContent = `⭐ ${formatRating(data.rating)}/5.0 (${data.reviewCount || 0} đánh giá)`;
+    profileRatingText.textContent = `⭐ ${formatRating(data.rating)}/5.0 (${
+      data.reviewCount || 0
+    } đánh giá)`;
   }
 }
 

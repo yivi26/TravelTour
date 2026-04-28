@@ -7,9 +7,9 @@
     <link rel="stylesheet" href="../../assets/css/guide/tongquan.css" />
     <link rel="stylesheet" href="../../assets/css/guide/khachhang.css" />
   </head>
+
   <body>
     <div class="dashboard">
-      <!-- TOPBAR -->
       <header class="topbar">
         <div class="topbar-left">
           <a href="tongquan.html" class="logo">TravelTour</a>
@@ -17,19 +17,20 @@
 
         <div class="topbar-right">
           <div class="user-info">
-            <p class="user-name">Nguyễn Văn An</p>
-            <p class="user-role">Hướng dẫn viên</p>
+            <p class="user-name" id="topbarUserName">Đang tải...</p>
+            <p class="user-role" id="topbarUserRole">Hướng dẫn viên</p>
           </div>
+
           <img
             class="user-avatar"
-            src="https://images.unsplash.com/photo-1768933294181-82778103e501?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"
+            id="topbarUserAvatar"
+            src="https://ui-avatars.com/api/?name=User&background=16a34a&color=fff"
             alt="Guide Avatar"
           />
         </div>
       </header>
 
       <div class="dashboard-body">
-        <!-- SIDEBAR -->
         <aside class="sidebar">
           <nav class="sidebar-menu">
             <a href="tongquan.html" class="menu-item">
@@ -69,7 +70,6 @@
           </nav>
         </aside>
 
-        <!-- MAIN -->
         <main class="main-content">
           <div class="page-container">
             <div class="page-header">
@@ -77,7 +77,6 @@
               <p>Quản lý danh sách khách tham gia tour</p>
             </div>
 
-            <!-- Header card -->
             <div class="card customer-header-card">
               <div class="customer-header-row">
                 <div>
@@ -101,15 +100,11 @@
 
                   <select id="tourFilter">
                     <option value="all">Tất cả tour</option>
-                    <option value="Tour Hạ Long">Tour Hạ Long</option>
-                    <option value="Tour Sapa">Tour Sapa</option>
-                    <option value="Tour Phú Quốc">Tour Phú Quốc</option>
                   </select>
                 </div>
               </div>
             </div>
 
-            <!-- Table -->
             <div class="card customer-table-card">
               <div class="table-wrap">
                 <table class="customer-table">
@@ -132,6 +127,7 @@
       </div>
     </div>
 
+    <script src="../../assets/js/guide/guideTopbar.js"></script>
     <script src="../../assets/js/guide/khachhang.js"></script>
   </body>
 </html>

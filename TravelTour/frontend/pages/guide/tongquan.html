@@ -6,9 +6,9 @@
     <title>Dashboard hướng dẫn viên - TravelTour</title>
     <link rel="stylesheet" href="../../assets/css/guide/tongquan.css" />
   </head>
+
   <body>
     <div class="dashboard">
-      <!-- Top Navigation: GIỐNG CUSTOMER -->
       <header class="topbar">
         <div class="topbar-left">
           <a href="tongquan.html" class="logo">TravelTour</a>
@@ -16,12 +16,14 @@
 
         <div class="topbar-right">
           <div class="user-info">
-            <p class="user-name">Nguyễn Văn An</p>
-            <p class="user-role">Hướng dẫn viên</p>
+            <p class="user-name" id="topbarUserName">Đang tải...</p>
+            <p class="user-role" id="topbarUserRole">Hướng dẫn viên</p>
           </div>
+
           <img
             class="user-avatar"
-            src="https://images.unsplash.com/photo-1768933294181-82778103e501?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYXBweSUyMGFzaWFuJTIwd29tYW4lMjB0cmF2ZWxlciUyMHBvcnRyYWl0fGVufDF8fHx8MTc3MzY3MjYxNXww&ixlib=rb-4.1.0&q=80&w=1080"
+            id="topbarUserAvatar"
+            src="https://ui-avatars.com/api/?name=User&background=16a34a&color=fff"
             alt="Guide Avatar"
           />
         </div>
@@ -67,7 +69,6 @@
           </nav>
         </aside>
 
-        <!-- Main Content: GIỮ NGUYÊN -->
         <main class="main-content">
           <div class="page-container guide-dashboard-page">
             <section class="page-header">
@@ -88,6 +89,7 @@
       </div>
     </div>
 
+    <script src="../../assets/js/guide/guideTopbar.js"></script>
     <script src="../../assets/js/guide/tongquan.js"></script>
   </body>
 </html>

@@ -7,9 +7,9 @@
     <link rel="stylesheet" href="../../assets/css/guide/tongquan.css" />
     <link rel="stylesheet" href="../../assets/css/guide/thunhap.css" />
   </head>
+
   <body>
     <div class="dashboard">
-      <!-- TOPBAR -->
       <header class="topbar">
         <div class="topbar-left">
           <a href="tongquan.html" class="logo">TravelTour</a>
@@ -17,19 +17,20 @@
 
         <div class="topbar-right">
           <div class="user-info">
-            <p class="user-name">Nguyễn Văn An</p>
-            <p class="user-role">Hướng dẫn viên</p>
+            <p class="user-name" id="topbarUserName">Đang tải...</p>
+            <p class="user-role" id="topbarUserRole">Hướng dẫn viên</p>
           </div>
+
           <img
             class="user-avatar"
-            src="https://images.unsplash.com/photo-1768933294181-82778103e501?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&q=80&w=1080"
+            id="topbarUserAvatar"
+            src="https://ui-avatars.com/api/?name=User&background=16a34a&color=fff"
             alt="Guide Avatar"
           />
         </div>
       </header>
 
       <div class="dashboard-body">
-        <!-- SIDEBAR -->
         <aside class="sidebar">
           <nav class="sidebar-menu">
             <a href="tongquan.html" class="menu-item">
@@ -69,7 +70,6 @@
           </nav>
         </aside>
 
-        <!-- MAIN -->
         <main class="main-content">
           <div class="page-container">
             <div class="page-header">
@@ -77,27 +77,26 @@
               <p>Theo dõi thu nhập và giao dịch của bạn</p>
             </div>
 
-            <!-- Stats -->
             <section class="income-stats-grid" id="incomeStatsGrid"></section>
 
-            <!-- Bar chart -->
             <section class="card income-card">
               <div class="chart-header">
                 <h3 class="section-title small-title">
                   Biểu đồ thu nhập theo tháng
                 </h3>
+
                 <select id="rangeSelect" class="range-select">
                   <option value="6">6 tháng gần nhất</option>
                   <option value="3">3 tháng gần nhất</option>
                   <option value="12">12 tháng gần nhất</option>
                 </select>
               </div>
+
               <div class="chart-wrap">
                 <canvas id="incomeBarChart"></canvas>
               </div>
             </section>
 
-            <!-- Line chart -->
             <section class="card income-card">
               <h3 class="section-title small-title">Xu hướng thu nhập</h3>
               <div class="chart-wrap line-chart-wrap">
@@ -105,7 +104,6 @@
               </div>
             </section>
 
-            <!-- Transactions -->
             <section class="card income-card">
               <h3 class="section-title small-title">Giao dịch gần đây</h3>
               <div class="transaction-list" id="transactionList"></div>
@@ -116,6 +114,7 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="../../assets/js/guide/guideTopbar.js"></script>
     <script src="../../assets/js/guide/thunhap.js"></script>
   </body>
 </html>
