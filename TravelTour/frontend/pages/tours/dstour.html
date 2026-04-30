@@ -4,16 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>TravelTour - Khám phá thế giới</title>
+
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
       href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
       rel="stylesheet"
     />
+
     <link rel="stylesheet" href="../../assets/css/navbar.css" />
     <link rel="stylesheet" href="../../assets/css/tours/dstour.css" />
     <link rel="stylesheet" href="../../assets/css/hero-search.css" />
   </head>
+
   <body class="has-public-navbar">
     <nav class="navbar">
       <div class="container nav-container">
@@ -38,12 +41,16 @@
     <main class="site-main">
       <section class="hero">
         <div class="hero-overlay"></div>
+
         <div class="container hero-content">
           <h1>
             Khám phá thế giới cùng
             <span data-setting-text="platform_name">TravelTour</span>
           </h1>
-          <p data-setting-text="slogan">Trải nghiệm du lịch sinh thái bền vững</p>
+
+          <p data-setting-text="slogan">
+            Trải nghiệm du lịch sinh thái bền vững
+          </p>
 
           <div class="search-box">
             <div class="search-item">
@@ -77,17 +84,15 @@
       <section class="results-section">
         <div class="container results-shell">
           <div class="results-toolbar">
-            <h2 class="results-title">Tìm thấy 248 tours</h2>
+            <h2 class="results-title">Đang tải tours...</h2>
+
             <div class="sort-box">
-              <label class="sort-box__label" for="tour-sort"
-                >Sắp xếp theo:</label
-              >
+              <label class="sort-box__label" for="tour-sort">
+                Sắp xếp theo:
+              </label>
+
               <div class="sort-box__select">
-                <select
-                  id="tour-sort"
-                  name="tour-sort"
-                  aria-label="Sắp xếp tour"
-                >
+                <select id="tour-sort" name="tour-sort" aria-label="Sắp xếp tour">
                   <option selected>Phổ biến nhất</option>
                   <option>Giá tăng dần</option>
                   <option>Giá giảm dần</option>
@@ -106,6 +111,7 @@
 
               <section class="filter-group">
                 <h4>Khoảng giá</h4>
+
                 <div class="price-range">
                   <input
                     id="price-range"
@@ -117,882 +123,110 @@
                     step="1000000"
                     aria-label="Khoảng giá"
                   />
+
                   <div class="price-range__values">
                     <span>0đ</span>
-                    <span>50.000.000đ</span>
+                    <span id="price-value">Tối đa: 25.000.000đ</span>
                   </div>
                 </div>
               </section>
 
               <section class="filter-group">
                 <h4>Thời gian</h4>
-                <label class="filter-option"
-                  ><input
-                    type="checkbox"
-                    name="duration"
-                    value="1-3 ngày"
-                  /><span>1-3 ngày</span></label
-                >
-                <label class="filter-option"
-                  ><input
-                    type="checkbox"
-                    name="duration"
-                    value="4-7 ngày"
-                  /><span>4-7 ngày</span></label
-                >
-                <label class="filter-option"
-                  ><input
-                    type="checkbox"
-                    name="duration"
-                    value="Trên 7 ngày"
-                  /><span>Trên 7 ngày</span></label
-                >
+
+                <label class="filter-option">
+                  <input type="checkbox" name="duration" value="1-3 ngày" />
+                  <span>1-3 ngày</span>
+                </label>
+
+                <label class="filter-option">
+                  <input type="checkbox" name="duration" value="4-7 ngày" />
+                  <span>4-7 ngày</span>
+                </label>
+
+                <label class="filter-option">
+                  <input type="checkbox" name="duration" value="Trên 7 ngày" />
+                  <span>Trên 7 ngày</span>
+                </label>
               </section>
 
               <section class="filter-group">
                 <h4>Loại tour</h4>
-                <label class="filter-option"
-                  ><input type="checkbox" name="type" value="Mạo hiểm" /><span
-                    >Mạo hiểm</span
-                  ></label
-                >
-                <label class="filter-option"
-                  ><input type="checkbox" name="type" value="Văn hóa" /><span
-                    >Văn hóa</span
-                  ></label
-                >
-                <label class="filter-option"
-                  ><input type="checkbox" name="type" value="Biển đảo" /><span
-                    >Biển đảo</span
-                  ></label
-                >
-                <label class="filter-option"
-                  ><input type="checkbox" name="type" value="Thành phố" /><span
-                    >Thành phố</span
-                  ></label
-                >
+
+                <select id="tour-type" class="filter-select" aria-label="Chọn loại tour">
+                  <option value="">-- Chọn danh mục --</option>
+                  <option value="1">Rừng nhiệt đới</option>
+                  <option value="2">Biển đảo</option>
+                  <option value="3">Núi cao – Trekking</option>
+                  <option value="4">Làng nghề truyền thống</option>
+                  <option value="5">Nông nghiệp sinh thái</option>
+                  <option value="6">Du lịch cộng đồng</option>
+                </select>
               </section>
 
               <section class="filter-group">
                 <h4>Đánh giá</h4>
-                <label class="filter-option"
-                  ><input type="checkbox" name="rating" value="5" /><span
-                    class="filter-stars"
-                    >★★★★★</span
-                  ></label
-                >
-                <label class="filter-option"
-                  ><input type="checkbox" name="rating" value="4+" /><span
-                    ><span class="filter-stars">★★★★</span> trở lên</span
-                  ></label
-                >
+
+                <label class="filter-option">
+                  <input type="checkbox" name="rating" value="5" />
+                  <span class="filter-stars">★★★★★</span>
+                </label>
+
+                <label class="filter-option">
+                  <input type="checkbox" name="rating" value="4+" />
+                  <span><span class="filter-stars">★★★★</span> trở lên</span>
+                </label>
               </section>
 
               <section class="filter-group filter-group--last">
                 <h4>Khu vực</h4>
-                <label class="filter-option"
-                  ><input type="checkbox" name="region" value="Miền Bắc" /><span
-                    >Miền Bắc</span
-                  ></label
-                >
-                <label class="filter-option"
-                  ><input
-                    type="checkbox"
-                    name="region"
-                    value="Miền Trung"
-                  /><span>Miền Trung</span></label
-                >
-                <label class="filter-option"
-                  ><input type="checkbox" name="region" value="Miền Nam" /><span
-                    >Miền Nam</span
-                  ></label
-                >
-                <label class="filter-option"
-                  ><input type="checkbox" name="region" value="Quốc tế" /><span
-                    >Quốc tế</span
-                  ></label
-                >
+
+                <label class="filter-option">
+                  <input type="checkbox" name="region" value="Miền Bắc" />
+                  <span>Miền Bắc</span>
+                </label>
+
+                <label class="filter-option">
+                  <input type="checkbox" name="region" value="Miền Trung" />
+                  <span>Miền Trung</span>
+                </label>
+
+                <label class="filter-option">
+                  <input type="checkbox" name="region" value="Miền Nam" />
+                  <span>Miền Nam</span>
+                </label>
               </section>
             </aside>
 
             <div class="tours-panel">
               <div class="tour-grid">
-                <article class="tour-card">
-                  <div class="tour-card__media">
-                    <img
-                      src="../../assets/images/tours/tour-1.png"
-                      alt="Du thuyền Hạ Long - Bái Tử Long 2N1Đ"
-                    />
-                    <button
-                      class="heart-btn"
-                      type="button"
-                      aria-label="Yêu thích Du thuyền Hạ Long - Bái Tử Long 2N1Đ"
-                      aria-pressed="false"
-                    >
-                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                        <path
-                          d="M10 17.5L3.75 11.6898C2.65524 10.673 1.875 9.24603 1.875 7.7508V7.63359C1.875 5.12277 3.66104 2.96803 6.12943 2.49694C7.53323 2.22631 8.96964 2.55021 10.1146 3.35614C10.4355 3.58427 10.7352 3.84814 11.0066 4.15166C11.1569 3.98019 11.318 3.82316 11.4892 3.67642C11.6208 3.56203 11.7564 3.45499 11.8999 3.35614C13.0449 2.55021 14.4814 2.22631 15.8852 2.4933C18.3536 2.96439 20.1396 5.12277 20.1396 7.63359V7.7508C20.1396 9.24603 19.3594 10.673 18.2646 11.6898L12.0146 17.4964C11.7219 17.7677 11.336 17.9212 10.9361 17.9212C10.5361 17.9212 10.1503 17.7714 9.85755 17.5H10Z"
-                          transform="translate(-1.007 -0.9) scale(0.86)"
-                          stroke="currentColor"
-                          stroke-width="1.8"
-                          stroke-linejoin="round"
-                        />
-                      </svg>
-                    </button>
-                    <span class="tour-card__badge">Phổ biến</span>
-                  </div>
-                  <div class="tour-card__body">
-                    <div class="tour-card__meta">
-                      <span class="tour-card__location">
-                        <svg viewBox="0 0 11 14" fill="none" aria-hidden="true">
-                          <path
-                            d="M5.89805 13.65C7.30078 11.8945 10.5 7.63984 10.5 5.25C10.5 2.35156 8.14844 0 5.25 0C2.35156 0 0 2.35156 0 5.25C0 7.63984 3.19922 11.8945 4.60195 13.65C4.93828 14.0684 5.56172 14.0684 5.89805 13.65ZM5.25 3.5C5.71413 3.5 6.15925 3.68437 6.48744 4.01256C6.81563 4.34075 7 4.78587 7 5.25C7 5.71413 6.81563 6.15925 6.48744 6.48744C6.15925 6.81563 5.71413 7 5.25 7C4.78587 7 4.34075 6.81563 4.01256 6.48744C3.68437 6.15925 3.5 5.71413 3.5 5.25C3.5 4.78587 3.68437 4.34075 4.01256 4.01256C4.34075 3.68437 4.78587 3.5 5.25 3.5Z"
-                            fill="#10B981"
-                          />
-                        </svg>
-                        Quảng Ninh
-                      </span>
-                      <span class="tour-card__rating">
-                        <svg viewBox="0 0 16 14" fill="none" aria-hidden="true">
-                          <path
-                            d="M8.66525 0.492188C8.52032 0.191406 8.21407 0 7.87775 0C7.54142 0 7.2379 0.191406 7.09025 0.492188L5.33204 4.10977L1.40548 4.68945C1.07736 4.73867 0.803918 4.96836 0.702746 5.28281C0.601574 5.59727 0.683605 5.94453 0.918761 6.17695L3.76798 8.99609L3.09532 12.9801C3.04064 13.3082 3.17736 13.6418 3.44806 13.8359C3.71876 14.0301 4.07696 14.0547 4.37228 13.8988L7.88048 12.0258L11.3887 13.8988C11.684 14.0547 12.0422 14.0328 12.3129 13.8359C12.5836 13.6391 12.7203 13.3082 12.6656 12.9801L11.9902 8.99609L14.8395 6.17695C15.0746 5.94453 15.1594 5.59727 15.0555 5.28281C14.9516 4.96836 14.6809 4.73867 14.3527 4.68945L10.4234 4.10977L8.66525 0.492188Z"
-                            fill="#FACC15"
-                          />
-                        </svg>
-                        <strong>4.9</strong>
-                        <span>(256)</span>
-                      </span>
-                    </div>
-                    <h3>Du thuyền Hạ Long - Bái Tử<br />Long 2N1Đ</h3>
-                    <p>
-                      Khám phá vẻ đẹp tuyệt vời của Vịnh<br />Hạ Long với các
-                      hoạt động chèo
-                    </p>
-                    <div class="tour-card__pricing">
-                      <div>
-                        <div class="tour-card__price">5.990.000đ</div>
-                        <div class="tour-card__unit">/ người</div>
-                      </div>
-                      <div class="tour-card__duration">
-                        <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                          <path
-                            d="M12.6875 7C12.6875 8.50842 12.0883 9.95506 11.0217 11.0217C9.95506 12.0883 8.50842 12.6875 7 12.6875C5.49158 12.6875 4.04494 12.0883 2.97833 11.0217C1.91172 9.95506 1.3125 8.50842 1.3125 7C1.3125 5.49158 1.91172 4.04494 2.97833 2.97833C4.04494 1.91172 5.49158 1.3125 7 1.3125C8.50842 1.3125 9.95506 1.91172 11.0217 2.97833C12.0883 4.04494 12.6875 5.49158 12.6875 7ZM0 7C0 8.85652 0.737498 10.637 2.05025 11.9497C3.36301 13.2625 5.14348 14 7 14C8.85652 14 10.637 13.2625 11.9497 11.9497C13.2625 10.637 14 8.85652 14 7C14 5.14348 13.2625 3.36301 11.9497 2.05025C10.637 0.737498 8.85652 0 7 0C5.14348 0 3.36301 0.737498 2.05025 2.05025C0.737498 3.36301 0 5.14348 0 7ZM6.34375 3.28125V7C6.34375 7.21875 6.45312 7.42383 6.63633 7.54688L9.26133 9.29688C9.56211 9.49922 9.96953 9.41719 10.1719 9.11367C10.3742 8.81016 10.2922 8.40547 9.98867 8.20312L7.65625 6.65V3.28125C7.65625 2.91758 7.36367 2.625 7 2.625C6.63633 2.625 6.34375 2.91758 6.34375 3.28125Z"
-                            fill="#4B5563"
-                          />
-                        </svg>
-                        2N1Đ
-                      </div>
-                    </div>
-                    <button class="detail-btn" type="button">
-                      Xem chi tiết
-                    </button>
-                  </div>
-                </article>
-
-                <article class="tour-card">
-                  <div class="tour-card__media">
-                    <img
-                      src="../../assets/images/tours/tour-2.png"
-                      alt="Tour Sapa - Fansipan 3N2Đ"
-                    />
-                    <button
-                      class="heart-btn"
-                      type="button"
-                      aria-label="Yêu thích Tour Sapa - Fansipan 3N2Đ"
-                      aria-pressed="false"
-                    >
-                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                        <path
-                          d="M10 17.5L3.75 11.6898C2.65524 10.673 1.875 9.24603 1.875 7.7508V7.63359C1.875 5.12277 3.66104 2.96803 6.12943 2.49694C7.53323 2.22631 8.96964 2.55021 10.1146 3.35614C10.4355 3.58427 10.7352 3.84814 11.0066 4.15166C11.1569 3.98019 11.318 3.82316 11.4892 3.67642C11.6208 3.56203 11.7564 3.45499 11.8999 3.35614C13.0449 2.55021 14.4814 2.22631 15.8852 2.4933C18.3536 2.96439 20.1396 5.12277 20.1396 7.63359V7.7508C20.1396 9.24603 19.3594 10.673 18.2646 11.6898L12.0146 17.4964C11.7219 17.7677 11.336 17.9212 10.9361 17.9212C10.5361 17.9212 10.1503 17.7714 9.85755 17.5H10Z"
-                          transform="translate(-1.007 -0.9) scale(0.86)"
-                          stroke="currentColor"
-                          stroke-width="1.8"
-                          stroke-linejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                  <div class="tour-card__body">
-                    <div class="tour-card__meta">
-                      <span class="tour-card__location">
-                        <svg viewBox="0 0 11 14" fill="none" aria-hidden="true">
-                          <path
-                            d="M5.89805 13.65C7.30078 11.8945 10.5 7.63984 10.5 5.25C10.5 2.35156 8.14844 0 5.25 0C2.35156 0 0 2.35156 0 5.25C0 7.63984 3.19922 11.8945 4.60195 13.65C4.93828 14.0684 5.56172 14.0684 5.89805 13.65ZM5.25 3.5C5.71413 3.5 6.15925 3.68437 6.48744 4.01256C6.81563 4.34075 7 4.78587 7 5.25C7 5.71413 6.81563 6.15925 6.48744 6.48744C6.15925 6.81563 5.71413 7 5.25 7C4.78587 7 4.34075 6.81563 4.01256 6.48744C3.68437 6.15925 3.5 5.71413 3.5 5.25C3.5 4.78587 3.68437 4.34075 4.01256 4.01256C4.34075 3.68437 4.78587 3.5 5.25 3.5Z"
-                            fill="#10B981"
-                          />
-                        </svg>
-                        Lào Cai
-                      </span>
-                      <span class="tour-card__rating">
-                        <svg viewBox="0 0 16 14" fill="none" aria-hidden="true">
-                          <path
-                            d="M8.66525 0.492188C8.52032 0.191406 8.21407 0 7.87775 0C7.54142 0 7.2379 0.191406 7.09025 0.492188L5.33204 4.10977L1.40548 4.68945C1.07736 4.73867 0.803918 4.96836 0.702746 5.28281C0.601574 5.59727 0.683605 5.94453 0.918761 6.17695L3.76798 8.99609L3.09532 12.9801C3.04064 13.3082 3.17736 13.6418 3.44806 13.8359C3.71876 14.0301 4.07696 14.0547 4.37228 13.8988L7.88048 12.0258L11.3887 13.8988C11.684 14.0547 12.0422 14.0328 12.3129 13.8359C12.5836 13.6391 12.7203 13.3082 12.6656 12.9801L11.9902 8.99609L14.8395 6.17695C15.0746 5.94453 15.1594 5.59727 15.0555 5.28281C14.9516 4.96836 14.6809 4.73867 14.3527 4.68945L10.4234 4.10977L8.66525 0.492188Z"
-                            fill="#FACC15"
-                          />
-                        </svg>
-                        <strong>4.8</strong>
-                        <span>(189)</span>
-                      </span>
-                    </div>
-                    <h3>Tour Sapa - Fansipan<br />3N2Đ</h3>
-                    <p>
-                      Chinh phục nóc nhà Đông Dương,<br />khám phá ruộng bậc
-                      thang và văn
-                    </p>
-                    <div class="tour-card__pricing">
-                      <div>
-                        <div class="tour-card__price">4.290.000đ</div>
-                        <div class="tour-card__unit">/ người</div>
-                      </div>
-                      <div class="tour-card__duration">
-                        <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                          <path
-                            d="M12.6875 7C12.6875 8.50842 12.0883 9.95506 11.0217 11.0217C9.95506 12.0883 8.50842 12.6875 7 12.6875C5.49158 12.6875 4.04494 12.0883 2.97833 11.0217C1.91172 9.95506 1.3125 8.50842 1.3125 7C1.3125 5.49158 1.91172 4.04494 2.97833 2.97833C4.04494 1.91172 5.49158 1.3125 7 1.3125C8.50842 1.3125 9.95506 1.91172 11.0217 2.97833C12.0883 4.04494 12.6875 5.49158 12.6875 7ZM0 7C0 8.85652 0.737498 10.637 2.05025 11.9497C3.36301 13.2625 5.14348 14 7 14C8.85652 14 10.637 13.2625 11.9497 11.9497C13.2625 10.637 14 8.85652 14 7C14 5.14348 13.2625 3.36301 11.9497 2.05025C10.637 0.737498 8.85652 0 7 0C5.14348 0 3.36301 0.737498 2.05025 2.05025C0.737498 3.36301 0 5.14348 0 7ZM6.34375 3.28125V7C6.34375 7.21875 6.45312 7.42383 6.63633 7.54688L9.26133 9.29688C9.56211 9.49922 9.96953 9.41719 10.1719 9.11367C10.3742 8.81016 10.2922 8.40547 9.98867 8.20312L7.65625 6.65V3.28125C7.65625 2.91758 7.36367 2.625 7 2.625C6.63633 2.625 6.34375 2.91758 6.34375 3.28125Z"
-                            fill="#4B5563"
-                          />
-                        </svg>
-                        3N2Đ
-                      </div>
-                    </div>
-                    <button class="detail-btn" type="button">
-                      Xem chi tiết
-                    </button>
-                  </div>
-                </article>
-
-                <article class="tour-card">
-                  <div class="tour-card__media">
-                    <img
-                      src="../../assets/images/tours/tour-3.png"
-                      alt="Phú Quốc - Đảo Ngọc 4N3Đ"
-                    />
-                    <button
-                      class="heart-btn"
-                      type="button"
-                      aria-label="Yêu thích Phú Quốc - Đảo Ngọc 4N3Đ"
-                      aria-pressed="false"
-                    >
-                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                        <path
-                          d="M10 17.5L3.75 11.6898C2.65524 10.673 1.875 9.24603 1.875 7.7508V7.63359C1.875 5.12277 3.66104 2.96803 6.12943 2.49694C7.53323 2.22631 8.96964 2.55021 10.1146 3.35614C10.4355 3.58427 10.7352 3.84814 11.0066 4.15166C11.1569 3.98019 11.318 3.82316 11.4892 3.67642C11.6208 3.56203 11.7564 3.45499 11.8999 3.35614C13.0449 2.55021 14.4814 2.22631 15.8852 2.4933C18.3536 2.96439 20.1396 5.12277 20.1396 7.63359V7.7508C20.1396 9.24603 19.3594 10.673 18.2646 11.6898L12.0146 17.4964C11.7219 17.7677 11.336 17.9212 10.9361 17.9212C10.5361 17.9212 10.1503 17.7714 9.85755 17.5H10Z"
-                          transform="translate(-1.007 -0.9) scale(0.86)"
-                          stroke="currentColor"
-                          stroke-width="1.8"
-                          stroke-linejoin="round"
-                        />
-                      </svg>
-                    </button>
-                    <span class="tour-card__badge">Giảm 20%</span>
-                  </div>
-                  <div class="tour-card__body">
-                    <div class="tour-card__meta">
-                      <span class="tour-card__location">
-                        <svg viewBox="0 0 11 14" fill="none" aria-hidden="true">
-                          <path
-                            d="M5.89805 13.65C7.30078 11.8945 10.5 7.63984 10.5 5.25C10.5 2.35156 8.14844 0 5.25 0C2.35156 0 0 2.35156 0 5.25C0 7.63984 3.19922 11.8945 4.60195 13.65C4.93828 14.0684 5.56172 14.0684 5.89805 13.65ZM5.25 3.5C5.71413 3.5 6.15925 3.68437 6.48744 4.01256C6.81563 4.34075 7 4.78587 7 5.25C7 5.71413 6.81563 6.15925 6.48744 6.48744C6.15925 6.81563 5.71413 7 5.25 7C4.78587 7 4.34075 6.81563 4.01256 6.48744C3.68437 6.15925 3.5 5.71413 3.5 5.25C3.5 4.78587 3.68437 4.34075 4.01256 4.01256C4.34075 3.68437 4.78587 3.5 5.25 3.5Z"
-                            fill="#10B981"
-                          />
-                        </svg>
-                        Kiên Giang
-                      </span>
-                      <span class="tour-card__rating">
-                        <svg viewBox="0 0 16 14" fill="none" aria-hidden="true">
-                          <path
-                            d="M8.66525 0.492188C8.52032 0.191406 8.21407 0 7.87775 0C7.54142 0 7.2379 0.191406 7.09025 0.492188L5.33204 4.10977L1.40548 4.68945C1.07736 4.73867 0.803918 4.96836 0.702746 5.28281C0.601574 5.59727 0.683605 5.94453 0.918761 6.17695L3.76798 8.99609L3.09532 12.9801C3.04064 13.3082 3.17736 13.6418 3.44806 13.8359C3.71876 14.0301 4.07696 14.0547 4.37228 13.8988L7.88048 12.0258L11.3887 13.8988C11.684 14.0547 12.0422 14.0328 12.3129 13.8359C12.5836 13.6391 12.7203 13.3082 12.6656 12.9801L11.9902 8.99609L14.8395 6.17695C15.0746 5.94453 15.1594 5.59727 15.0555 5.28281C14.9516 4.96836 14.6809 4.73867 14.3527 4.68945L10.4234 4.10977L8.66525 0.492188Z"
-                            fill="#FACC15"
-                          />
-                        </svg>
-                        <strong>4.7</strong>
-                        <span>(324)</span>
-                      </span>
-                    </div>
-                    <h3>Phú Quốc - Đảo Ngọc<br />4N3Đ</h3>
-                    <p>
-                      Nghỉ dưỡng tại thiên đường biển<br />đ ảo với bãi biển
-                      tuyệt đẹp, lặn ngắm
-                    </p>
-                    <div class="tour-card__pricing">
-                      <div>
-                        <div class="tour-card__price">6.790.000đ</div>
-                        <div class="tour-card__old-price">8.490.000đ</div>
-                      </div>
-                      <div class="tour-card__duration">
-                        <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                          <path
-                            d="M12.6875 7C12.6875 8.50842 12.0883 9.95506 11.0217 11.0217C9.95506 12.0883 8.50842 12.6875 7 12.6875C5.49158 12.6875 4.04494 12.0883 2.97833 11.0217C1.91172 9.95506 1.3125 8.50842 1.3125 7C1.3125 5.49158 1.91172 4.04494 2.97833 2.97833C4.04494 1.91172 5.49158 1.3125 7 1.3125C8.50842 1.3125 9.95506 1.91172 11.0217 2.97833C12.0883 4.04494 12.6875 5.49158 12.6875 7ZM0 7C0 8.85652 0.737498 10.637 2.05025 11.9497C3.36301 13.2625 5.14348 14 7 14C8.85652 14 10.637 13.2625 11.9497 11.9497C13.2625 10.637 14 8.85652 14 7C14 5.14348 13.2625 3.36301 11.9497 2.05025C10.637 0.737498 8.85652 0 7 0C5.14348 0 3.36301 0.737498 2.05025 2.05025C0.737498 3.36301 0 5.14348 0 7ZM6.34375 3.28125V7C6.34375 7.21875 6.45312 7.42383 6.63633 7.54688L9.26133 9.29688C9.56211 9.49922 9.96953 9.41719 10.1719 9.11367C10.3742 8.81016 10.2922 8.40547 9.98867 8.20312L7.65625 6.65V3.28125C7.65625 2.91758 7.36367 2.625 7 2.625C6.63633 2.625 6.34375 2.91758 6.34375 3.28125Z"
-                            fill="#4B5563"
-                          />
-                        </svg>
-                        4N3Đ
-                      </div>
-                    </div>
-                    <button class="detail-btn" type="button">
-                      Xem chi tiết
-                    </button>
-                  </div>
-                </article>
-
-                <article class="tour-card">
-                  <div class="tour-card__media">
-                    <img
-                      src="../../assets/images/tours/tour-4.png"
-                      alt="Đà Nẵng - Hội An - Huế 4N3Đ"
-                    />
-                    <button
-                      class="heart-btn"
-                      type="button"
-                      aria-label="Yêu thích Đà Nẵng - Hội An - Huế 4N3Đ"
-                      aria-pressed="false"
-                    >
-                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                        <path
-                          d="M10 17.5L3.75 11.6898C2.65524 10.673 1.875 9.24603 1.875 7.7508V7.63359C1.875 5.12277 3.66104 2.96803 6.12943 2.49694C7.53323 2.22631 8.96964 2.55021 10.1146 3.35614C10.4355 3.58427 10.7352 3.84814 11.0066 4.15166C11.1569 3.98019 11.318 3.82316 11.4892 3.67642C11.6208 3.56203 11.7564 3.45499 11.8999 3.35614C13.0449 2.55021 14.4814 2.22631 15.8852 2.4933C18.3536 2.96439 20.1396 5.12277 20.1396 7.63359V7.7508C20.1396 9.24603 19.3594 10.673 18.2646 11.6898L12.0146 17.4964C11.7219 17.7677 11.336 17.9212 10.9361 17.9212C10.5361 17.9212 10.1503 17.7714 9.85755 17.5H10Z"
-                          transform="translate(-1.007 -0.9) scale(0.86)"
-                          stroke="currentColor"
-                          stroke-width="1.8"
-                          stroke-linejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                  <div class="tour-card__body">
-                    <div class="tour-card__meta">
-                      <span class="tour-card__location"
-                        ><svg
-                          viewBox="0 0 11 14"
-                          fill="none"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M5.89805 13.65C7.30078 11.8945 10.5 7.63984 10.5 5.25C10.5 2.35156 8.14844 0 5.25 0C2.35156 0 0 2.35156 0 5.25C0 7.63984 3.19922 11.8945 4.60195 13.65C4.93828 14.0684 5.56172 14.0684 5.89805 13.65ZM5.25 3.5C5.71413 3.5 6.15925 3.68437 6.48744 4.01256C6.81563 4.34075 7 4.78587 7 5.25C7 5.71413 6.81563 6.15925 6.48744 6.48744C6.15925 6.81563 5.71413 7 5.25 7C4.78587 7 4.34075 6.81563 4.01256 6.48744C3.68437 6.15925 3.5 5.71413 3.5 5.25C3.5 4.78587 3.68437 4.34075 4.01256 4.01256C4.34075 3.68437 4.78587 3.5 5.25 3.5Z"
-                            fill="#10B981"
-                          /></svg
-                        >Đà Nẵng</span
-                      >
-                      <span class="tour-card__rating"
-                        ><svg
-                          viewBox="0 0 16 14"
-                          fill="none"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M8.66525 0.492188C8.52032 0.191406 8.21407 0 7.87775 0C7.54142 0 7.2379 0.191406 7.09025 0.492188L5.33204 4.10977L1.40548 4.68945C1.07736 4.73867 0.803918 4.96836 0.702746 5.28281C0.601574 5.59727 0.683605 5.94453 0.918761 6.17695L3.76798 8.99609L3.09532 12.9801C3.04064 13.3082 3.17736 13.6418 3.44806 13.8359C3.71876 14.0301 4.07696 14.0547 4.37228 13.8988L7.88048 12.0258L11.3887 13.8988C11.684 14.0547 12.0422 14.0328 12.3129 13.8359C12.5836 13.6391 12.7203 13.3082 12.6656 12.9801L11.9902 8.99609L14.8395 6.17695C15.0746 5.94453 15.1594 5.59727 15.0555 5.28281C14.9516 4.96836 14.6809 4.73867 14.3527 4.68945L10.4234 4.10977L8.66525 0.492188Z"
-                            fill="#FACC15"
-                          /></svg
-                        ><strong>4.9</strong><span>(412)</span></span
-                      >
-                    </div>
-                    <h3>Đà Nẵng - Hội An - Huế<br />4N3Đ</h3>
-                    <p>
-                      Khám phá miền Trung di sản với<br />cầu Vàng, phố cổ Hội
-                      An và cố đô
-                    </p>
-                    <div class="tour-card__pricing">
-                      <div>
-                        <div class="tour-card__price">5.490.000đ</div>
-                        <div class="tour-card__unit">/ người</div>
-                      </div>
-                      <div class="tour-card__duration">
-                        <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                          <path
-                            d="M12.6875 7C12.6875 8.50842 12.0883 9.95506 11.0217 11.0217C9.95506 12.0883 8.50842 12.6875 7 12.6875C5.49158 12.6875 4.04494 12.0883 2.97833 11.0217C1.91172 9.95506 1.3125 8.50842 1.3125 7C1.3125 5.49158 1.91172 4.04494 2.97833 2.97833C4.04494 1.91172 5.49158 1.3125 7 1.3125C8.50842 1.3125 9.95506 1.91172 11.0217 2.97833C12.0883 4.04494 12.6875 5.49158 12.6875 7ZM0 7C0 8.85652 0.737498 10.637 2.05025 11.9497C3.36301 13.2625 5.14348 14 7 14C8.85652 14 10.637 13.2625 11.9497 11.9497C13.2625 10.637 14 8.85652 14 7C14 5.14348 13.2625 3.36301 11.9497 2.05025C10.637 0.737498 8.85652 0 7 0C5.14348 0 3.36301 0.737498 2.05025 2.05025C0.737498 3.36301 0 5.14348 0 7ZM6.34375 3.28125V7C6.34375 7.21875 6.45312 7.42383 6.63633 7.54688L9.26133 9.29688C9.56211 9.49922 9.96953 9.41719 10.1719 9.11367C10.3742 8.81016 10.2922 8.40547 9.98867 8.20312L7.65625 6.65V3.28125C7.65625 2.91758 7.36367 2.625 7 2.625C6.63633 2.625 6.34375 2.91758 6.34375 3.28125Z"
-                            fill="#4B5563"
-                          /></svg
-                        >4N3Đ
-                      </div>
-                    </div>
-                    <button class="detail-btn" type="button">
-                      Xem chi tiết
-                    </button>
-                  </div>
-                </article>
-
-                <article class="tour-card">
-                  <div class="tour-card__media">
-                    <img
-                      src="../../assets/images/tours/tour-5.png"
-                      alt="Bangkok - Pattaya 5N4Đ"
-                    />
-                    <button
-                      class="heart-btn"
-                      type="button"
-                      aria-label="Yêu thích Bangkok - Pattaya 5N4Đ"
-                      aria-pressed="false"
-                    >
-                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                        <path
-                          d="M10 17.5L3.75 11.6898C2.65524 10.673 1.875 9.24603 1.875 7.7508V7.63359C1.875 5.12277 3.66104 2.96803 6.12943 2.49694C7.53323 2.22631 8.96964 2.55021 10.1146 3.35614C10.4355 3.58427 10.7352 3.84814 11.0066 4.15166C11.1569 3.98019 11.318 3.82316 11.4892 3.67642C11.6208 3.56203 11.7564 3.45499 11.8999 3.35614C13.0449 2.55021 14.4814 2.22631 15.8852 2.4933C18.3536 2.96439 20.1396 5.12277 20.1396 7.63359V7.7508C20.1396 9.24603 19.3594 10.673 18.2646 11.6898L12.0146 17.4964C11.7219 17.7677 11.336 17.9212 10.9361 17.9212C10.5361 17.9212 10.1503 17.7714 9.85755 17.5H10Z"
-                          transform="translate(-1.007 -0.9) scale(0.86)"
-                          stroke="currentColor"
-                          stroke-width="1.8"
-                          stroke-linejoin="round"
-                        />
-                      </svg>
-                    </button>
-                    <span class="tour-card__badge">Hot</span>
-                  </div>
-                  <div class="tour-card__body">
-                    <div class="tour-card__meta">
-                      <span class="tour-card__location"
-                        ><svg
-                          viewBox="0 0 11 14"
-                          fill="none"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M5.89805 13.65C7.30078 11.8945 10.5 7.63984 10.5 5.25C10.5 2.35156 8.14844 0 5.25 0C2.35156 0 0 2.35156 0 5.25C0 7.63984 3.19922 11.8945 4.60195 13.65C4.93828 14.0684 5.56172 14.0684 5.89805 13.65ZM5.25 3.5C5.71413 3.5 6.15925 3.68437 6.48744 4.01256C6.81563 4.34075 7 4.78587 7 5.25C7 5.71413 6.81563 6.15925 6.48744 6.48744C6.15925 6.81563 5.71413 7 5.25 7C4.78587 7 4.34075 6.81563 4.01256 6.48744C3.68437 6.15925 3.5 5.71413 3.5 5.25C3.5 4.78587 3.68437 4.34075 4.01256 4.01256C4.34075 3.68437 4.78587 3.5 5.25 3.5Z"
-                            fill="#10B981"
-                          /></svg
-                        >Thái Lan</span
-                      >
-                      <span class="tour-card__rating"
-                        ><svg
-                          viewBox="0 0 16 14"
-                          fill="none"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M8.66525 0.492188C8.52032 0.191406 8.21407 0 7.87775 0C7.54142 0 7.2379 0.191406 7.09025 0.492188L5.33204 4.10977L1.40548 4.68945C1.07736 4.73867 0.803918 4.96836 0.702746 5.28281C0.601574 5.59727 0.683605 5.94453 0.918761 6.17695L3.76798 8.99609L3.09532 12.9801C3.04064 13.3082 3.17736 13.6418 3.44806 13.8359C3.71876 14.0301 4.07696 14.0547 4.37228 13.8988L7.88048 12.0258L11.3887 13.8988C11.684 14.0547 12.0422 14.0328 12.3129 13.8359C12.5836 13.6391 12.7203 13.3082 12.6656 12.9801L11.9902 8.99609L14.8395 6.17695C15.0746 5.94453 15.1594 5.59727 15.0555 5.28281C14.9516 4.96836 14.6809 4.73867 14.3527 4.68945L10.4234 4.10977L8.66525 0.492188Z"
-                            fill="#FACC15"
-                          /></svg
-                        ><strong>5.0</strong><span>(567)</span></span
-                      >
-                    </div>
-                    <h3>Bangkok - Pattaya 5N4Đ</h3>
-                    <p>
-                      Trải nghiệm xứ sở chùa vàng với<br />chùa Wat Arun, chợ
-                      nổi Damnoen
-                    </p>
-                    <div class="tour-card__pricing">
-                      <div>
-                        <div class="tour-card__price">8.990.000đ</div>
-                        <div class="tour-card__unit">/ người</div>
-                      </div>
-                      <div class="tour-card__duration">
-                        <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                          <path
-                            d="M12.6875 7C12.6875 8.50842 12.0883 9.95506 11.0217 11.0217C9.95506 12.0883 8.50842 12.6875 7 12.6875C5.49158 12.6875 4.04494 12.0883 2.97833 11.0217C1.91172 9.95506 1.3125 8.50842 1.3125 7C1.3125 5.49158 1.91172 4.04494 2.97833 2.97833C4.04494 1.91172 5.49158 1.3125 7 1.3125C8.50842 1.3125 9.95506 1.91172 11.0217 2.97833C12.0883 4.04494 12.6875 5.49158 12.6875 7ZM0 7C0 8.85652 0.737498 10.637 2.05025 11.9497C3.36301 13.2625 5.14348 14 7 14C8.85652 14 10.637 13.2625 11.9497 11.9497C13.2625 10.637 14 8.85652 14 7C14 5.14348 13.2625 3.36301 11.9497 2.05025C10.637 0.737498 8.85652 0 7 0C5.14348 0 3.36301 0.737498 2.05025 2.05025C0.737498 3.36301 0 5.14348 0 7ZM6.34375 3.28125V7C6.34375 7.21875 6.45312 7.42383 6.63633 7.54688L9.26133 9.29688C9.56211 9.49922 9.96953 9.41719 10.1719 9.11367C10.3742 8.81016 10.2922 8.40547 9.98867 8.20312L7.65625 6.65V3.28125C7.65625 2.91758 7.36367 2.625 7 2.625C6.63633 2.625 6.34375 2.91758 6.34375 3.28125Z"
-                            fill="#4B5563"
-                          /></svg
-                        >5N4Đ
-                      </div>
-                    </div>
-                    <button class="detail-btn" type="button">
-                      Xem chi tiết
-                    </button>
-                  </div>
-                </article>
-
-                <article class="tour-card">
-                  <div class="tour-card__media">
-                    <img
-                      src="../../assets/images/tours/tour-6.png"
-                      alt="Nha Trang - Vinpearl 3N2Đ"
-                    />
-                    <button
-                      class="heart-btn"
-                      type="button"
-                      aria-label="Yêu thích Nha Trang - Vinpearl 3N2Đ"
-                      aria-pressed="false"
-                    >
-                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                        <path
-                          d="M10 17.5L3.75 11.6898C2.65524 10.673 1.875 9.24603 1.875 7.7508V7.63359C1.875 5.12277 3.66104 2.96803 6.12943 2.49694C7.53323 2.22631 8.96964 2.55021 10.1146 3.35614C10.4355 3.58427 10.7352 3.84814 11.0066 4.15166C11.1569 3.98019 11.318 3.82316 11.4892 3.67642C11.6208 3.56203 11.7564 3.45499 11.8999 3.35614C13.0449 2.55021 14.4814 2.22631 15.8852 2.4933C18.3536 2.96439 20.1396 5.12277 20.1396 7.63359V7.7508C20.1396 9.24603 19.3594 10.673 18.2646 11.6898L12.0146 17.4964C11.7219 17.7677 11.336 17.9212 10.9361 17.9212C10.5361 17.9212 10.1503 17.7714 9.85755 17.5H10Z"
-                          transform="translate(-1.007 -0.9) scale(0.86)"
-                          stroke="currentColor"
-                          stroke-width="1.8"
-                          stroke-linejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                  <div class="tour-card__body">
-                    <div class="tour-card__meta">
-                      <span class="tour-card__location"
-                        ><svg
-                          viewBox="0 0 11 14"
-                          fill="none"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M5.89805 13.65C7.30078 11.8945 10.5 7.63984 10.5 5.25C10.5 2.35156 8.14844 0 5.25 0C2.35156 0 0 2.35156 0 5.25C0 7.63984 3.19922 11.8945 4.60195 13.65C4.93828 14.0684 5.56172 14.0684 5.89805 13.65ZM5.25 3.5C5.71413 3.5 6.15925 3.68437 6.48744 4.01256C6.81563 4.34075 7 4.78587 7 5.25C7 5.71413 6.81563 6.15925 6.48744 6.48744C6.15925 6.81563 5.71413 7 5.25 7C4.78587 7 4.34075 6.81563 4.01256 6.48744C3.68437 6.15925 3.5 5.71413 3.5 5.25C3.5 4.78587 3.68437 4.34075 4.01256 4.01256C4.34075 3.68437 4.78587 3.5 5.25 3.5Z"
-                            fill="#10B981"
-                          /></svg
-                        >Khánh Hòa</span
-                      >
-                      <span class="tour-card__rating"
-                        ><svg
-                          viewBox="0 0 16 14"
-                          fill="none"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M8.66525 0.492188C8.52032 0.191406 8.21407 0 7.87775 0C7.54142 0 7.2379 0.191406 7.09025 0.492188L5.33204 4.10977L1.40548 4.68945C1.07736 4.73867 0.803918 4.96836 0.702746 5.28281C0.601574 5.59727 0.683605 5.94453 0.918761 6.17695L3.76798 8.99609L3.09532 12.9801C3.04064 13.3082 3.17736 13.6418 3.44806 13.8359C3.71876 14.0301 4.07696 14.0547 4.37228 13.8988L7.88048 12.0258L11.3887 13.8988C11.684 14.0547 12.0422 14.0328 12.3129 13.8359C12.5836 13.6391 12.7203 13.3082 12.6656 12.9801L11.9902 8.99609L14.8395 6.17695C15.0746 5.94453 15.1594 5.59727 15.0555 5.28281C14.9516 4.96836 14.6809 4.73867 14.3527 4.68945L10.4234 4.10977L8.66525 0.492188Z"
-                            fill="#FACC15"
-                          /></svg
-                        ><strong>4.8</strong><span>(298)</span></span
-                      >
-                    </div>
-                    <h3>Nha Trang - Vinpearl 3N2Đ</h3>
-                    <p>
-                      Nghỉ dưỡng tại thành phố biển xinh<br />đ ẹp với hoạt động
-                      lặn biển, tắm bùn
-                    </p>
-                    <div class="tour-card__pricing">
-                      <div>
-                        <div class="tour-card__price">4.890.000đ</div>
-                        <div class="tour-card__unit">/ người</div>
-                      </div>
-                      <div class="tour-card__duration">
-                        <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                          <path
-                            d="M12.6875 7C12.6875 8.50842 12.0883 9.95506 11.0217 11.0217C9.95506 12.0883 8.50842 12.6875 7 12.6875C5.49158 12.6875 4.04494 12.0883 2.97833 11.0217C1.91172 9.95506 1.3125 8.50842 1.3125 7C1.3125 5.49158 1.91172 4.04494 2.97833 2.97833C4.04494 1.91172 5.49158 1.3125 7 1.3125C8.50842 1.3125 9.95506 1.91172 11.0217 2.97833C12.0883 4.04494 12.6875 5.49158 12.6875 7ZM0 7C0 8.85652 0.737498 10.637 2.05025 11.9497C3.36301 13.2625 5.14348 14 7 14C8.85652 14 10.637 13.2625 11.9497 11.9497C13.2625 10.637 14 8.85652 14 7C14 5.14348 13.2625 3.36301 11.9497 2.05025C10.637 0.737498 8.85652 0 7 0C5.14348 0 3.36301 0.737498 2.05025 2.05025C0.737498 3.36301 0 5.14348 0 7ZM6.34375 3.28125V7C6.34375 7.21875 6.45312 7.42383 6.63633 7.54688L9.26133 9.29688C9.56211 9.49922 9.96953 9.41719 10.1719 9.11367C10.3742 8.81016 10.2922 8.40547 9.98867 8.20312L7.65625 6.65V3.28125C7.65625 2.91758 7.36367 2.625 7 2.625C6.63633 2.625 6.34375 2.91758 6.34375 3.28125Z"
-                            fill="#4B5563"
-                          /></svg
-                        >3N2Đ
-                      </div>
-                    </div>
-                    <button class="detail-btn" type="button">
-                      Xem chi tiết
-                    </button>
-                  </div>
-                </article>
-
-                <article class="tour-card">
-                  <div class="tour-card__media">
-                    <img
-                      src="../../assets/images/tours/tour-7.png"
-                      alt="Singapore - Malaysia 6N5Đ"
-                    />
-                    <button
-                      class="heart-btn"
-                      type="button"
-                      aria-label="Yêu thích Singapore - Malaysia 6N5Đ"
-                      aria-pressed="false"
-                    >
-                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                        <path
-                          d="M10 17.5L3.75 11.6898C2.65524 10.673 1.875 9.24603 1.875 7.7508V7.63359C1.875 5.12277 3.66104 2.96803 6.12943 2.49694C7.53323 2.22631 8.96964 2.55021 10.1146 3.35614C10.4355 3.58427 10.7352 3.84814 11.0066 4.15166C11.1569 3.98019 11.318 3.82316 11.4892 3.67642C11.6208 3.56203 11.7564 3.45499 11.8999 3.35614C13.0449 2.55021 14.4814 2.22631 15.8852 2.4933C18.3536 2.96439 20.1396 5.12277 20.1396 7.63359V7.7508C20.1396 9.24603 19.3594 10.673 18.2646 11.6898L12.0146 17.4964C11.7219 17.7677 11.336 17.9212 10.9361 17.9212C10.5361 17.9212 10.1503 17.7714 9.85755 17.5H10Z"
-                          transform="translate(-1.007 -0.9) scale(0.86)"
-                          stroke="currentColor"
-                          stroke-width="1.8"
-                          stroke-linejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                  <div class="tour-card__body">
-                    <div class="tour-card__meta">
-                      <span class="tour-card__location"
-                        ><svg
-                          viewBox="0 0 11 14"
-                          fill="none"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M5.89805 13.65C7.30078 11.8945 10.5 7.63984 10.5 5.25C10.5 2.35156 8.14844 0 5.25 0C2.35156 0 0 2.35156 0 5.25C0 7.63984 3.19922 11.8945 4.60195 13.65C4.93828 14.0684 5.56172 14.0684 5.89805 13.65ZM5.25 3.5C5.71413 3.5 6.15925 3.68437 6.48744 4.01256C6.81563 4.34075 7 4.78587 7 5.25C7 5.71413 6.81563 6.15925 6.48744 6.48744C6.15925 6.81563 5.71413 7 5.25 7C4.78587 7 4.34075 6.81563 4.01256 6.48744C3.68437 6.15925 3.5 5.71413 3.5 5.25C3.5 4.78587 3.68437 4.34075 4.01256 4.01256C4.34075 3.68437 4.78587 3.5 5.25 3.5Z"
-                            fill="#10B981"
-                          /></svg
-                        >Singapore</span
-                      >
-                      <span class="tour-card__rating"
-                        ><svg
-                          viewBox="0 0 16 14"
-                          fill="none"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M8.66525 0.492188C8.52032 0.191406 8.21407 0 7.87775 0C7.54142 0 7.2379 0.191406 7.09025 0.492188L5.33204 4.10977L1.40548 4.68945C1.07736 4.73867 0.803918 4.96836 0.702746 5.28281C0.601574 5.59727 0.683605 5.94453 0.918761 6.17695L3.76798 8.99609L3.09532 12.9801C3.04064 13.3082 3.17736 13.6418 3.44806 13.8359C3.71876 14.0301 4.07696 14.0547 4.37228 13.8988L7.88048 12.0258L11.3887 13.8988C11.684 14.0547 12.0422 14.0328 12.3129 13.8359C12.5836 13.6391 12.7203 13.3082 12.6656 12.9801L11.9902 8.99609L14.8395 6.17695C15.0746 5.94453 15.1594 5.59727 15.0555 5.28281C14.9516 4.96836 14.6809 4.73867 14.3527 4.68945L10.4234 4.10977L8.66525 0.492188Z"
-                            fill="#FACC15"
-                          /></svg
-                        ><strong>4.9</strong><span>(445)</span></span
-                      >
-                    </div>
-                    <h3>Singapore - Malaysia 6N5Đ</h3>
-                    <p>
-                      Khám phá đảo quốc sư tử với<br />Gardens by the Bay,
-                      Universal
-                    </p>
-                    <div class="tour-card__pricing">
-                      <div>
-                        <div class="tour-card__price">14.990.000đ</div>
-                        <div class="tour-card__unit">/ người</div>
-                      </div>
-                      <div class="tour-card__duration">
-                        <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                          <path
-                            d="M12.6875 7C12.6875 8.50842 12.0883 9.95506 11.0217 11.0217C9.95506 12.0883 8.50842 12.6875 7 12.6875C5.49158 12.6875 4.04494 12.0883 2.97833 11.0217C1.91172 9.95506 1.3125 8.50842 1.3125 7C1.3125 5.49158 1.91172 4.04494 2.97833 2.97833C4.04494 1.91172 5.49158 1.3125 7 1.3125C8.50842 1.3125 9.95506 1.91172 11.0217 2.97833C12.0883 4.04494 12.6875 5.49158 12.6875 7ZM0 7C0 8.85652 0.737498 10.637 2.05025 11.9497C3.36301 13.2625 5.14348 14 7 14C8.85652 14 10.637 13.2625 11.9497 11.9497C13.2625 10.637 14 8.85652 14 7C14 5.14348 13.2625 3.36301 11.9497 2.05025C10.637 0.737498 8.85652 0 7 0C5.14348 0 3.36301 0.737498 2.05025 2.05025C0.737498 3.36301 0 5.14348 0 7ZM6.34375 3.28125V7C6.34375 7.21875 6.45312 7.42383 6.63633 7.54688L9.26133 9.29688C9.56211 9.49922 9.96953 9.41719 10.1719 9.11367C10.3742 8.81016 10.2922 8.40547 9.98867 8.20312L7.65625 6.65V3.28125C7.65625 2.91758 7.36367 2.625 7 2.625C6.63633 2.625 6.34375 2.91758 6.34375 3.28125Z"
-                            fill="#4B5563"
-                          /></svg
-                        >6N5Đ
-                      </div>
-                    </div>
-                    <button class="detail-btn" type="button">
-                      Xem chi tiết
-                    </button>
-                  </div>
-                </article>
-
-                <article class="tour-card">
-                  <div class="tour-card__media">
-                    <img
-                      src="../../assets/images/tours/tour-8.png"
-                      alt="Đà Lạt Thành Phố Ngàn Hoa 3N2Đ"
-                    />
-                    <button
-                      class="heart-btn"
-                      type="button"
-                      aria-label="Yêu thích Đà Lạt Thành Phố Ngàn Hoa 3N2Đ"
-                      aria-pressed="false"
-                    >
-                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                        <path
-                          d="M10 17.5L3.75 11.6898C2.65524 10.673 1.875 9.24603 1.875 7.7508V7.63359C1.875 5.12277 3.66104 2.96803 6.12943 2.49694C7.53323 2.22631 8.96964 2.55021 10.1146 3.35614C10.4355 3.58427 10.7352 3.84814 11.0066 4.15166C11.1569 3.98019 11.318 3.82316 11.4892 3.67642C11.6208 3.56203 11.7564 3.45499 11.8999 3.35614C13.0449 2.55021 14.4814 2.22631 15.8852 2.4933C18.3536 2.96439 20.1396 5.12277 20.1396 7.63359V7.7508C20.1396 9.24603 19.3594 10.673 18.2646 11.6898L12.0146 17.4964C11.7219 17.7677 11.336 17.9212 10.9361 17.9212C10.5361 17.9212 10.1503 17.7714 9.85755 17.5H10Z"
-                          transform="translate(-1.007 -0.9) scale(0.86)"
-                          stroke="currentColor"
-                          stroke-width="1.8"
-                          stroke-linejoin="round"
-                        />
-                      </svg>
-                    </button>
-                  </div>
-                  <div class="tour-card__body">
-                    <div class="tour-card__meta">
-                      <span class="tour-card__location"
-                        ><svg
-                          viewBox="0 0 11 14"
-                          fill="none"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M5.89805 13.65C7.30078 11.8945 10.5 7.63984 10.5 5.25C10.5 2.35156 8.14844 0 5.25 0C2.35156 0 0 2.35156 0 5.25C0 7.63984 3.19922 11.8945 4.60195 13.65C4.93828 14.0684 5.56172 14.0684 5.89805 13.65ZM5.25 3.5C5.71413 3.5 6.15925 3.68437 6.48744 4.01256C6.81563 4.34075 7 4.78587 7 5.25C7 5.71413 6.81563 6.15925 6.48744 6.48744C6.15925 6.81563 5.71413 7 5.25 7C4.78587 7 4.34075 6.81563 4.01256 6.48744C3.68437 6.15925 3.5 5.71413 3.5 5.25C3.5 4.78587 3.68437 4.34075 4.01256 4.01256C4.34075 3.68437 4.78587 3.5 5.25 3.5Z"
-                            fill="#10B981"
-                          /></svg
-                        >Lâm Đồng</span
-                      >
-                      <span class="tour-card__rating"
-                        ><svg
-                          viewBox="0 0 16 14"
-                          fill="none"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M8.66525 0.492188C8.52032 0.191406 8.21407 0 7.87775 0C7.54142 0 7.2379 0.191406 7.09025 0.492188L5.33204 4.10977L1.40548 4.68945C1.07736 4.73867 0.803918 4.96836 0.702746 5.28281C0.601574 5.59727 0.683605 5.94453 0.918761 6.17695L3.76798 8.99609L3.09532 12.9801C3.04064 13.3082 3.17736 13.6418 3.44806 13.8359C3.71876 14.0301 4.07696 14.0547 4.37228 13.8988L7.88048 12.0258L11.3887 13.8988C11.684 14.0547 12.0422 14.0328 12.3129 13.8359C12.5836 13.6391 12.7203 13.3082 12.6656 12.9801L11.9902 8.99609L14.8395 6.17695C15.0746 5.94453 15.1594 5.59727 15.0555 5.28281C14.9516 4.96836 14.6809 4.73867 14.3527 4.68945L10.4234 4.10977L8.66525 0.492188Z"
-                            fill="#FACC15"
-                          /></svg
-                        ><strong>4.7</strong><span>(201)</span></span
-                      >
-                    </div>
-                    <h3>Đà Lạt Thành Phố Ngàn<br />Hoa 3N2Đ</h3>
-                    <p>
-                      Tận hưởng không khí trong lành của<br />thành phố sương mù
-                      với thác
-                    </p>
-                    <div class="tour-card__pricing">
-                      <div>
-                        <div class="tour-card__price">3.590.000đ</div>
-                        <div class="tour-card__unit">/ người</div>
-                      </div>
-                      <div class="tour-card__duration">
-                        <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                          <path
-                            d="M12.6875 7C12.6875 8.50842 12.0883 9.95506 11.0217 11.0217C9.95506 12.0883 8.50842 12.6875 7 12.6875C5.49158 12.6875 4.04494 12.0883 2.97833 11.0217C1.91172 9.95506 1.3125 8.50842 1.3125 7C1.3125 5.49158 1.91172 4.04494 2.97833 2.97833C4.04494 1.91172 5.49158 1.3125 7 1.3125C8.50842 1.3125 9.95506 1.91172 11.0217 2.97833C12.0883 4.04494 12.6875 5.49158 12.6875 7ZM0 7C0 8.85652 0.737498 10.637 2.05025 11.9497C3.36301 13.2625 5.14348 14 7 14C8.85652 14 10.637 13.2625 11.9497 11.9497C13.2625 10.637 14 8.85652 14 7C14 5.14348 13.2625 3.36301 11.9497 2.05025C10.637 0.737498 8.85652 0 7 0C5.14348 0 3.36301 0.737498 2.05025 2.05025C0.737498 3.36301 0 5.14348 0 7ZM6.34375 3.28125V7C6.34375 7.21875 6.45312 7.42383 6.63633 7.54688L9.26133 9.29688C9.56211 9.49922 9.96953 9.41719 10.1719 9.11367C10.3742 8.81016 10.2922 8.40547 9.98867 8.20312L7.65625 6.65V3.28125C7.65625 2.91758 7.36367 2.625 7 2.625C6.63633 2.625 6.34375 2.91758 6.34375 3.28125Z"
-                            fill="#4B5563"
-                          /></svg
-                        >3N2Đ
-                      </div>
-                    </div>
-                    <button class="detail-btn" type="button">
-                      Xem chi tiết
-                    </button>
-                  </div>
-                </article>
-
-                <article class="tour-card">
-                  <div class="tour-card__media">
-                    <img
-                      src="../../assets/images/tours/tour-9.png"
-                      alt="Dubai - Abu Dhabi Xa Hoa 7N6Đ"
-                    />
-                    <button
-                      class="heart-btn"
-                      type="button"
-                      aria-label="Yêu thích Dubai - Abu Dhabi Xa Hoa 7N6Đ"
-                      aria-pressed="false"
-                    >
-                      <svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                        <path
-                          d="M10 17.5L3.75 11.6898C2.65524 10.673 1.875 9.24603 1.875 7.7508V7.63359C1.875 5.12277 3.66104 2.96803 6.12943 2.49694C7.53323 2.22631 8.96964 2.55021 10.1146 3.35614C10.4355 3.58427 10.7352 3.84814 11.0066 4.15166C11.1569 3.98019 11.318 3.82316 11.4892 3.67642C11.6208 3.56203 11.7564 3.45499 11.8999 3.35614C13.0449 2.55021 14.4814 2.22631 15.8852 2.4933C18.3536 2.96439 20.1396 5.12277 20.1396 7.63359V7.7508C20.1396 9.24603 19.3594 10.673 18.2646 11.6898L12.0146 17.4964C11.7219 17.7677 11.336 17.9212 10.9361 17.9212C10.5361 17.9212 10.1503 17.7714 9.85755 17.5H10Z"
-                          transform="translate(-1.007 -0.9) scale(0.86)"
-                          stroke="currentColor"
-                          stroke-width="1.8"
-                          stroke-linejoin="round"
-                        />
-                      </svg>
-                    </button>
-                    <span class="tour-card__badge">Cao cấp</span>
-                  </div>
-                  <div class="tour-card__body">
-                    <div class="tour-card__meta">
-                      <span class="tour-card__location"
-                        ><svg
-                          viewBox="0 0 11 14"
-                          fill="none"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M5.89805 13.65C7.30078 11.8945 10.5 7.63984 10.5 5.25C10.5 2.35156 8.14844 0 5.25 0C2.35156 0 0 2.35156 0 5.25C0 7.63984 3.19922 11.8945 4.60195 13.65C4.93828 14.0684 5.56172 14.0684 5.89805 13.65ZM5.25 3.5C5.71413 3.5 6.15925 3.68437 6.48744 4.01256C6.81563 4.34075 7 4.78587 7 5.25C7 5.71413 6.81563 6.15925 6.48744 6.48744C6.15925 6.81563 5.71413 7 5.25 7C4.78587 7 4.34075 6.81563 4.01256 6.48744C3.68437 6.15925 3.5 5.71413 3.5 5.25C3.5 4.78587 3.68437 4.34075 4.01256 4.01256C4.34075 3.68437 4.78587 3.5 5.25 3.5Z"
-                            fill="#10B981"
-                          /></svg
-                        >UAE</span
-                      >
-                      <span class="tour-card__rating"
-                        ><svg
-                          viewBox="0 0 16 14"
-                          fill="none"
-                          aria-hidden="true"
-                        >
-                          <path
-                            d="M8.66525 0.492188C8.52032 0.191406 8.21407 0 7.87775 0C7.54142 0 7.2379 0.191406 7.09025 0.492188L5.33204 4.10977L1.40548 4.68945C1.07736 4.73867 0.803918 4.96836 0.702746 5.28281C0.601574 5.59727 0.683605 5.94453 0.918761 6.17695L3.76798 8.99609L3.09532 12.9801C3.04064 13.3082 3.17736 13.6418 3.44806 13.8359C3.71876 14.0301 4.07696 14.0547 4.37228 13.8988L7.88048 12.0258L11.3887 13.8988C11.684 14.0547 12.0422 14.0328 12.3129 13.8359C12.5836 13.6391 12.7203 13.3082 12.6656 12.9801L11.9902 8.99609L14.8395 6.17695C15.0746 5.94453 15.1594 5.59727 15.0555 5.28281C14.9516 4.96836 14.6809 4.73867 14.3527 4.68945L10.4234 4.10977L8.66525 0.492188Z"
-                            fill="#FACC15"
-                          /></svg
-                        ><strong>5.0</strong><span>(389)</span></span
-                      >
-                    </div>
-                    <h3>Dubai - Abu Dhabi Xa Hoa<br />7N6Đ</h3>
-                    <p>
-                      Trải nghiệm sự xa hoa tại Dubai với<br />B urj Khalifa, sa
-                      mạc Safari và thành
-                    </p>
-                    <div class="tour-card__pricing">
-                      <div>
-                        <div class="tour-card__price">32.990.000đ</div>
-                        <div class="tour-card__unit">/ người</div>
-                      </div>
-                      <div class="tour-card__duration">
-                        <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
-                          <path
-                            d="M12.6875 7C12.6875 8.50842 12.0883 9.95506 11.0217 11.0217C9.95506 12.0883 8.50842 12.6875 7 12.6875C5.49158 12.6875 4.04494 12.0883 2.97833 11.0217C1.91172 9.95506 1.3125 8.50842 1.3125 7C1.3125 5.49158 1.91172 4.04494 2.97833 2.97833C4.04494 1.91172 5.49158 1.3125 7 1.3125C8.50842 1.3125 9.95506 1.91172 11.0217 2.97833C12.0883 4.04494 12.6875 5.49158 12.6875 7ZM0 7C0 8.85652 0.737498 10.637 2.05025 11.9497C3.36301 13.2625 5.14348 14 7 14C8.85652 14 10.637 13.2625 11.9497 11.9497C13.2625 10.637 14 8.85652 14 7C14 5.14348 13.2625 3.36301 11.9497 2.05025C10.637 0.737498 8.85652 0 7 0C5.14348 0 3.36301 0.737498 2.05025 2.05025C0.737498 3.36301 0 5.14348 0 7ZM6.34375 3.28125V7C6.34375 7.21875 6.45312 7.42383 6.63633 7.54688L9.26133 9.29688C9.56211 9.49922 9.96953 9.41719 10.1719 9.11367C10.3742 8.81016 10.2922 8.40547 9.98867 8.20312L7.65625 6.65V3.28125C7.65625 2.91758 7.36367 2.625 7 2.625C6.63633 2.625 6.34375 2.91758 6.34375 3.28125Z"
-                            fill="#4B5563"
-                          /></svg
-                        >7N6Đ
-                      </div>
-                    </div>
-                    <button class="detail-btn" type="button">
-                      Xem chi tiết
-                    </button>
-                  </div>
-                </article>
+                <div
+                  style="grid-column: 1 / -1; padding: 32px; text-align: center;"
+                >
+                  Đang tải danh sách tour...
+                </div>
               </div>
 
-              <nav class="pagination" aria-label="Phân trang">
-                <button
-                  class="page-btn page-btn--icon"
-                  type="button"
-                  aria-label="Trang trước"
-                >
-                  <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                    <path
-                      d="M10 12L6 8L10 4"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </button>
-                <button
-                  class="page-btn is-active"
-                  type="button"
-                  data-page="1"
-                  aria-current="page"
-                >
-                  1
-                </button>
-                <button class="page-btn" type="button" data-page="2">2</button>
-                <button class="page-btn" type="button" data-page="3">3</button>
-                <button class="page-btn" type="button" data-page="4">4</button>
-                <span class="page-ellipsis">...</span>
-                <button class="page-btn" type="button" data-page="28">
-                  28
-                </button>
-                <button
-                  class="page-btn page-btn--icon"
-                  type="button"
-                  aria-label="Trang sau"
-                >
-                  <svg viewBox="0 0 16 16" fill="none" aria-hidden="true">
-                    <path
-                      d="M6 4L10 8L6 12"
-                      stroke="currentColor"
-                      stroke-width="1.5"
-                      stroke-linecap="round"
-                      stroke-linejoin="round"
-                    />
-                  </svg>
-                </button>
-              </nav>
+              <nav class="pagination" aria-label="Phân trang"></nav>
             </div>
           </div>
         </div>
       </section>
     </main>
+
     <footer class="site-footer">
       <div class="container footer-grid">
         <div class="footer-brand">
           <a class="brand brand--footer" href="#" aria-label="TravelTour">
-            <span class="brand__icon" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none">
-                <path
-                  d="M12 2C17.5228 2 22 6.47715 22 12C22 17.5228 17.5228 22 12 22C6.47715 22 2 17.5228 2 12C2 6.47715 6.47715 2 12 2Z"
-                  fill="currentColor"
-                />
-                <path
-                  d="M3.5 12H20.5M12 2.5C14.7 5.2 16.25 8.75 16.25 12C16.25 15.25 14.7 18.8 12 21.5C9.3 18.8 7.75 15.25 7.75 12C7.75 8.75 9.3 5.2 12 2.5ZM4.4 7.5H19.6M4.4 16.5H19.6"
-                  stroke="#111827"
-                  stroke-width="1.2"
-                  stroke-linecap="round"
-                  stroke-linejoin="round"
-                />
-              </svg>
-            </span>
             <span class="brand__text">TravelTour</span>
           </a>
+
           <p>
             Đồng hành cùng bạn khám phá thế giới với những trải nghiệm du lịch
             tuyệt vời nhất
           </p>
-          <div class="social-links" aria-label="Mạng xã hội">
-            <a href="#" aria-label="Facebook"
-              ><svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path
-                  d="M11.1538 17.5V10.7846H13.4615L13.8462 8.07692H11.1538V6.34615C11.1538 5.57692 11.3462 5 12.5 5H14V2.5C13.8077 2.5 12.8462 2.30769 11.7308 2.30769C9.42308 2.30769 7.88462 3.65385 7.88462 6.15385V8.07692H5.38462V10.7846H7.88462V17.5H11.1538Z"
-                  fill="currentColor"
-                /></svg
-            ></a>
-            <a href="#" aria-label="Instagram"
-              ><svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path
-                  d="M10 5.38462C7.45308 5.38462 5.38462 7.45308 5.38462 10C5.38462 12.5469 7.45308 14.6154 10 14.6154C12.5469 14.6154 14.6154 12.5469 14.6154 10C14.6154 7.45308 12.5469 5.38462 10 5.38462ZM10 13.0769C8.30769 13.0769 6.92308 11.6923 6.92308 10C6.92308 8.30769 8.30769 6.92308 10 6.92308C11.6923 6.92308 13.0769 8.30769 13.0769 10C13.0769 11.6923 11.6923 13.0769 10 13.0769ZM15 5C15.5969 5 16.0769 4.52 16.0769 3.92308C16.0769 3.32615 15.5969 2.84615 15 2.84615C14.4031 2.84615 13.9231 3.32615 13.9231 3.92308C13.9231 4.52 14.4031 5 15 5ZM17.6923 5.01538C17.6308 3.72308 17.3385 2.57692 16.3846 1.62308C15.4308 0.669231 14.2846 0.376923 12.9923 0.315385C11.6615 0.238462 8.33846 0.238462 7.00769 0.315385C5.71539 0.376923 4.56923 0.669231 3.61539 1.62308C2.66154 2.57692 2.36923 3.72308 2.30769 5.01538C2.23077 6.34615 2.23077 9.66923 2.30769 11C2.36923 12.2923 2.66154 13.4385 3.61539 14.3923C4.56923 15.3462 5.71539 15.6385 7.00769 15.7C8.33846 15.7769 11.6615 15.7769 12.9923 15.7C14.2846 15.6385 15.4308 15.3462 16.3846 14.3923C17.3385 13.4385 17.6308 12.2923 17.6923 11C17.7692 9.66923 17.7692 6.34615 17.6923 5.01538ZM15.8615 13.1231C15.5846 13.8154 15.0462 14.3538 14.3538 14.6308C13.3154 15.0462 10.8615 14.9538 10 14.9538C9.13846 14.9538 6.67692 15.0462 5.64615 14.6308C4.95385 14.3538 4.41539 13.8154 4.13846 13.1231C3.72308 12.0846 3.81539 9.63077 3.81539 8.76923C3.81539 7.90769 3.72308 5.44615 4.13846 4.41538C4.41539 3.72308 4.95385 3.18462 5.64615 2.90769C6.68462 2.49231 9.13846 2.58462 10 2.58462C10.8615 2.58462 13.3231 2.49231 14.3538 2.90769C15.0462 3.18462 15.5846 3.72308 15.8615 4.41538C16.2769 5.45385 16.1846 7.90769 16.1846 8.76923C16.1846 9.63077 16.2769 12.0923 15.8615 13.1231Z"
-                  fill="currentColor"
-                /></svg
-            ></a>
-            <a href="#" aria-label="YouTube"
-              ><svg viewBox="0 0 20 20" fill="none" aria-hidden="true">
-                <path
-                  d="M18.2142 5.37644C18.0167 4.63269 17.4348 4.04769 16.6951 3.84819C15.3546 3.48644 9.99997 3.48644 9.99997 3.48644C9.99997 3.48644 4.64535 3.48644 3.30482 3.84819C2.56512 4.04772 1.98322 4.63269 1.78574 5.37644C1.42627 6.72424 1.42627 9.5372 1.42627 9.5372C1.42627 9.5372 1.42627 12.3502 1.78574 13.698C1.98322 14.4417 2.56512 15.0032 3.30482 15.2027C4.64535 15.5645 9.99997 15.5645 9.99997 15.5645C9.99997 15.5645 15.3546 15.5645 16.6951 15.2027C17.4348 15.0032 18.0167 14.4417 18.2142 13.698C18.5737 12.3502 18.5737 9.5372 18.5737 9.5372C18.5737 9.5372 18.5737 6.72424 18.2142 5.37644ZM8.24148 12.0909V6.9835L12.7316 9.53726L8.24148 12.0909Z"
-                  fill="currentColor"
-                /></svg
-            ></a>
-            <a href="#" aria-label="TikTok"
-              ><svg viewBox="0 0 14 16" fill="none" aria-hidden="true">
-                <path
-                  d="M14 6.55969C12.6242 6.56298 11.2822 6.13392 10.1634 5.33313V10.9181C10.1631 11.9525 9.84689 12.9622 9.25721 13.812C8.66753 14.6619 7.83245 15.3115 6.86362 15.6739C5.89479 16.0364 4.83841 16.0944 3.83571 15.8402C2.83301 15.5861 1.9318 15.0319 1.25258 14.2517C0.573363 13.4716 0.14851 12.5026 0.0348314 11.4745C-0.0788471 10.4464 0.124068 9.40803 0.616444 8.49833C1.10882 7.58863 1.86719 6.85093 2.79014 6.38387C3.7131 5.91681 4.75665 5.74265 5.78125 5.88469V8.69375C5.31239 8.54627 4.80892 8.55071 4.34273 8.70644C3.87655 8.86217 3.47149 9.16123 3.1854 9.56089C2.89932 9.96056 2.74683 10.4404 2.74973 10.9319C2.75262 11.4234 2.91075 11.9014 3.20152 12.2977C3.4923 12.694 3.90085 12.9882 4.36884 13.1385C4.83682 13.2887 5.34031 13.2872 5.8074 13.1342C6.2745 12.9812 6.6813 12.6845 6.96973 12.2866C7.25815 11.8886 7.41345 11.4096 7.41344 10.9181V0H10.1634C10.1615 0.232231 10.181 0.464146 10.2216 0.692813C10.3171 1.20328 10.5158 1.68888 10.8055 2.11992C11.0952 2.55096 11.4697 2.91837 11.9062 3.19969C12.5273 3.61034 13.2555 3.82922 14 3.82906V6.55969Z"
-                  fill="currentColor"
-                /></svg
-            ></a>
-          </div>
         </div>
+
         <div class="footer-column">
           <h4>Về chúng tôi</h4>
           <a href="#">Giới thiệu</a>
@@ -1000,6 +234,7 @@
           <a href="#">Tuyển dụng</a>
           <a href="#">Tin tức</a>
         </div>
+
         <div class="footer-column">
           <h4>Hỗ trợ</h4>
           <a href="#">Điều khoản</a>
@@ -1007,38 +242,26 @@
           <a href="#">FAQ</a>
           <a href="#">Hướng dẫn</a>
         </div>
+
         <div class="footer-column">
           <h4>Liên hệ</h4>
           <div class="footer-contact">
-            <svg viewBox="0 0 11 14" fill="none" aria-hidden="true">
-              <path
-                d="M5.89805 13.65C7.30078 11.8945 10.5 7.63984 10.5 5.25C10.5 2.35156 8.14844 0 5.25 0C2.35156 0 0 2.35156 0 5.25C0 7.63984 3.19922 11.8945 4.60195 13.65C4.93828 14.0684 5.56172 14.0684 5.89805 13.65ZM5.25 3.5C5.71413 3.5 6.15925 3.68437 6.48744 4.01256C6.81563 4.34075 7 4.78587 7 5.25C7 5.71413 6.81563 6.15925 6.48744 6.48744C6.15925 6.81563 5.71413 7 5.25 7C4.78587 7 4.34075 6.81563 4.01256 6.48744C3.68437 6.15925 3.5 5.71413 3.5 5.25C3.5 4.78587 3.68437 4.34075 4.01256 4.01256C4.34075 3.68437 4.78587 3.5 5.25 3.5Z"
-                fill="#10B981"
-              /></svg
-            ><span>123 Nguyễn Huệ, Q.1, TP.HCM</span>
+            <span>📍 123 Nguyễn Huệ, Q.1, TP.HCM</span>
           </div>
           <div class="footer-contact">
-            <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
-              <path
-                d="M4.50898 0.673273C4.29844 0.164679 3.74336 -0.106024 3.21289 0.0388978L0.806641 0.695148C0.330859 0.826398 0 1.25843 0 1.75062C0 8.51546 5.48516 14.0006 12.25 14.0006C12.7422 14.0006 13.1742 13.6698 13.3055 13.194L13.9617 10.7877C14.1066 10.2573 13.8359 9.70218 13.3273 9.49163L10.7023 8.39788C10.2566 8.21194 9.73984 8.34046 9.43633 8.71507L8.33164 10.0631C6.40664 9.15257 4.84805 7.59398 3.9375 5.66898L5.28555 4.56702C5.66016 4.26077 5.78867 3.74671 5.60273 3.30101L4.50898 0.676007V0.673273Z"
-                fill="#10B981"
-              /></svg
-            ><span>1900 1234</span>
+            <span>☎ 1900 1234</span>
           </div>
           <div class="footer-contact">
-            <svg viewBox="0 0 14 14" fill="none" aria-hidden="true">
-              <path
-                d="M1.3125 1.75C0.587891 1.75 0 2.33789 0 3.0625C0 3.47539 0.194141 3.86367 0.525 4.1125L6.475 8.575C6.78672 8.80742 7.21328 8.80742 7.525 8.575L13.475 4.1125C13.8059 3.86367 14 3.47539 14 3.0625C14 2.33789 13.4121 1.75 12.6875 1.75H1.3125ZM0 4.8125V10.5C0 11.4652 0.784766 12.25 1.75 12.25H12.25C13.2152 12.25 14 11.4652 14 10.5V4.8125L8.05 9.275C7.42656 9.74258 6.57344 9.74258 5.95 9.275L0 4.8125Z"
-                fill="#10B981"
-              /></svg
-            ><span>support@traveltour.vn</span>
+            <span>✉ support@traveltour.vn</span>
           </div>
         </div>
       </div>
+
       <div class="container footer-bottom">
         <p>© 2024 TravelTour. All rights reserved.</p>
       </div>
     </footer>
+
     <script defer src="../../assets/js/caidat.js"></script>
     <script defer src="../../assets/js/tours/dstour.js"></script>
   </body>

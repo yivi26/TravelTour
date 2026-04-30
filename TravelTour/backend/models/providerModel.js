@@ -967,8 +967,15 @@ export async function getPublicTours(filters = {}) {
       t.meeting_point,
       t.latitude,
       t.longitude,
+
       t.base_price,
+      t.sale_price,
+      t.tax_percent,
+      t.tax,
+      t.final_price,
+
       t.duration_days,
+      t.duration_text,
       t.max_capacity,
       t.thumbnail_url,
       t.status,
@@ -990,9 +997,19 @@ export async function getPublicTours(filters = {}) {
   params.push(Number(limit));
 
   const [rows] = await db.query(sql, params);
-  return rows;
-}
 
+  return rows.map((row) => {
+    const pricing = resolvePublicTourPricing(row);
+
+    return {
+      ...row,
+      tax_percent: pricing.tax_percent,
+      tax: pricing.tax,
+      final_price: pricing.final_price,
+      display_price: pricing.final_price
+    };
+  });
+}
 export async function getPublicDiscountedTours(limit = 6) {
   const [rows] = await db.query(
     `
