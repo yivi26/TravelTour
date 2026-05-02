@@ -18,6 +18,9 @@ const priceSlider =
 
 const resetButton = document.querySelector(".filters-reset");
 
+/** Dropdown “Loại tour” (#tour-type) — giá trị option là category_id khớp với taotour.js */
+const tourTypeSelect = document.getElementById("tour-type");
+
 const destinationInput =
   document.querySelector('.search-box input[type="text"]') ||
   document.querySelector('input[name="destination"]');
@@ -229,6 +232,67 @@ function matchType(tour, selectedTypes) {
   return selectedTypes.some((type) => text.includes(normalizeText(type)));
 }
 
+/**
+ * Đánh giá dùng cho lọc: ưu tiên số từ API (trung bình review), không có thì null.
+ */
+function getTourRatingForFilter(tour) {
+  const raw = tour.rating ?? tour.rating_avg;
+  const n = Number(raw);
+  if (Number.isFinite(n) && n > 0) return n;
+  return null;
+}
+
+/**
+ * Checkbox Đánh giá: "5" (≈5★), "4+"…"1+" (ngưỡng điểm TB tương ứng sao).
+ * Nhiều ô được chọn thì OR — tour chỉ cần thỏa một điều kiện.
+ */
+function matchRating(tour, selectedRatings) {
+  if (!selectedRatings.length) return true;
+
+  const rating = getTourRatingForFilter(tour);
+  if (rating == null) return false;
+
+  return selectedRatings.some((val) => {
+    if (val === "5") return rating >= 4.8;
+    if (val === "4+") return rating >= 4;
+    if (val === "3+") return rating >= 3;
+    if (val === "2+") return rating >= 2;
+    if (val === "1+") return rating >= 1;
+    return false;
+  });
+}
+
+/**
+ * Lọc theo danh mục đã chọn trên select (ưu tiên category_id từ API).
+ * Khi không chọn (-- Chọn danh mục --) thì không lọc theo danh mục.
+ */
+function matchCategoryBySelect(tour, selectedCategoryId) {
+  if (!selectedCategoryId) return true;
+
+  const id = Number(selectedCategoryId);
+  if (!Number.isFinite(id)) return true;
+
+  const tourCat = Number(tour.category_id);
+  if (Number.isFinite(tourCat) && tourCat === id) return true;
+
+  // Fallback: tour chưa gán danh mục trong DB — gợi ý khớp theo từ khóa (đã normalize)
+  const fragmentsById = {
+    1: ["rung nhiet doi"],
+    2: ["bien dao"],
+    3: ["nui cao", "trekking"],
+    4: ["lang nghe truyen thong"],
+    5: ["nong nghiep sinh thai"],
+    6: ["du lich cong dong"]
+  };
+  const haystack = normalizeText(
+    `${tour.title || ""} ${tour.description || ""} ${tour.category_name || ""}`
+  );
+  const fragments = fragmentsById[id];
+  return Array.isArray(fragments)
+    ? fragments.some((frag) => haystack.includes(frag))
+    : false;
+}
+
 function sortTours(tours) {
   const selectedIndex = sortSelect ? sortSelect.selectedIndex : 0;
   const sorted = [...tours];
@@ -267,12 +331,15 @@ function updateSliderFill(slider) {
 function applyFilters(resetPage = true) {
   if (resetPage) currentPage = 1;
 
+  // Ghép từ ô tìm kiếm + slider giá + checkbox thời gian/khu vực + select loại tour
   const keyword = normalizeText(destinationInput?.value || "");
   const maxPrice = Number(priceSlider?.value || 50000000);
 
   const selectedDurations = getCheckedValues("duration");
   const selectedTypes = getCheckedValues("type");
   const selectedRegions = getCheckedValues("region");
+  const selectedRatings = getCheckedValues("rating");
+  const selectedCategoryId = (tourTypeSelect && tourTypeSelect.value) || "";
 
   filteredTours = allTours.filter((tour) => {
     const tourText = normalizeText(
@@ -286,7 +353,9 @@ function applyFilters(resetPage = true) {
       price <= maxPrice &&
       matchDuration(tour, selectedDurations) &&
       matchType(tour, selectedTypes) &&
-      matchRegion(tour, selectedRegions)
+      matchCategoryBySelect(tour, selectedCategoryId) &&
+      matchRegion(tour, selectedRegions) &&
+      matchRating(tour, selectedRatings)
     );
   });
 
@@ -530,7 +599,8 @@ async function loadTours() {
     updateSliderFill(priceSlider);
     updatePriceLabel();
 
-    const response = await fetch(API_URL);
+    // Lấy nhiều tour hơn mặc định API để lọc phía trang dstour đủ dữ liệu
+    const response = await fetch(`${API_URL}?limit=500`);
 
     if (!response.ok) {
       throw new Error("Không tải được danh sách tour");
@@ -586,6 +656,10 @@ document.querySelectorAll(".filters-card input").forEach((input) => {
   input.addEventListener("change", () => applyFilters(true));
 });
 
+if (tourTypeSelect) {
+  tourTypeSelect.addEventListener("change", () => applyFilters(true));
+}
+
 if (resetButton) {
   resetButton.addEventListener("click", () => {
     document
@@ -606,6 +680,10 @@ if (resetButton) {
 
     if (sortSelect) {
       sortSelect.selectedIndex = 0;
+    }
+
+    if (tourTypeSelect) {
+      tourTypeSelect.value = "";
     }
 
     currentPage = 1;
