@@ -916,6 +916,105 @@ export async function getDashboardDataByProvider(providerId) {
   };
 }
 
+function toIsoDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
+}
+
+export async function getProviderNotifications(providerId, limit = 12) {
+  const safeLimit = Math.max(1, Math.min(50, Number(limit) || 12));
+  const notifications = [];
+
+  const [providerRows] = await db.query(
+    `
+    SELECT status, updated_at
+    FROM providers
+    WHERE id = ?
+    LIMIT 1
+    `,
+    [providerId]
+  );
+
+  if (providerRows.length > 0) {
+    const provider = providerRows[0];
+    const status = String(provider.status || "").toLowerCase();
+    let subtitle = "Tài khoản nhà cung cấp của bạn có cập nhật mới từ admin.";
+    let tone = "blue";
+
+    if (status === "active") {
+      subtitle = "Admin đã duyệt tài khoản nhà cung cấp của bạn.";
+      tone = "green";
+    } else if (status === "pending") {
+      subtitle = "Tài khoản đang chờ admin phê duyệt.";
+      tone = "orange";
+    } else if (status === "blocked" || status === "inactive") {
+      subtitle = "Tài khoản nhà cung cấp đang bị tạm khóa bởi admin.";
+      tone = "red";
+    }
+
+    notifications.push({
+      id: "provider-status",
+      type: "admin_provider_status",
+      title: "Thông báo từ Admin",
+      subtitle,
+      date: toIsoDate(provider.updated_at),
+      href: "profile.html",
+      tone
+    });
+  }
+
+  const [tourRows] = await db.query(
+    `
+    SELECT id, title, status, updated_at
+    FROM tours
+    WHERE provider_id = ?
+      AND status IN ('active', 'paused', 'archived', 'full')
+    ORDER BY updated_at DESC, id DESC
+    LIMIT ?
+    `,
+    [providerId, safeLimit]
+  );
+
+  for (const row of tourRows) {
+    const status = String(row.status || "").toLowerCase();
+    let subtitle = `${row.title || "Tour"} có cập nhật trạng thái mới.`;
+    let tone = "blue";
+
+    if (status === "active") {
+      subtitle = `Admin đã duyệt tour "${row.title || "Tour"}".`;
+      tone = "green";
+    } else if (status === "paused") {
+      subtitle = `Tour "${row.title || "Tour"}" đang bị tạm dừng bởi admin.`;
+      tone = "orange";
+    } else if (status === "archived") {
+      subtitle = `Tour "${row.title || "Tour"}" đã bị ẩn bởi admin.`;
+      tone = "red";
+    } else if (status === "full") {
+      subtitle = `Tour "${row.title || "Tour"}" đã đủ chỗ.`;
+      tone = "purple";
+    }
+
+    notifications.push({
+      id: `tour-${row.id}`,
+      type: "admin_tour_status",
+      title: "Thông báo từ Admin",
+      subtitle,
+      date: toIsoDate(row.updated_at),
+      href: "tour_management.html",
+      tone
+    });
+  }
+
+  notifications.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+
+  return {
+    total: notifications.length,
+    items: notifications.slice(0, safeLimit)
+  };
+}
+
 export async function getPublicFeaturedTours(limit = 6) {
   const [rows] = await db.query(
     `
@@ -980,9 +1079,24 @@ export async function getPublicTours(filters = {}) {
       t.thumbnail_url,
       t.status,
       t.created_at,
-      p.company_name AS provider_name
+      p.company_name AS provider_name,
+      tcm.category_id,
+      tr.rating_avg
     FROM tours t
     LEFT JOIN providers p ON t.provider_id = p.id
+    LEFT JOIN (
+      SELECT tour_id, MIN(category_id) AS category_id
+      FROM tour_category_map
+      GROUP BY tour_id
+    ) tcm ON tcm.tour_id = t.id
+    LEFT JOIN (
+      SELECT
+        r.tour_id,
+        AVG(r.rating) AS rating_avg
+      FROM reviews r
+      WHERE COALESCE(r.status, '') NOT IN ('hidden', 'rejected', 'pending')
+      GROUP BY r.tour_id
+    ) tr ON tr.tour_id = t.id
     WHERE t.status = 'active'
   `;
 
@@ -1000,13 +1114,16 @@ export async function getPublicTours(filters = {}) {
 
   return rows.map((row) => {
     const pricing = resolvePublicTourPricing(row);
+    const avg = row.rating_avg != null ? Number(row.rating_avg) : null;
 
     return {
       ...row,
       tax_percent: pricing.tax_percent,
       tax: pricing.tax,
       final_price: pricing.final_price,
-      display_price: pricing.final_price
+      display_price: pricing.final_price,
+      rating:
+        avg != null && Number.isFinite(avg) ? Math.round(avg * 10) / 10 : null
     };
   });
 }

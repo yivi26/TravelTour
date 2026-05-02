@@ -20,7 +20,14 @@
   <body class="has-public-navbar">
     <nav class="navbar">
       <div class="container nav-container">
-        <div class="logo" data-setting-text="platform_name">TravelTour</div>
+        <!-- Click logo để về trang chủ -->
+        <a
+          class="logo"
+          href="../../index.html"
+          data-setting-text="platform_name"
+          aria-label="Về trang chủ"
+          >TravelTour</a
+        >
 
         <ul class="nav-menu">
           <li><a href="../../index.html">Trang chủ</a></li>
@@ -174,7 +181,22 @@
 
                 <label class="filter-option">
                   <input type="checkbox" name="rating" value="4+" />
-                  <span><span class="filter-stars">★★★★</span> trở lên</span>
+                  <span class="filter-stars">★★★★</span>
+                </label>
+
+                <label class="filter-option">
+                  <input type="checkbox" name="rating" value="3+" />
+                  <span class="filter-stars">★★★</span>
+                </label>
+
+                <label class="filter-option">
+                  <input type="checkbox" name="rating" value="2+" />
+                  <span class="filter-stars">★★</span>
+                </label>
+
+                <label class="filter-option">
+                  <input type="checkbox" name="rating" value="1+" />
+                  <span class="filter-stars">★</span>
                 </label>
               </section>
 

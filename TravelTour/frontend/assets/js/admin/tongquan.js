@@ -188,13 +188,3 @@
       .join("");
   }
 })();
-document.addEventListener("DOMContentLoaded", function () {
-  const logoutBtn = document.getElementById("logoutBtn");
-
-  logoutBtn.addEventListener("click", function () {
-    localStorage.clear();
-    sessionStorage.clear();
-
-    window.location.href = "http://localhost:3000/login";
-  });
-});
