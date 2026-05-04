@@ -462,7 +462,7 @@ button {
 }
 
 .summary-card h2 {
-  font-size: 1.95rem;
+  font-size: 1.65rem;
   line-height: 1.3;
 }
 
@@ -477,33 +477,45 @@ button {
 .summary-card__row {
   color: #647083;
   font-size: 1rem;
+  line-height: 1.55;
+  align-items: flex-start;
 }
 
 .summary-card__row strong {
   color: #2f3948;
-  font-size: 1.15rem;
+  font-size: 1.1rem;
+  font-weight: 700;
   text-align: right;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
 .summary-card__total {
-  margin-top: 24px;
-  color: #2f3948;
-  font-size: 1.2rem;
-  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-top: 10px;
+
+  gap: 12px;
+}
+.summary-card__total span {
+  font-size: 1rem;
+  font-weight: 500;
+  color: #647083;
 }
 
 .summary-card__total strong {
+  font-size: 1.5rem;
+  font-weight: 700;
   color: var(--primary);
-  font-size: 1.8rem;
-  line-height: 1.05;
-  text-align: right;
+  white-space: nowrap;
 }
 
 .summary-card__note {
   display: flex;
   gap: 12px;
-  margin-top: 24px;
-  padding: 16px 18px;
+  margin-top: 28px;
+  padding: 18px 18px;
   border-radius: var(--radius-md);
   background: #eff9f7;
   color: #6b7485;
@@ -529,8 +541,8 @@ button {
 .summary-card__note p {
   margin: 0;
   font-size: 0.95rem;
+  line-height: 1.65;
 }
-
 .meta-icon {
   position: relative;
   width: 20px;
@@ -750,4 +762,62 @@ button {
   .summary-card__total strong {
     font-size: 1.45rem;
   }
+}
+.summary-card__policy {
+  margin-top: 18px;
+  padding: 16px;
+  border-radius: 14px;
+  background: #f8fafb;
+  border: 1px solid #e6ebf0;
+}
+
+.summary-card__policy-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: #2f3948;
+  margin-bottom: 10px;
+}
+
+.summary-card__policy-list strong {
+  color: #2f3948;
+}
+.summary-card__policy-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.policy-item {
+  position: relative;
+  padding-left: 26px;
+  margin-bottom: 8px;
+  font-size: 0.92rem;
+  color: #4a5568;
+  line-height: 1.5;
+}
+
+.policy-item.success::before {
+  content: "✔";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #18c58f;
+  font-weight: bold;
+}
+
+.policy-item.danger::before {
+  content: "✖";
+  position: absolute;
+  left: 0;
+  top: 0;
+  color: #a0aec0;
+  font-weight: bold;
+}
+
+.policy-note-line {
+  margin-top: 10px;
+  font-size: 0.85rem;
+  color: #7a8699;
+  line-height: 1.5;
+  padding-left: 0;
 }

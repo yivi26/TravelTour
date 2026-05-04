@@ -80,7 +80,7 @@ async function loadCustomerProfile() {
     }
   } catch (error) {
     console.error("Lỗi loadCustomerProfile:", error);
-    alert("Không thể kết nối server");
+    showToast("Không thể kết nối server", "error");
   }
 }
 
@@ -121,16 +121,26 @@ function bindLogout() {
   if (!logoutBtn) return;
 
   logoutBtn.addEventListener("click", function () {
-    const isConfirmed = confirm("Bạn có chắc muốn đăng xuất không?");
-    if (!isConfirmed) return;
-
-    localStorage.removeItem("traveltour_user");
-    localStorage.removeItem("traveltour_remember");
-
-    goToLogin();
+    const modal = document.getElementById("logoutModal");
+    modal.classList.add("active");
   });
 }
+function handleLogoutModal() {
+  const modal = document.getElementById("logoutModal");
+  const cancelBtn = document.getElementById("cancelLogout");
+  const confirmBtn = document.getElementById("confirmLogout");
 
+  cancelBtn.addEventListener("click", () => {
+    modal.classList.remove("active");
+  });
+
+  confirmBtn.addEventListener("click", () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("traveltour_user");
+
+    window.location.href = "../dangnhap/login.html";
+  });
+}
 function enterInlineEditMode() {
   const fullNameText = document.getElementById("profileFullName");
   const phoneText = document.getElementById("profilePhone");
@@ -223,6 +233,23 @@ async function saveInlineProfile() {
       );
       return;
     }
+    if (full_name.length < 2) {
+      showToast("Họ tên phải có ít nhất 2 ký tự", "error");
+      return;
+    }
+    const phoneRegex = /^(0\d{9})$/;
+
+    if (!phoneRegex.test(phone)) {
+      showToast(
+        "Số điện thoại không hợp lệ. Vui lòng nhập 10 số và bắt đầu bằng số 0",
+        "error",
+      );
+      return;
+    }
+    if (address.length < 5) {
+      showToast("Địa chỉ phải có ít nhất 5 ký tự", "error");
+      return;
+    }
 
     const response = await fetch("http://localhost:3000/api/customer/profile", {
       method: "PUT",
@@ -251,7 +278,43 @@ async function saveInlineProfile() {
     showToast("Không thể cập nhật thông tin", "error");
   }
 }
+async function uploadCustomerAvatar(file) {
+  try {
+    if (!file) return;
 
+    const allowedTypes = ["image/jpeg", "image/png", "image/webp"];
+    if (!allowedTypes.includes(file.type)) {
+      showToast("Chỉ chấp nhận ảnh JPG, PNG hoặc WEBP", "error");
+      return;
+    }
+
+    if (file.size > 2 * 1024 * 1024) {
+      showToast("Ảnh không được vượt quá 2MB", "error");
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append("avatar", file);
+
+    const response = await fetch("http://localhost:3000/api/customer/avatar", {
+      method: "POST",
+      body: formData,
+    });
+
+    const result = await response.json();
+
+    if (!result.success) {
+      showToast(result.message || "Upload ảnh thất bại", "error");
+      return;
+    }
+
+    await loadCustomerProfile();
+    showToast("Cập nhật ảnh đại diện thành công");
+  } catch (error) {
+    console.error("uploadCustomerAvatar error:", error);
+    showToast("Không thể upload ảnh đại diện", "error");
+  }
+}
 function showToast(message, type = "success") {
   const toast = document.getElementById("toast");
   const toastMessage = document.getElementById("toastMessage");
@@ -278,15 +341,11 @@ function showToast(message, type = "success") {
     }, 300);
   }, 3000);
 }
-/**
- * ================================
- * GẮN SỰ KIỆN
- * ================================
- */
 function bindEvents() {
   const menuToggle = document.getElementById("menuToggle");
   const sidebarOverlay = document.getElementById("sidebarOverlay");
   const changeAvatarBtn = document.getElementById("changeAvatarBtn");
+  const avatarInput = document.getElementById("avatarInput");
   const updateInfoBtn = document.getElementById("updateInfoBtn");
   const changePasswordBtn = document.getElementById("changePasswordBtn");
   const viewAllBtn = document.getElementById("viewAllBtn");
@@ -302,9 +361,18 @@ function bindEvents() {
     sidebarOverlay.addEventListener("click", closeSidebar);
   }
 
-  if (changeAvatarBtn) {
+  if (changeAvatarBtn && avatarInput) {
     changeAvatarBtn.addEventListener("click", function () {
-      alert("Chức năng đổi ảnh đại diện sẽ làm sau.");
+      avatarInput.click();
+    });
+  }
+  if (avatarInput) {
+    avatarInput.addEventListener("change", async function () {
+      const file = this.files?.[0];
+      if (!file) return;
+
+      await uploadCustomerAvatar(file);
+      this.value = "";
     });
   }
 
@@ -347,12 +415,6 @@ function bindEvents() {
   bindLogout();
   bindBookingDetail();
 }
-
-document.addEventListener("DOMContentLoaded", function () {
-  loadCustomerProfile();
-  bindEvents();
-  loadRecentBookings();
-});
 async function loadRecentBookings() {
   try {
     const response = await fetch("http://localhost:3000/api/bookings/recent");
@@ -452,3 +514,10 @@ function getStatusClass(status) {
   if (status === "completed") return "status-completed";
   return "status-default";
 }
+document.addEventListener("DOMContentLoaded", function () {
+  loadCustomerProfile();
+  bindEvents();
+  loadRecentBookings();
+  bindLogout();
+  handleLogoutModal();
+});

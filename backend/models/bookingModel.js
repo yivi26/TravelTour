@@ -224,6 +224,7 @@ export const getMyBookingsByUser = async (userId) => {
       b.id AS booking_id,
       b.booking_code,
       b.status,
+      b.payment_method,
       b.final_price,
       b.booked_at,
       b.num_adults,
@@ -246,4 +247,65 @@ export const getMyBookingsByUser = async (userId) => {
 
   const [rows] = await db.execute(sql, [userId]);
   return rows;
+};
+export async function countBookingsByUser(userId) {
+  const [rows] = await db.query(
+    "SELECT COUNT(*) AS total FROM bookings WHERE user_id = ?",
+    [userId],
+  );
+  return Number(rows[0]?.total || 0);
+}
+export const getBookingSummaryData = async (tourId) => {
+  const [rows] = await db.execute(
+    `
+    SELECT 
+      id,
+      title,
+      location,
+      base_price,
+      sale_price,
+      thumbnail_url
+    FROM tours
+    WHERE id = ?
+    LIMIT 1
+    `,
+    [tourId],
+  );
+
+  return rows[0] || null;
+};
+export const cancelBookingById = async (bookingId, userId, reason) => {
+  const sql = `
+    UPDATE bookings
+    SET 
+      status = 'cancelled',
+      cancelled_reason = ?,
+      cancelled_at = NOW(),
+      updated_at = NOW()
+    WHERE id = ?
+      AND user_id = ?
+      AND status IN ('pending', 'confirmed')
+  `;
+
+  const [result] = await db.execute(sql, [reason, bookingId, userId]);
+  return result;
+};
+export const getCancelableBookingById = async (bookingId, userId) => {
+  const sql = `
+    SELECT
+      b.id,
+      b.user_id,
+      b.status,
+      b.final_price,
+      b.cancelled_at,
+      ts.departure_date
+    FROM bookings b
+    JOIN tour_schedules ts ON b.schedule_id = ts.id
+    WHERE b.id = ?
+      AND b.user_id = ?
+    LIMIT 1
+  `;
+
+  const [rows] = await db.execute(sql, [bookingId, userId]);
+  return rows[0] || null;
 };

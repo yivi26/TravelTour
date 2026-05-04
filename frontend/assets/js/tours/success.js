@@ -16,6 +16,8 @@
   var customerEmail = document.getElementById("customer-email");
   var paymentMethod = document.getElementById("payment-method");
   var officeNote = document.getElementById("office-note");
+  var successTitle = document.getElementById("success-title");
+  var successDesc = document.getElementById("success-desc");
 
   if (bookingCode) {
     bookingCode.textContent = data.booking_code || "---";
@@ -38,5 +40,32 @@
 
   if (officeNote && data.payment_method === "office") {
     officeNote.style.display = "block";
+  }
+  if (data.payment_method === "office") {
+    if (successTitle) {
+      successTitle.textContent = "Đặt tour thành công - Chờ thanh toán!";
+    }
+
+    if (successDesc) {
+      successDesc.textContent = "Booking của bạn đã được ghi nhận.";
+    }
+
+    if (officeNote) {
+      officeNote.textContent =
+        "Vui lòng đến văn phòng TravelTour để hoàn tất thanh toán.";
+      officeNote.style.display = "block";
+    }
+  } else {
+    if (successTitle) {
+      successTitle.textContent = "Thanh toán thành công!";
+    }
+
+    if (successDesc) {
+      successDesc.textContent = "Cảm ơn bạn đã thanh toán qua ví điện tử.";
+    }
+
+    if (officeNote) {
+      officeNote.style.display = "none";
+    }
   }
 })();

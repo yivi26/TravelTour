@@ -9,6 +9,7 @@ import providerRoutes from "./routes/provider.js";
 import chatbotRoutes from "./routes/chatbot.js";
 import customerRoutes from "./routes/customer.js";
 import bookingRoutes from "./routes/booking.js";
+import paymentRoutes from "./routes/payment.js";
 dotenv.config();
 
 const app = express();
@@ -38,7 +39,7 @@ app.use(
 /* =========================
    SERVE FILE ẢNH UPLOAD
 ========================= */
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
 /* =========================
    ROUTE PAGE FRONTEND
@@ -76,6 +77,7 @@ app.use("/api/provider", providerRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/customer", customerRoutes);
 app.use("/api/bookings", bookingRoutes);
+app.use("/api/payments", paymentRoutes);
 
 /* =========================
    404 API

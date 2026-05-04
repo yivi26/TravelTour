@@ -1,7 +1,7 @@
 (function () {
   var STORAGE_KEY = "traveltour-booking";
   var BASE_PRICE = 8500000;
-  var SERVICE_FEE = 500000;
+
   var paymentForm = document.getElementById("payment-form");
   var cardForm = document.getElementById("card-form");
   var agreeTerms = document.getElementById("agree-terms");
@@ -77,9 +77,10 @@
       contact_email: data.customer?.email || "",
       special_requests: data.customer?.note || "",
 
-      payment_method: getSelectedMethod()
-        ? getSelectedMethod().value
-        : "wallet",
+      payment_method:
+        getSelectedMethod() && getSelectedMethod().value === "wallet"
+          ? "momo"
+          : "office",
       travelers: (data.guests || []).map(function (g) {
         var normalizedBirthDate = normalizeDate(g.birthday);
 
@@ -115,7 +116,44 @@
 
     return formatCurrency(value);
   }
+  function getStoredData() {
+    try {
+      return JSON.parse(sessionStorage.getItem("traveltour-booking") || "{}");
+    } catch (e) {
+      return {};
+    }
+  }
 
+  function formatCurrency(value) {
+    return new Intl.NumberFormat("vi-VN").format(value) + " ₫";
+  }
+  function renderSummary() {
+    var data = getStoredData();
+    var meta = data.bookingMeta || {};
+    var options = data.options || {};
+
+    var basePrice = Number(meta.grandTotal || 0);
+    var totalGuests = Number(meta.totalGuests || 1);
+    var extraPrice = Number(options.extraPrice || 0);
+
+    var finalTotal = basePrice + extraPrice;
+
+    var guestLine = document.getElementById("summary-guest-line");
+    var tourPrice = document.getElementById("summary-tour-price");
+    var grandTotal = document.getElementById("summary-grand-total");
+
+    if (guestLine) {
+      guestLine.innerHTML = `Giá tour ×<br />${totalGuests} khách`;
+    }
+
+    if (tourPrice) {
+      tourPrice.textContent = formatCurrency(basePrice);
+    }
+
+    if (grandTotal) {
+      grandTotal.textContent = formatCurrency(finalTotal);
+    }
+  }
   function showToast(message) {
     var toast = document.querySelector(".page-toast");
 
@@ -163,8 +201,7 @@
     });
 
     if (cardForm) {
-      cardForm.style.display =
-        selected && selected.value === "wallet" ? "grid" : "none";
+      cardForm.style.display = "none";
     }
 
     if (officeInfo) {
@@ -186,7 +223,7 @@
 
     if (payTotal) {
       payTotal.innerHTML = formatCurrencyMultiline(
-        BASE_PRICE + SERVICE_FEE + optionExtra + laterFee,
+        BASE_PRICE + optionExtra + laterFee,
       );
     }
   }
@@ -363,29 +400,55 @@
         var result = await res.json();
         console.log("RESULT:", result);
 
-        // if (result.success) {
-        //   var selected = getSelectedMethod();
-
-        //   if (selected && selected.value === "office") {
-        //     showToast(
-        //       "🎉 Đặt tour thành công! Vui lòng đến văn phòng TravelTour để thanh toán.",
-        //     );
-        //   } else {
-        //     showToast("🎉 Đặt tour thành công!");
-        //   }
-        // }
         if (result.success) {
           var selected = getSelectedMethod();
+          var paymentMethod = selected ? selected.value : "wallet";
 
           sessionStorage.setItem(
             "traveltour-last-booking",
             JSON.stringify({
               booking_id: result.booking_id,
               booking_code: result.booking_code,
-              payment_method: selected ? selected.value : "wallet",
+              payment_method: paymentMethod,
               customer: getStoredData().customer || {},
             }),
           );
+
+          if (paymentMethod === "wallet") {
+            var paymentRes = await fetch(
+              "http://localhost:3000/api/payments/momo/" +
+                result.booking_id +
+                "/create",
+              {
+                method: "POST",
+                headers: {
+                  "Content-Type": "application/json",
+                  Authorization:
+                    "Bearer " + localStorage.getItem("accessToken"),
+                },
+              },
+            );
+
+            var paymentResult = await paymentRes.json();
+
+            if (!paymentResult.success) {
+              showToast(
+                paymentResult.message || "Không thể tạo thanh toán MoMo",
+              );
+              return;
+            }
+
+            window.location.href = paymentResult.payUrl;
+            return;
+          }
+
+          if (paymentMethod === "office") {
+            showToast(
+              "Đặt tour thành công. Vui lòng đến văn phòng TravelTour để thanh toán.",
+            );
+            window.location.href = "./success.html";
+            return;
+          }
 
           window.location.href = "./success.html";
         } else {
@@ -404,4 +467,5 @@
   refreshSelectedMethod();
   updateTotal();
   updateConfirmState();
+  renderSummary();
 })();
