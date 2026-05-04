@@ -2,7 +2,6 @@
   let TOUR_PRICE = 0;
   let currentTour = null;
   let meetingMap = null;
-  let meetingMarker = null;
 
   const bookingForm = document.getElementById("booking-form");
   const dateInput = document.getElementById("departure-date");
@@ -248,7 +247,6 @@
     if (meetingMap) {
       meetingMap.remove();
       meetingMap = null;
-      meetingMarker = null;
     }
   }
 
@@ -290,7 +288,7 @@
       attribution: "&copy; OpenStreetMap",
     }).addTo(meetingMap);
 
-    meetingMarker = L.marker([lat, lng])
+    L.marker([lat, lng])
       .addTo(meetingMap)
       .bindPopup(meetingPoint || "Điểm tập trung")
       .openPopup();
@@ -431,14 +429,43 @@
 
     const adults = Number(adultSelect.value) || 0;
     const children = Number(childSelect.value) || 0;
-    const totalGuests = Math.max(adults + children, 1);
+    const totalGuests = adults + children;
     const totalPrice = TOUR_PRICE * totalGuests;
 
     lineLabel.textContent = `${formatCurrency(TOUR_PRICE)} x ${totalGuests} khách`;
     lineTotal.textContent = formatCurrency(totalPrice);
     grandTotal.textContent = formatCurrency(totalPrice);
   }
+  function validateGuestCount() {
+    if (!adultSelect || !childSelect) {
+      return "Không tìm thấy thông tin số lượng khách.";
+    }
 
+    const adults = Number(adultSelect.value);
+    const children = Number(childSelect.value);
+
+    if (!Number.isInteger(adults) || adults < 1) {
+      return "Số người lớn phải từ 1 trở lên.";
+    }
+
+    if (!Number.isInteger(children) || children < 0) {
+      return "Số trẻ em không hợp lệ.";
+    }
+
+    const totalGuests = adults + children;
+
+    if (totalGuests <= 0) {
+      return "Tổng số khách phải lớn hơn 0.";
+    }
+
+    const maxCapacity = Number(currentTour?.max_capacity || 0);
+
+    if (maxCapacity > 0 && totalGuests > maxCapacity) {
+      return `Tổng số khách không được vượt quá ${maxCapacity}.`;
+    }
+
+    return null;
+  }
   function setupDepartureDate() {
     if (!dateInput) return;
 
@@ -450,17 +477,42 @@
       .slice(0, 10);
 
     dateInput.min = localDate;
-    dateInput.value = localDate;
-  }
 
+    if (!dateInput.value) {
+      dateInput.value = localDate;
+    }
+  }
+  function validateDepartureDate() {
+    if (!dateInput) {
+      return "Không tìm thấy ô ngày khởi hành.";
+    }
+
+    if (!dateInput.value) {
+      return "Vui lòng chọn ngày khởi hành.";
+    }
+
+    const selectedDate = new Date(dateInput.value + "T00:00:00");
+
+    if (Number.isNaN(selectedDate.getTime())) {
+      return "Ngày khởi hành không hợp lệ.";
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    if (selectedDate < today) {
+      return "Ngày khởi hành không được nhỏ hơn ngày hôm nay.";
+    }
+
+    return null;
+  }
   async function init() {
     try {
       const tourId = getTourIdFromURL();
 
       const tour = await fetchTourDetail(tourId);
 
-      console.log("TOUR DATA:", tour); // 👈 thêm dòng này
-
+      // console.log("TOUR DATA:", tour);
       renderTourDetail(tour);
       setupDepartureDate();
     } catch (error) {
@@ -485,8 +537,36 @@
         return;
       }
 
+      const departureDateError = validateDepartureDate();
+      if (departureDateError) {
+        alert(departureDateError);
+        dateInput.focus();
+        return;
+      }
+
+      const guestCountError = validateGuestCount();
+      if (guestCountError) {
+        alert(guestCountError);
+        return;
+      }
+
       updateBookingSummary();
-      window.location.href = "./ttkhachhang.html";
+
+      const adults = Number(adultSelect.value);
+      const children = Number(childSelect.value);
+      const totalGuests = adults + children;
+      const totalPrice = TOUR_PRICE * totalGuests;
+
+      const params = new URLSearchParams({
+        tour_id: String(currentTour.id),
+        departure_date: dateInput.value,
+        adults: String(adults),
+        children: String(children),
+        total_guests: String(totalGuests),
+        total_price: String(totalPrice),
+      });
+
+      window.location.href = `./ttkhachhang.html?${params.toString()}`;
     });
   }
   function renderExtraInfo(tour) {

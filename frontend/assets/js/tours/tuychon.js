@@ -1,9 +1,11 @@
 (function () {
   var STORAGE_KEY = "traveltour-booking";
   var BASE_PRICE = 8500000;
-  var SERVICE_FEE = 500000;
   var optionForm = document.getElementById("option-form");
-  var payTotal = document.getElementById("pay-total");
+
+  var summaryGuestLine = document.getElementById("summary-guest-line");
+  var summaryTourPrice = document.getElementById("summary-tour-price");
+  var summaryGrandTotal = document.getElementById("summary-grand-total");
   var goBackButton = document.querySelector(".js-go-back");
   var goNextButton = document.querySelector(".js-go-next");
   var toastTimer = null;
@@ -22,6 +24,30 @@
 
   function formatCurrency(value) {
     return new Intl.NumberFormat("vi-VN").format(value) + " \u20ab";
+  }
+  function getBookingMeta() {
+    var storedData = getStoredData();
+    return storedData.bookingMeta || {};
+  }
+
+  function getBasePrice() {
+    var meta = getBookingMeta();
+
+    if (Number(meta.grandTotal || 0) > 0) {
+      return Number(meta.grandTotal);
+    }
+
+    return BASE_PRICE;
+  }
+
+  function getTotalGuests() {
+    var meta = getBookingMeta();
+
+    if (Number(meta.totalGuests || 0) > 0) {
+      return Number(meta.totalGuests);
+    }
+
+    return 1;
   }
 
   function formatCurrencyMultiline(value) {
@@ -93,10 +119,21 @@
   function updateTotal() {
     var optionData = collectOptions();
 
-    if (payTotal) {
-      payTotal.innerHTML = formatCurrencyMultiline(
-        BASE_PRICE + SERVICE_FEE + optionData.extraPrice,
-      );
+    var basePrice = getBasePrice();
+    var totalGuests = getTotalGuests();
+
+    var finalTotal = basePrice + optionData.extraPrice;
+
+    if (summaryGuestLine) {
+      summaryGuestLine.innerHTML = `Giá tour ×<br />${totalGuests} khách`;
+    }
+
+    if (summaryTourPrice) {
+      summaryTourPrice.textContent = formatCurrency(basePrice);
+    }
+
+    if (summaryGrandTotal) {
+      summaryGrandTotal.textContent = formatCurrency(finalTotal);
     }
   }
 

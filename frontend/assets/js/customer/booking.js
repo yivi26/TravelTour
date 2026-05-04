@@ -17,6 +17,11 @@ async function loadMyBookings() {
   try {
     const response = await fetch(
       "http://localhost:3000/api/bookings/my-bookings",
+      {
+        headers: {
+          Authorization: "Bearer " + localStorage.getItem("accessToken"),
+        },
+      },
     );
     const result = await response.json();
 
@@ -129,14 +134,25 @@ function renderUpcomingBookings() {
 
             <div class="booking-action-group">
               ${
-                booking.status === "Chờ thanh toán"
+                booking.statusRaw === "pending_payment" &&
+                booking.paymentMethod === "momo"
                   ? `
-                <button class="booking-btn booking-btn-primary" data-action="pay" data-id="${booking.id}">
-                  Thanh toán ngay
-                </button>
-              `
+  <button class="booking-btn booking-btn-primary" data-action="pay" data-id="${booking.id}">
+    Thanh toán ngay
+  </button>
+`
                   : ""
               }
+
+${
+  booking.statusRaw === "pending_payment" && booking.paymentMethod === "office"
+    ? `
+  <button class="booking-btn booking-btn-primary" data-action="office" data-id="${booking.id}">
+    Thanh toán tại văn phòng
+  </button>
+`
+    : ""
+}
 
               <button class="booking-btn booking-btn-outline-primary" data-action="detail" data-id="${booking.id}">
                 Chi tiết
@@ -191,7 +207,9 @@ function bindEvents() {
     if (action === "pay") {
       alert("Thanh toán booking ID: " + id);
     }
-
+    if (action === "office") {
+      document.getElementById("officeModal").classList.remove("hidden");
+    }
     if (action === "detail") {
       window.location.href = `../tours/chitiet.html?booking_id=${id}`;
       return;
@@ -208,8 +226,47 @@ function bindEvents() {
     }
   });
 }
+const closeBtn = document.getElementById("closeModal");
 
+if (closeBtn) {
+  closeBtn.addEventListener("click", function () {
+    document.getElementById("officeModal").classList.add("hidden");
+  });
+}
+function bindLogout() {
+  const logoutBtn = document.querySelector(".logout-btn");
+  if (!logoutBtn) return;
+
+  logoutBtn.addEventListener("click", function () {
+    const modal = document.getElementById("logoutModal");
+    modal.classList.remove("hidden");
+  });
+}
+
+function handleLogoutModal() {
+  const modal = document.getElementById("logoutModal");
+  const cancelBtn = document.getElementById("cancelLogout");
+  const confirmBtn = document.getElementById("confirmLogout");
+
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", () => {
+      modal.classList.add("hidden");
+    });
+  }
+
+  if (confirmBtn) {
+    confirmBtn.addEventListener("click", () => {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("traveltour_user");
+
+      window.location.href = "../dangnhap/login.html";
+    });
+  }
+}
 document.addEventListener("DOMContentLoaded", function () {
   bindEvents();
   loadMyBookings();
+
+  bindLogout();
+  handleLogoutModal();
 });

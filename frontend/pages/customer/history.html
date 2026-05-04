@@ -99,7 +99,89 @@
         </main>
       </div>
     </div>
+    <div id="cancelModal" class="cancel-modal">
+      <div class="cancel-modal__overlay" data-cancel-close></div>
 
+      <div class="cancel-modal__box">
+        <h2>Hủy tour</h2>
+        <p>Vui lòng chọn lý do hủy tour</p>
+
+        <select id="cancelReason" class="cancel-modal__select">
+          <option value="">-- Chọn lý do --</option>
+          <option value="Thay đổi kế hoạch">Thay đổi kế hoạch</option>
+          <option value="Không còn nhu cầu đi tour">
+            Không còn nhu cầu đi tour
+          </option>
+          <option value="Thông tin tour không phù hợp">
+            Thông tin tour không phù hợp
+          </option>
+          <option value="Muốn đổi sang tour khác">
+            Muốn đổi sang tour khác
+          </option>
+          <option value="Lý do cá nhân">Lý do cá nhân</option>
+          <option value="Khác">Khác</option>
+        </select>
+
+        <textarea
+          id="cancelReasonOther"
+          class="cancel-modal__textarea"
+          placeholder="Nhập lý do khác..."
+          style="display: none"
+        ></textarea>
+
+        <div class="cancel-modal__actions">
+          <button
+            type="button"
+            class="cancel-modal__btn cancel-modal__btn--ghost"
+            data-cancel-close
+          >
+            Đóng
+          </button>
+
+          <button
+            type="button"
+            id="confirmCancelBtn"
+            class="cancel-modal__btn cancel-modal__btn--danger"
+          >
+            Xác nhận hủy
+          </button>
+        </div>
+      </div>
+    </div>
+    <div id="confirmCancelModal" class="confirm-cancel-modal">
+      <div class="modal-content">
+        <h3>Bạn chắc chắn muốn hủy tour này?</h3>
+
+        <div class="modal-actions">
+          <button id="cancelConfirmCancel" class="btn-cancel">Không</button>
+          <button id="confirmCancelFinal" class="btn-confirm">
+            Đồng ý hủy
+          </button>
+        </div>
+      </div>
+    </div>
+    <div class="modal" id="logoutModal">
+      <div class="modal-content">
+        <h3>Bạn có muốn đăng xuất không?</h3>
+
+        <div class="modal-actions">
+          <button class="btn-cancel" id="cancelLogout">Hủy</button>
+          <button class="btn-confirm" id="confirmLogout">Đăng xuất</button>
+        </div>
+      </div>
+    </div>
+    <div id="messageModal" class="confirm-cancel-modal">
+      <div class="modal-content">
+        <h3>Không thể hủy tour</h3>
+        <p id="messageModalText"></p>
+
+        <div class="modal-actions">
+          <button type="button" id="messageModalOk" class="btn-confirm">
+            Đóng
+          </button>
+        </div>
+      </div>
+    </div>
     <script src="../../assets/js/customer/history.js"></script>
   </body>
 </html>

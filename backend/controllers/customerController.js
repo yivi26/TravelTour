@@ -1,4 +1,5 @@
 import bcrypt from "bcrypt";
+import db from "../config/db.js";
 import {
   getUserProfileById,
   updateUserProfileById,
@@ -19,10 +20,16 @@ export const getCustomerProfile = async (req, res, next) => {
       });
     }
 
+    const userData = {
+      ...user,
+      avatar_url: user.avatar_url
+        ? `http://localhost:3000${user.avatar_url}`
+        : "",
+    };
+
     return res.status(200).json({
       success: true,
-      message: "Lấy thông tin cá nhân thành công",
-      data: user,
+      data: userData,
     });
   } catch (error) {
     next(error);
@@ -33,6 +40,21 @@ export const updateCustomerProfile = async (req, res, next) => {
   try {
     const userId = req.user.id;
     const { full_name, phone, address } = req.body;
+    if (!full_name || !phone || !address) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng nhập đầy đủ họ tên, số điện thoại và địa chỉ",
+      });
+    }
+
+    const phoneRegex = /^(0\d{9})$/;
+
+    if (!phoneRegex.test(phone)) {
+      return res.status(400).json({
+        success: false,
+        message: "Số điện thoại không hợp lệ",
+      });
+    }
 
     if (!full_name || !phone || !address) {
       return res.status(400).json({
@@ -65,6 +87,46 @@ export const updateCustomerProfile = async (req, res, next) => {
     });
   } catch (error) {
     next(error);
+  }
+};
+export const updateCustomerAvatar = async (req, res) => {
+  try {
+    const userId = req.user.id;
+
+    if (!userId) {
+      return res.status(400).json({
+        success: false,
+        message: "Không tìm thấy user",
+      });
+    }
+
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: "Vui lòng chọn ảnh đại diện",
+      });
+    }
+
+    const avatarPath = `/uploads/avatars/${req.file.filename}`;
+
+    await db.execute("UPDATE users SET avatar_url = ? WHERE id = ?", [
+      avatarPath,
+      userId,
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: "Cập nhật ảnh đại diện thành công",
+      data: {
+        avatar_url: `http://localhost:3000${avatarPath}`,
+      },
+    });
+  } catch (error) {
+    console.error("updateCustomerAvatar error:", error);
+    return res.status(500).json({
+      success: false,
+      message: "Lỗi server khi cập nhật ảnh đại diện",
+    });
   }
 };
 export const changePassword = async (req, res) => {

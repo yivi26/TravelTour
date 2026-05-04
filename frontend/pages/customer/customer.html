@@ -90,6 +90,13 @@
                     >
                       📷
                     </button>
+
+                    <input
+                      type="file"
+                      id="avatarInput"
+                      accept="image/png, image/jpeg, image/webp"
+                      class="hidden"
+                    />
                   </div>
                   <p class="avatar-label">Ảnh đại diện</p>
                 </div>
@@ -196,6 +203,16 @@
 
     <div id="toast" class="toast hidden">
       <span id="toastMessage"></span>
+    </div>
+    <div class="modal" id="logoutModal">
+      <div class="modal-content">
+        <h3>Bạn có muốn đăng xuất không?</h3>
+
+        <div class="modal-actions">
+          <button class="btn-cancel" id="cancelLogout">Hủy</button>
+          <button class="btn-confirm" id="confirmLogout">Đăng xuất</button>
+        </div>
+      </div>
     </div>
     <script src="../../assets/js/customer/customer.js"></script>
   </body>
