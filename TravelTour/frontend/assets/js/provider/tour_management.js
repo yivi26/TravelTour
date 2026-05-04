@@ -5,7 +5,8 @@ let toursData = [];
 // =========================================
 async function loadTours() {
   try {
-    const res = await fetch("/api/provider/tours");
+    const http = window.providerFetch || fetch;
+    const res = await http("/api/provider/tours");
     const result = await res.json();
 
     console.log("TOURS:", result);
@@ -135,7 +136,8 @@ async function deleteTour(id) {
   if (!confirmDelete) return;
 
   try {
-    const res = await fetch(`/api/provider/tours/${id}`, {
+    const http = window.providerFetch || fetch;
+    const res = await http(`/api/provider/tours/${id}`, {
       method: "DELETE"
     });
 
@@ -171,7 +173,8 @@ async function toggleStatus(id, currentStatus) {
   }
 
   try {
-    const res = await fetch(`/api/provider/tours/${id}/status`, {
+    const http = window.providerFetch || fetch;
+    const res = await http(`/api/provider/tours/${id}/status`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus })

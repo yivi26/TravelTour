@@ -353,6 +353,32 @@ button {
   min-height: 420px;
 }
 
+@keyframes slideAnimations {
+  0%,
+  45% {
+    opacity: 1;
+  }
+  50%,
+  55% {
+    opacity: 0;
+  }
+  60%,
+  100% {
+    opacity: 1;
+  }
+}
+
+#tour-main-image {
+  animation: slideAnimations 4s infinite;
+  will-change: opacity;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  #tour-main-image {
+    animation: none;
+  }
+}
+
 .gallery-button {
   position: absolute;
   right: 14px;

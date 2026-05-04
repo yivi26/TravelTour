@@ -233,7 +233,8 @@ function renderCharts(charts) {
 }
 
 async function fetchDashboardData() {
-  const response = await fetch("http://localhost:3000/api/provider/dashboard");
+  const http = window.providerFetch || fetch;
+  const response = await http("/api/provider/dashboard");
 
   if (!response.ok) {
     const errorData = await response.json().catch(() => ({}));

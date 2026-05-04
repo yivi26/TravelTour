@@ -9,6 +9,74 @@ function safeJsonParse(value, fallback = []) {
   }
 }
 
+export async function getProviderIdByUserId(userId) {
+  const id = Number(userId || 0);
+  if (!Number.isFinite(id) || id <= 0) return null;
+  const [rows] = await db.query(
+    `
+    SELECT id
+    FROM providers
+    WHERE user_id = ?
+    LIMIT 1
+    `,
+    [id],
+  );
+  return rows?.[0]?.id ? Number(rows[0].id) : null;
+}
+
+// Tự tạo hồ sơ providers nếu thiếu (để tài khoản provider tạo từ trước vẫn dùng được)
+export async function ensureProviderIdByUserId(userId) {
+  const id = Number(userId || 0);
+  if (!Number.isFinite(id) || id <= 0) return null;
+
+  const existing = await getProviderIdByUserId(id);
+  if (existing) return existing;
+
+  const [[u]] = await db.query(
+    `
+    SELECT id, full_name, email
+    FROM users
+    WHERE id = ?
+    LIMIT 1
+    `,
+    [id]
+  );
+  if (!u?.id) return null;
+
+  const name = String(u.full_name || u.email || `Provider #${id}`).trim();
+  const email = String(u.email || "").trim() || null;
+
+  try {
+    try {
+      // Schema có thể không có cột email → thử trước, fail thì fallback
+      await db.query(
+        `
+        INSERT INTO providers (user_id, company_name, email, status)
+        VALUES (?, ?, ?, 'approved')
+        `,
+        [id, name, email]
+      );
+    } catch (e) {
+      if (String(e?.sqlMessage || e?.message || "").includes("Unknown column 'email'")) {
+        await db.query(
+          `
+          INSERT INTO providers (user_id, company_name, status)
+          VALUES (?, ?, 'approved')
+          `,
+          [id, name]
+        );
+      } else {
+        throw e;
+      }
+    }
+  } catch (err) {
+    // Nếu có unique constraint và bị tạo song song thì bỏ qua
+    if (err?.code !== "ER_DUP_ENTRY") throw err;
+  }
+
+  return await getProviderIdByUserId(id);
+}
+
 function createSlug(text = "") {
   return String(text)
     .toLowerCase()

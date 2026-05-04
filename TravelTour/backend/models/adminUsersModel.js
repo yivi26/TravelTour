@@ -1,5 +1,6 @@
 import db from "../config/db.js";
 import { buildPages, normalizeKeyword, toNumber } from "../utils/modelHelpers.js";
+import bcrypt from "bcryptjs";
 
 function mapRole(role) {
   const r = String(role || "").toLowerCase();
@@ -158,6 +159,91 @@ export async function setUserActive(userId, isActive) {
     status: status.label,
     statusKey: status.key,
     is_active: Boolean(row.is_active)
+  };
+}
+
+export async function createPartnerUser({ full_name, email, password, role } = {}) {
+  const name = String(full_name || "").trim();
+  const mail = String(email || "").trim();
+  // Trim để tránh case user nhập dư khoảng trắng (login.js cũng trim)
+  const pass = String(password || "").trim();
+  const r = String(role || "").toLowerCase();
+
+  if (!name) {
+    const err = new Error("Vui lòng nhập họ tên");
+    err.statusCode = 400;
+    throw err;
+  }
+  if (!mail) {
+    const err = new Error("Vui lòng nhập email / tên đăng nhập");
+    err.statusCode = 400;
+    throw err;
+  }
+  if (!pass || pass.length < 4) {
+    const err = new Error("Mật khẩu tối thiểu 4 ký tự");
+    err.statusCode = 400;
+    throw err;
+  }
+  if (r !== "provider" && r !== "guide") {
+    const err = new Error("Role không hợp lệ (chỉ Provider/Guide)");
+    err.statusCode = 400;
+    throw err;
+  }
+
+  const [[exists]] = await db.query(`SELECT id FROM users WHERE email = ? LIMIT 1`, [mail]);
+  if (exists?.id) {
+    const err = new Error("Tài khoản đã tồn tại");
+    err.statusCode = 409;
+    throw err;
+  }
+
+  const password_hash = await bcrypt.hash(pass, 10);
+  const [result] = await db.query(
+    `
+    INSERT INTO users (email, password_hash, full_name, phone, role, is_active, email_verified, last_login_at)
+    VALUES (?, ?, ?, NULL, ?, 1, 1, NULL)
+    `,
+    [mail, password_hash, name, r]
+  );
+
+  // Tạo hồ sơ domain tương ứng để provider/guide không dùng nhầm dữ liệu cũ.
+  // Provider: tạo record trong bảng providers gắn với users.id
+  if (r === "provider") {
+    // best-effort: chỉ insert các field phổ biến; DB có thể tự set created_at/updated_at
+    try {
+      await db.query(
+        `
+        INSERT INTO providers (user_id, company_name, email, status)
+        VALUES (?, ?, ?, 'approved')
+        `,
+        [result.insertId, name, mail]
+      );
+    } catch (e) {
+      if (String(e?.sqlMessage || e?.message || "").includes("Unknown column 'email'")) {
+        await db.query(
+          `
+          INSERT INTO providers (user_id, company_name, status)
+          VALUES (?, ?, 'approved')
+          `,
+          [result.insertId, name]
+        );
+      } else {
+        throw e;
+      }
+    }
+  }
+
+  const [[row]] = await db.query(
+    `SELECT id, full_name, email, role, is_active, created_at FROM users WHERE id = ? LIMIT 1`,
+    [result.insertId]
+  );
+
+  return {
+    id: toNumber(row?.id),
+    name: row?.full_name || name,
+    email: row?.email || mail,
+    role: row?.role || r,
+    is_active: Boolean(row?.is_active)
   };
 }
 

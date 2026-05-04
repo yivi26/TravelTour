@@ -1,7 +1,8 @@
 // booking_management.js
 
 async function loadBookings() {
-  const res = await fetch("/api/provider/bookings");
+  const http = window.providerFetch || fetch;
+  const res = await http("/api/provider/bookings");
   const data = await res.json();
 
   console.log("DATA:", data); // 👈 DEBUG

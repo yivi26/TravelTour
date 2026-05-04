@@ -3,6 +3,7 @@
   let currentTour = null;
   let meetingMap = null;
   let meetingMarker = null;
+  let galleryAutoTimer = null;
 
   const bookingForm = document.getElementById("booking-form");
   const dateInput = document.getElementById("departure-date");
@@ -193,6 +194,10 @@
 
     if (images.length <= 1) {
       thumbsContainer.innerHTML = "";
+      if (galleryAutoTimer) {
+        clearInterval(galleryAutoTimer);
+        galleryAutoTimer = null;
+      }
       return;
     }
 
@@ -213,13 +218,36 @@
 
     const thumbButtons = thumbsContainer.querySelectorAll(".tour-thumb");
 
+    function setActiveByIndex(nextIndex) {
+      const safeIndex =
+        images.length > 0 ? ((nextIndex % images.length) + images.length) % images.length : 0;
+      const nextUrl = images[safeIndex] || FALLBACK_IMAGE;
+      mainImage.src = nextUrl;
+      thumbButtons.forEach((item) => item.classList.remove("active"));
+      const btn = thumbsContainer.querySelector(`.tour-thumb[data-image="${CSS.escape(nextUrl)}"]`);
+      if (btn) btn.classList.add("active");
+      mainImage.dataset.idx = String(safeIndex);
+    }
+
+    function restartAuto() {
+      if (galleryAutoTimer) clearInterval(galleryAutoTimer);
+      galleryAutoTimer = setInterval(() => {
+        const cur = Number.parseInt(mainImage.dataset.idx || "0", 10) || 0;
+        setActiveByIndex(cur + 1);
+      }, 2000);
+    }
+
+    // set initial index based on activeMainImage
+    const initialIndex = Math.max(0, images.indexOf(activeMainImage));
+    setActiveByIndex(initialIndex);
+    restartAuto();
+
     thumbButtons.forEach((button) => {
       button.addEventListener("click", () => {
         const imageUrl = button.getAttribute("data-image") || FALLBACK_IMAGE;
-        mainImage.src = imageUrl;
-
-        thumbButtons.forEach((item) => item.classList.remove("active"));
-        button.classList.add("active");
+        const idx = images.indexOf(imageUrl);
+        setActiveByIndex(idx >= 0 ? idx : 0);
+        restartAuto();
       });
     });
   }

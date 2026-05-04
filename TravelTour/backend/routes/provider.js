@@ -19,8 +19,24 @@ import {
   getProfile,
   updateProfile
 } from "../controllers/providerController.js";
+import {
+  uploadMultiple,
+  uploadMultipleController,
+  uploadSingle,
+  uploadSingleController
+} from "../controllers/uploadController.js";
 
 const router = express.Router();
+
+// Chặn cache cho route theo user (đổi tài khoản không bị “dính” data cũ)
+router.use((req, res, next) => {
+  res.setHeader("X-Provider-NoCache", "1");
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Surrogate-Control", "no-store");
+  return next();
+});
 
 /* =========================
    PUBLIC ROUTES
@@ -35,6 +51,12 @@ router.get("/public/tours/:id", getPublicTourDetailController);
 ========================= */
 router.get("/profile", getProfile);
 router.put("/profile", updateProfile);
+
+/* =========================
+   UPLOADS
+========================= */
+router.post("/upload", uploadSingle, uploadSingleController);
+router.post("/uploads", uploadMultiple, uploadMultipleController);
 
 /* =========================
    PROVIDER DASHBOARD

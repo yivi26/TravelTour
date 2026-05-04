@@ -13,13 +13,29 @@ import {
   getProviderProfile,
   updateProviderProfile,
   getDashboardDataByProvider,
+  ensureProviderIdByUserId,
   getPublicFeaturedTours,
   getPublicTours,
   getPublicDiscountedTours,
   getPublicTourById
 } from "../models/providerModel.js";
 
-const PROVIDER_ID = 1;
+async function requireProviderId(req) {
+  const raw = req.headers["x-user-id"];
+  const userId = Number(raw || 0);
+  if (!userId) {
+    const err = new Error("Thiếu x-user-id. Vui lòng đăng nhập lại.");
+    err.statusCode = 401;
+    throw err;
+  }
+  const providerId = await ensureProviderIdByUserId(userId);
+  if (!providerId) {
+    const err = new Error("Tài khoản provider chưa có hồ sơ nhà cung cấp (providers).");
+    err.statusCode = 404;
+    throw err;
+  }
+  return providerId;
+}
 
 function normalizeTourPayload(body = {}) {
   return {
@@ -206,7 +222,8 @@ export async function getPublicTourDetailController(req, res) {
 ========================= */
 export async function getDashboardData(req, res) {
   try {
-    const dashboardData = await getDashboardDataByProvider(PROVIDER_ID);
+    const providerId = await requireProviderId(req);
+    const dashboardData = await getDashboardDataByProvider(providerId);
 
     return res.status(200).json({
       message: "Lấy dữ liệu dashboard thành công",
@@ -214,8 +231,9 @@ export async function getDashboardData(req, res) {
     });
   } catch (err) {
     console.error("❌ DASHBOARD ERROR:", err);
-    return res.status(500).json({
-      message: "Lỗi lấy dữ liệu dashboard",
+    const status = Number(err?.statusCode || 500);
+    return res.status(status).json({
+      message: err.message || "Lỗi lấy dữ liệu dashboard",
       error: err.sqlMessage || err.message
     });
   }
@@ -226,7 +244,8 @@ export async function getDashboardData(req, res) {
 ========================= */
 export async function getProfile(req, res) {
   try {
-    const profile = await getProviderProfile(PROVIDER_ID);
+    const providerId = await requireProviderId(req);
+    const profile = await getProviderProfile(providerId);
 
     if (!profile) {
       return res.status(404).json({
@@ -237,8 +256,9 @@ export async function getProfile(req, res) {
     return res.status(200).json({ profile });
   } catch (err) {
     console.error("❌ GET PROFILE ERROR:", err);
-    return res.status(500).json({
-      message: "Lỗi lấy hồ sơ provider",
+    const status = Number(err?.statusCode || 500);
+    return res.status(status).json({
+      message: err.message || "Lỗi lấy hồ sơ provider",
       error: err.sqlMessage || err.message
     });
   }
@@ -246,7 +266,8 @@ export async function getProfile(req, res) {
 
 export async function updateProfile(req, res) {
   try {
-    const profile = await updateProviderProfile(PROVIDER_ID, req.body);
+    const providerId = await requireProviderId(req);
+    const profile = await updateProviderProfile(providerId, req.body);
 
     return res.status(200).json({
       message: "Cập nhật hồ sơ provider thành công",
@@ -254,8 +275,9 @@ export async function updateProfile(req, res) {
     });
   } catch (err) {
     console.error("❌ UPDATE PROFILE ERROR:", err);
-    return res.status(500).json({
-      message: "Lỗi cập nhật hồ sơ provider",
+    const status = Number(err?.statusCode || 500);
+    return res.status(status).json({
+      message: err.message || "Lỗi cập nhật hồ sơ provider",
       error: err.sqlMessage || err.message
     });
   }
@@ -266,7 +288,8 @@ export async function updateProfile(req, res) {
 ========================= */
 export async function getTours(req, res) {
   try {
-    const tours = await getToursByProvider(PROVIDER_ID);
+    const providerId = await requireProviderId(req);
+    const tours = await getToursByProvider(providerId);
 
     return res.status(200).json({
       message: "Lấy danh sách tour thành công",
@@ -274,8 +297,9 @@ export async function getTours(req, res) {
     });
   } catch (err) {
     console.error("❌ TOUR ERROR:", err);
-    return res.status(500).json({
-      message: "Lỗi lấy tour",
+    const status = Number(err?.statusCode || 500);
+    return res.status(status).json({
+      message: err.message || "Lỗi lấy tour",
       error: err.sqlMessage || err.message
     });
   }
@@ -283,6 +307,7 @@ export async function getTours(req, res) {
 
 export async function getTourDetailController(req, res) {
   try {
+    const providerId = await requireProviderId(req);
     const id = Number(req.params.id);
 
     if (!id) {
@@ -291,7 +316,7 @@ export async function getTourDetailController(req, res) {
       });
     }
 
-    const tour = await getTourById(PROVIDER_ID, id);
+    const tour = await getTourById(providerId, id);
 
     if (!tour) {
       return res.status(404).json({
@@ -305,8 +330,9 @@ export async function getTourDetailController(req, res) {
     });
   } catch (err) {
     console.error("❌ GET TOUR DETAIL ERROR:", err);
-    return res.status(500).json({
-      message: "Lỗi lấy chi tiết tour",
+    const status = Number(err?.statusCode || 500);
+    return res.status(status).json({
+      message: err.message || "Lỗi lấy chi tiết tour",
       error: err.sqlMessage || err.message
     });
   }
@@ -314,6 +340,7 @@ export async function getTourDetailController(req, res) {
 
 export async function createNewTour(req, res) {
   try {
+    const providerId = await requireProviderId(req);
     const payload = normalizeTourPayload(req.body);
     const validationError = validateTourPayload(payload);
 
@@ -323,7 +350,7 @@ export async function createNewTour(req, res) {
       });
     }
 
-    const tourId = await createTour(PROVIDER_ID, payload);
+    const tourId = await createTour(providerId, payload);
 
     return res.status(201).json({
       message: "Tạo tour thành công",
@@ -344,8 +371,9 @@ export async function createNewTour(req, res) {
       });
     }
 
-    return res.status(500).json({
-      message: "Lỗi tạo tour",
+    const status = Number(err?.statusCode || 500);
+    return res.status(status).json({
+      message: err.message || "Lỗi tạo tour",
       error: err.sqlMessage || err.message || "Unknown error"
     });
   }
@@ -353,6 +381,7 @@ export async function createNewTour(req, res) {
 
 export async function updateTourController(req, res) {
   try {
+    const providerId = await requireProviderId(req);
     const id = Number(req.params.id);
 
     if (!id) {
@@ -361,7 +390,7 @@ export async function updateTourController(req, res) {
       });
     }
 
-    const existedTour = await getTourById(PROVIDER_ID, id);
+    const existedTour = await getTourById(providerId, id);
 
     if (!existedTour) {
       return res.status(404).json({
@@ -378,15 +407,16 @@ export async function updateTourController(req, res) {
       });
     }
 
-    await updateTour(PROVIDER_ID, id, payload);
+    await updateTour(providerId, id, payload);
 
     return res.status(200).json({
       message: "Cập nhật tour thành công"
     });
   } catch (err) {
     console.error("❌ UPDATE TOUR ERROR:", err);
-    return res.status(500).json({
-      message: "Lỗi cập nhật tour",
+    const status = Number(err?.statusCode || 500);
+    return res.status(status).json({
+      message: err.message || "Lỗi cập nhật tour",
       error: err.sqlMessage || err.message
     });
   }
@@ -394,6 +424,7 @@ export async function updateTourController(req, res) {
 
 export async function deleteTourController(req, res) {
   try {
+    const providerId = await requireProviderId(req);
     const id = Number(req.params.id);
 
     if (!id) {
@@ -402,7 +433,7 @@ export async function deleteTourController(req, res) {
       });
     }
 
-    const existedTour = await getTourById(PROVIDER_ID, id);
+    const existedTour = await getTourById(providerId, id);
 
     if (!existedTour) {
       return res.status(404).json({
@@ -410,15 +441,16 @@ export async function deleteTourController(req, res) {
       });
     }
 
-    await deleteTour(id);
+    await deleteTour(providerId, id);
 
     return res.status(200).json({
       message: "Xóa tour thành công"
     });
   } catch (err) {
     console.error("❌ DELETE TOUR ERROR:", err);
-    return res.status(500).json({
-      message: "Lỗi xóa tour",
+    const status = Number(err?.statusCode || 500);
+    return res.status(status).json({
+      message: err.message || "Lỗi xóa tour",
       error: err.sqlMessage || err.message
     });
   }
@@ -426,6 +458,7 @@ export async function deleteTourController(req, res) {
 
 export async function updateTourStatusController(req, res) {
   try {
+    const providerId = await requireProviderId(req);
     const { status } = req.body;
     const id = Number(req.params.id);
 
@@ -448,7 +481,7 @@ export async function updateTourStatusController(req, res) {
       });
     }
 
-    const existedTour = await getTourById(PROVIDER_ID, id);
+    const existedTour = await getTourById(providerId, id);
 
     if (!existedTour) {
       return res.status(404).json({
@@ -456,15 +489,16 @@ export async function updateTourStatusController(req, res) {
       });
     }
 
-    await updateTourStatus(id, status);
+    await updateTourStatus(providerId, id, status);
 
     return res.status(200).json({
       message: "Cập nhật trạng thái tour thành công"
     });
   } catch (err) {
     console.error("❌ UPDATE TOUR STATUS ERROR:", err);
-    return res.status(500).json({
-      message: "Lỗi cập nhật trạng thái tour",
+    const status = Number(err?.statusCode || 500);
+    return res.status(status).json({
+      message: err.message || "Lỗi cập nhật trạng thái tour",
       error: err.sqlMessage || err.message
     });
   }
@@ -472,7 +506,8 @@ export async function updateTourStatusController(req, res) {
 
 export async function getToursForGuideAssignmentController(req, res) {
   try {
-    const tours = await getToursForGuideAssignment(PROVIDER_ID);
+    const providerId = await requireProviderId(req);
+    const tours = await getToursForGuideAssignment(providerId);
 
     return res.status(200).json({
       message: "Lấy danh sách tour để phân công HDV thành công",
@@ -480,8 +515,9 @@ export async function getToursForGuideAssignmentController(req, res) {
     });
   } catch (err) {
     console.error("❌ GET TOURS FOR GUIDE ASSIGNMENT ERROR:", err);
-    return res.status(500).json({
-      message: "Lỗi lấy danh sách tour để phân công HDV",
+    const status = Number(err?.statusCode || 500);
+    return res.status(status).json({
+      message: err.message || "Lỗi lấy danh sách tour để phân công HDV",
       error: err.sqlMessage || err.message
     });
   }
@@ -492,12 +528,14 @@ export async function getToursForGuideAssignmentController(req, res) {
 ========================= */
 export async function getBookings(req, res) {
   try {
-    const bookings = await getBookingsByProvider(PROVIDER_ID);
+    const providerId = await requireProviderId(req);
+    const bookings = await getBookingsByProvider(providerId);
     return res.status(200).json(bookings);
   } catch (err) {
     console.error("❌ BOOKING ERROR:", err);
-    return res.status(500).json({
-      message: "Lỗi booking",
+    const status = Number(err?.statusCode || 500);
+    return res.status(status).json({
+      message: err.message || "Lỗi booking",
       error: err.sqlMessage || err.message
     });
   }
@@ -505,6 +543,7 @@ export async function getBookings(req, res) {
 
 export async function updateBooking(req, res) {
   try {
+    await requireProviderId(req);
     const { status } = req.body;
 
     if (!status) {
@@ -520,8 +559,9 @@ export async function updateBooking(req, res) {
     });
   } catch (err) {
     console.error("❌ UPDATE BOOKING ERROR:", err);
-    return res.status(500).json({
-      message: "Lỗi update booking",
+    const status = Number(err?.statusCode || 500);
+    return res.status(status).json({
+      message: err.message || "Lỗi update booking",
       error: err.sqlMessage || err.message
     });
   }
@@ -532,12 +572,14 @@ export async function updateBooking(req, res) {
 ========================= */
 export async function getAllGuides(req, res) {
   try {
-    const guides = await getGuides(PROVIDER_ID);
+    const providerId = await requireProviderId(req);
+    const guides = await getGuides(providerId);
     return res.status(200).json(guides);
   } catch (err) {
     console.error("❌ GUIDE ERROR:", err);
-    return res.status(500).json({
-      message: "Lỗi guide",
+    const status = Number(err?.statusCode || 500);
+    return res.status(status).json({
+      message: err.message || "Lỗi guide",
       error: err.sqlMessage || err.message
     });
   }
@@ -545,6 +587,7 @@ export async function getAllGuides(req, res) {
 
 export async function assignGuideToTourController(req, res) {
   try {
+    const providerId = await requireProviderId(req);
     const { tourId, guideId } = req.body;
 
     if (!tourId || !guideId) {
@@ -554,7 +597,7 @@ export async function assignGuideToTourController(req, res) {
     }
 
     const updatedTour = await assignGuideToTour(
-      PROVIDER_ID,
+      providerId,
       Number(tourId),
       Number(guideId)
     );
@@ -565,7 +608,8 @@ export async function assignGuideToTourController(req, res) {
     });
   } catch (err) {
     console.error("❌ ASSIGN GUIDE TO TOUR ERROR:", err);
-    return res.status(500).json({
+    const status = Number(err?.statusCode || 500);
+    return res.status(status).json({
       message: err.message || "Lỗi phân công guide cho tour",
       error: err.sqlMessage || err.message
     });

@@ -3,7 +3,8 @@ import { getAdminDashboardController } from "../controllers/adminDashboardContro
 import { getAdminNotificationsController } from "../controllers/adminNotificationsController.js";
 import {
   getAdminUsersController,
-  patchAdminUserActiveController
+  patchAdminUserActiveController,
+  postAdminPartnerUserController
 } from "../controllers/adminUsersController.js";
 import {
   getAdminProvidersController,
@@ -37,6 +38,7 @@ router.get("/dashboard", getAdminDashboardController);
 router.get("/notifications", getAdminNotificationsController);
 router.get("/users", getAdminUsersController);
 router.patch("/users/:id/active", patchAdminUserActiveController);
+router.post("/users/partner", postAdminPartnerUserController);
 router.get("/providers", getAdminProvidersController);
 router.patch("/providers/:id/status", patchAdminProviderStatusController);
 router.get("/guides", getAdminGuidesController);

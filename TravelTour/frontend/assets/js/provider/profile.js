@@ -49,7 +49,8 @@ function escapeHtml(text) {
 }
 
 async function fetchProfile() {
-  const response = await fetch("/api/provider/profile", {
+  const http = window.providerFetch || fetch;
+  const response = await http("/api/provider/profile", {
     method: "GET",
     headers: {
       "Content-Type": "application/json"
@@ -66,7 +67,8 @@ async function fetchProfile() {
 }
 
 async function updateProfile(payload) {
-  const response = await fetch("/api/provider/profile", {
+  const http = window.providerFetch || fetch;
+  const response = await http("/api/provider/profile", {
     method: "PUT",
     headers: {
       "Content-Type": "application/json"

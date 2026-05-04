@@ -50,7 +50,8 @@ function normalizeTour(tour) {
 }
 
 async function fetchGuides() {
-  const response = await fetch("/api/provider/guides", {
+  const http = window.providerFetch || fetch;
+  const response = await http("/api/provider/guides", {
     method: "GET",
     headers: {
       "Content-Type": "application/json"
@@ -67,7 +68,8 @@ async function fetchGuides() {
 }
 
 async function fetchToursForAssignment() {
-  const response = await fetch("/api/provider/tours/guide-assignment", {
+  const http = window.providerFetch || fetch;
+  const response = await http("/api/provider/tours/guide-assignment", {
     method: "GET",
     headers: {
       "Content-Type": "application/json"
@@ -85,7 +87,8 @@ async function fetchToursForAssignment() {
 }
 
 async function assignGuideToTour(tourId, guideId) {
-  const response = await fetch("/api/provider/assign-guide-to-tour", {
+  const http = window.providerFetch || fetch;
+  const response = await http("/api/provider/assign-guide-to-tour", {
     method: "POST",
     headers: {
       "Content-Type": "application/json"

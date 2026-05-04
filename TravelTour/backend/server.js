@@ -1,8 +1,10 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
-import dotenv from "dotenv";
 import { fileURLToPath } from "url";
+
+// Load .env 1 lần duy nhất cho toàn bộ backend
+import "./config/env.js";
 
 import authRoutes from "./routes/auth.js";
 import providerRoutes from "./routes/provider.js";
@@ -13,14 +15,20 @@ import settingsRoutes from "./routes/settings.js";
 import adminDashboardRoutes from "./routes/adminDashboard.js";
 
 const app = express();
+// Tắt ETag để tránh 304 lấy cache sai theo user
+app.set("etag", false);
+
+// Debug: đánh dấu response từ server này
+app.use((req, res, next) => {
+  res.setHeader("X-TravelTour-Server", "backend");
+  return next();
+});
 
 /* =========================
    FIX __dirname CHO ESM
 ========================= */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
-
-dotenv.config({ path: path.join(__dirname, ".env") });
 
 /* =========================
    MIDDLEWARE
@@ -78,6 +86,14 @@ app.get("/api/test", (req, res) => {
    API ROUTES
 ========================= */
 app.use("/api/auth", authRoutes);
+// Chặn cache cho các API có dữ liệu theo user (tránh 304 trả về data cũ)
+app.use("/api/provider", (req, res, next) => {
+  res.setHeader("Cache-Control", "no-store, no-cache, must-revalidate, proxy-revalidate");
+  res.setHeader("Pragma", "no-cache");
+  res.setHeader("Expires", "0");
+  res.setHeader("Surrogate-Control", "no-store");
+  return next();
+});
 app.use("/api/provider", providerRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/guide", guideRoutes);

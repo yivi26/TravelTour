@@ -172,10 +172,14 @@
                   <input
                     id="tourDurationText"
                     name="tourDurationText"
-                    type="text"
-                    placeholder="3 ngày 2 đêm"
+                    type="number"
+                    min="1"
+                    step="1"
+                    inputmode="numeric"
+                    placeholder="Ví dụ: 3"
                   />
                 </div>
+                <small id="tourDurationPreview">1 ngày 0 đêm</small>
               </div>
 
               <div class="form-group">
@@ -550,6 +554,7 @@
 
       <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
       <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+      <script src="../../assets/js/provider/providerApi.js"></script>
       <script src="../../assets/js/provider/taotour.js"></script>
       <script src="../../assets/js/provider/provider-logout.js"></script>
     </main>

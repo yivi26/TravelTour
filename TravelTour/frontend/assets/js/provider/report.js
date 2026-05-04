@@ -48,7 +48,8 @@ function fetchJsonSafe(response) {
 }
 
 async function fetchReportData() {
-  const response = await fetch("/api/provider/report", {
+  const http = window.providerFetch || fetch;
+  const response = await http("/api/provider/report", {
     method: "GET",
     headers: {
       "Content-Type": "application/json"

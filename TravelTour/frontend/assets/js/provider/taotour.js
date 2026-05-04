@@ -66,6 +66,10 @@ document.addEventListener("DOMContentLoaded", () => {
   const finalPriceInput = document.getElementById("tourFinalPrice");
 
   const meetingPointInput = document.getElementById("meetingPoint");
+  const durationDaysInput = document.getElementById("tourDurationText");
+  const durationPreview = document.getElementById("tourDurationPreview");
+  const startDateInput = document.getElementById("tourStartDate");
+  const endDateInput = document.getElementById("tourEndDate");
 
   const pageTitle = document.getElementById("pageTitle");
   const pageDesc = document.getElementById("pageDesc");
@@ -85,6 +89,7 @@ document.addEventListener("DOMContentLoaded", () => {
   let selectedLongitude = null;
 
   let excelImportedData = null;
+  let isSyncingDuration = false;
 
   init();
 
@@ -105,6 +110,7 @@ document.addEventListener("DOMContentLoaded", () => {
     renderGalleryPreview();
     calculateTaxAndFinalPrice();
     updateFormProgress();
+    syncDurationPreviewAndDates("init");
   }
 
   function updatePageMode() {
@@ -121,7 +127,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function bindEvents() {
-    addHighlightBtn?.addEventListener("click", addHighlightRow);
+    addHighlightBtn?.addEventListener("click", () => addHighlightRow());
     addDayBtn?.addEventListener("click", addItineraryDay);
 
     coverUploadBox?.addEventListener("click", () => {
@@ -164,6 +170,10 @@ document.addEventListener("DOMContentLoaded", () => {
       syncDiscountFromSalePrice();
       calculateTaxAndFinalPrice();
     });
+
+    durationDaysInput?.addEventListener("input", () => syncDurationPreviewAndDates("days"));
+    startDateInput?.addEventListener("change", () => syncDurationPreviewAndDates("start"));
+    endDateInput?.addEventListener("change", () => syncDurationPreviewAndDates("end"));
 
     document.addEventListener("input", updateFormProgress);
     document.addEventListener("change", updateFormProgress);
@@ -258,7 +268,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function loadTourDetail(id) {
     try {
-      const response = await fetch(`/api/provider/tours/${id}`);
+      const http = window.providerFetch || fetch;
+      const response = await http(`/api/provider/tours/${id}`);
       const result = await response.json();
 
       if (!response.ok) {
@@ -272,7 +283,12 @@ document.addEventListener("DOMContentLoaded", () => {
       setValue("tourCode", tour.code);
       setValue("categorySelect", tour.category_id);
       setValue("tourLocation", tour.location);
-      setValue("tourDurationText", tour.duration_text);
+      setValue(
+        "tourDurationText",
+        tour.duration_days != null && Number(tour.duration_days) >= 1
+          ? Number(tour.duration_days)
+          : parseDurationDays(tour.duration_text)
+      );
       setValue("tourStartDate", formatDateForInput(tour.start_date));
       setValue("tourEndDate", formatDateForInput(tour.end_date));
       setValue("tourMaxCapacity", tour.max_capacity);
@@ -296,6 +312,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
       syncDiscountFromSalePrice();
       calculateTaxAndFinalPrice();
+      syncDurationPreviewAndDates("init");
 
       if (highlightList) {
         highlightList.innerHTML = "";
@@ -378,11 +395,16 @@ document.addEventListener("DOMContentLoaded", () => {
   function addHighlightRow(value = "") {
     if (!highlightList) return;
 
+    // Nếu bị truyền nhầm event (click), bỏ qua và tạo row rỗng
+    if (value && typeof value === "object") value = "";
+
     const row = document.createElement("div");
     row.className = "dynamic-row";
     row.innerHTML = `
       <input type="text" class="highlight-input" placeholder="Ví dụ: Khám phá vịnh bằng du thuyền" value="${escapeHtml(value)}" />
-      <button type="button" class="remove-row-btn">Xóa</button>
+      <button type="button" class="remove-btn remove-row-btn" aria-label="Xóa điểm nổi bật" title="Xóa">
+        <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+      </button>
     `;
 
     row.querySelector(".remove-row-btn")?.addEventListener("click", () => {
@@ -404,7 +426,10 @@ document.addEventListener("DOMContentLoaded", () => {
     block.innerHTML = `
       <div class="itinerary-day-header">
         <h4>Ngày ${currentDay}</h4>
-        <button type="button" class="remove-day-btn">Xóa ngày</button>
+        <button type="button" class="danger-text-btn remove-day-btn" title="Xóa ngày">
+          <i class="fa-regular fa-trash-can" aria-hidden="true"></i>
+          <span>Xóa ngày</span>
+        </button>
       </div>
 
       <div class="form-group">
@@ -649,9 +674,93 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function parseDurationDays(durationText) {
-    const matched = durationText.match(/(\d+)/);
+    const raw = String(durationText ?? "").trim();
+    const n = Number(raw);
+    if (Number.isFinite(n) && n >= 1) return Math.floor(n);
+    const matched = raw.match(/(\d+)/);
     if (!matched) return 1;
-    return Number(matched[1]) || 1;
+    const v = Number(matched[1]) || 1;
+    return v >= 1 ? v : 1;
+  }
+
+  function buildDurationText(days) {
+    const d = Math.max(1, Math.floor(Number(days) || 1));
+    const nights = Math.max(d - 1, 0);
+    return `${d} ngày ${nights} đêm`;
+  }
+
+  function parseDateInputValue(value) {
+    if (!value) return null;
+    const d = new Date(`${value}T00:00:00`);
+    if (Number.isNaN(d.getTime())) return null;
+    return d;
+  }
+
+  function formatDateInputValue(date) {
+    if (!date || Number.isNaN(date.getTime())) return "";
+    const y = date.getFullYear();
+    const m = String(date.getMonth() + 1).padStart(2, "0");
+    const d = String(date.getDate()).padStart(2, "0");
+    return `${y}-${m}-${d}`;
+  }
+
+  function addDays(date, days) {
+    const d = new Date(date.getTime());
+    d.setDate(d.getDate() + days);
+    return d;
+  }
+
+  function diffDaysInclusive(start, end) {
+    const ms = end.getTime() - start.getTime();
+    const days = Math.floor(ms / 86400000) + 1;
+    return days;
+  }
+
+  function syncDurationPreviewAndDates(source = "") {
+    if (isSyncingDuration) return;
+    isSyncingDuration = true;
+    try {
+      const days = parseDurationDays(durationDaysInput?.value);
+
+      if (durationDaysInput && String(durationDaysInput.value || "").trim() === "") {
+        durationDaysInput.value = String(days);
+      }
+
+      if (durationPreview) durationPreview.textContent = buildDurationText(days);
+
+      const start = parseDateInputValue(startDateInput?.value);
+      const end = parseDateInputValue(endDateInput?.value);
+
+      // Chặn end < start: set min cho endDate và tự kéo về hợp lệ
+      if (startDateInput && start) {
+        startDateInput.max = "";
+      }
+      if (endDateInput) {
+        endDateInput.min = start ? formatDateInputValue(start) : "";
+      }
+
+      if (source === "end" && start && end) {
+        if (end < start) {
+          // Nếu user chọn sai, kéo end về start rồi đồng bộ lại
+          if (endDateInput) endDateInput.value = formatDateInputValue(start);
+          if (durationDaysInput) durationDaysInput.value = "1";
+          if (durationPreview) durationPreview.textContent = buildDurationText(1);
+          return;
+        }
+        const computedDays = diffDaysInclusive(start, end);
+        const safeDays = computedDays >= 1 ? computedDays : 1;
+        if (durationDaysInput) durationDaysInput.value = String(safeDays);
+        if (durationPreview) durationPreview.textContent = buildDurationText(safeDays);
+        return;
+      }
+
+      if (start && days >= 1) {
+        const computedEnd = addDays(start, Math.max(days - 1, 0));
+        if (endDateInput) endDateInput.value = formatDateInputValue(computedEnd);
+      }
+    } finally {
+      isSyncingDuration = false;
+    }
   }
 
   function createSlug(title) {
@@ -682,7 +791,8 @@ document.addEventListener("DOMContentLoaded", () => {
     const code = getInputValue("tourCode");
     const categoryId = getInputValue("categorySelect");
     const location = getInputValue("tourLocation");
-    const durationText = getInputValue("tourDurationText");
+    const durationDays = parseDurationDays(getInputValue("tourDurationText"));
+    const durationText = buildDurationText(durationDays);
     const startDate = getInputValue("tourStartDate");
     const endDate = getInputValue("tourEndDate");
     const maxCapacity = Number(getInputValue("tourMaxCapacity"));
@@ -712,7 +822,7 @@ document.addEventListener("DOMContentLoaded", () => {
       category_id: categoryId ? Number(categoryId) : null,
       location,
       duration_text: durationText,
-      duration_days: parseDurationDays(durationText),
+      duration_days: durationDays,
       start_date: startDate || null,
       end_date: endDate || null,
       max_capacity: Number.isFinite(maxCapacity) ? maxCapacity : 0,
@@ -825,6 +935,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
   async function submitTour(status) {
   try {
+    // Upload ảnh trước khi tạo/cập nhật tour để tránh thumbnail_url trỏ file không tồn tại
+    if (selectedCoverImage && !selectedCoverImage.existing) {
+      const uploaded = await uploadSingleImage(selectedCoverImage);
+      selectedCoverImage = { name: uploaded.filename, existing: true, url: uploaded.url };
+    }
+
+    if (Array.isArray(selectedGalleryImages) && selectedGalleryImages.length > 0) {
+      const newFiles = selectedGalleryImages.filter((f) => f && !f.existing);
+      if (newFiles.length > 0) {
+        const uploadedList = await uploadMultipleImages(newFiles);
+        // Map theo originalname (file.name)
+        const map = new Map(uploadedList.map((u) => [u.originalname, u]));
+        selectedGalleryImages = selectedGalleryImages.map((f) => {
+          if (f && !f.existing) {
+            const u = map.get(f.name);
+            if (u) return { name: u.filename, existing: true, url: u.url };
+          }
+          return f;
+        });
+        renderGalleryPreview();
+      }
+    }
+
     const formData = collectFormData();
 
     if (!validateFormData(formData, status)) {
@@ -844,7 +977,8 @@ document.addEventListener("DOMContentLoaded", () => {
 
     const method = isEditMode ? "PUT" : "POST";
 
-    const response = await fetch(url, {
+    const http = window.providerFetch || fetch;
+    const response = await http(url, {
       method,
       headers: {
         "Content-Type": "application/json"
@@ -889,6 +1023,26 @@ if (status === "active" && savedTourId) {
     alert(isEditMode ? "Có lỗi xảy ra khi cập nhật tour." : "Có lỗi xảy ra khi tạo tour.");
   }
 }
+
+  async function uploadSingleImage(file) {
+    const fd = new FormData();
+    fd.append("file", file, file.name);
+    const http = window.providerFetch || fetch;
+    const res = await http("/api/provider/upload", { method: "POST", body: fd });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || "Upload ảnh thất bại");
+    return data.file;
+  }
+
+  async function uploadMultipleImages(files) {
+    const fd = new FormData();
+    files.forEach((f) => fd.append("files", f, f.name));
+    const http = window.providerFetch || fetch;
+    const res = await http("/api/provider/uploads", { method: "POST", body: fd });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.message || "Upload ảnh thất bại");
+    return Array.isArray(data.files) ? data.files : [];
+  }
 
   function updateRequiredStatus(element, isDone) {
     if (!element) return;

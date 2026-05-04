@@ -66,9 +66,9 @@
       }
 
       const emailPattern = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      const isDefaultAdminLogin = email === "admin";
-      if (!emailPattern.test(email) && !isDefaultAdminLogin) {
-        showMessage("Email không đúng định dạng.", "error");
+      const isSpecialUsername = email === "admin" || email === "guide";
+      if (!emailPattern.test(email) && !isSpecialUsername) {
+        showMessage("Email / tên đăng nhập không hợp lệ.", "error");
         return;
       }
 
