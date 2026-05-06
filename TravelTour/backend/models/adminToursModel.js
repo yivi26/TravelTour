@@ -17,6 +17,29 @@ function mapTourStatus(status) {
   return { label: "Đã duyệt", key: "approved" };
 }
 
+function resolveTourFinalPrice(row) {
+  const basePrice = toNumber(row?.base_price, 0);
+  const salePrice = toNumber(row?.sale_price, 0);
+  const appliedPrice = salePrice > 0 && salePrice < basePrice ? salePrice : basePrice;
+  const taxPercent = Math.max(0, toNumber(row?.tax_percent, 0));
+  const taxValue = Math.max(0, toNumber(row?.tax, 0));
+  const finalPriceValue = Math.max(0, toNumber(row?.final_price, 0));
+
+  if (taxPercent <= 0) {
+    return finalPriceValue > 0 ? finalPriceValue : appliedPrice;
+  }
+
+  if (finalPriceValue > 0) {
+    return finalPriceValue;
+  }
+
+  if (taxValue > 0) {
+    return appliedPrice + taxValue;
+  }
+
+  return appliedPrice + Math.round(appliedPrice * (taxPercent / 100));
+}
+
 export async function getTourStats() {
   const [[totalRow]] = await db.query(`SELECT COUNT(*) AS total FROM tours`);
   const [[approvedRow]] = await db.query(
@@ -82,6 +105,10 @@ export async function listTours({ page = 1, pageSize = 7, q = "" } = {}) {
       t.location,
       t.status,
       t.base_price,
+      t.sale_price,
+      t.tax_percent,
+      t.tax,
+      t.final_price,
       t.max_capacity,
       p.company_name AS provider_name,
       (
@@ -103,13 +130,14 @@ export async function listTours({ page = 1, pageSize = 7, q = "" } = {}) {
     const mapped = mapTourStatus(r.status);
     const booked = toNumber(r.booked_count);
     const cap = Math.max(0, toNumber(r.max_capacity));
+    const finalPrice = resolveTourFinalPrice(r);
     return {
       id: toNumber(r.id),
       name: r.title || "Tour",
       supplier: r.provider_name || "",
       guide: "",
       slots: `${Math.min(booked, cap)}/${cap}`,
-      price: toNumber(r.base_price).toLocaleString("vi-VN"),
+      price: finalPrice.toLocaleString("vi-VN"),
       status: mapped.label,
       statusKey: mapped.key,
       location: r.location || "",

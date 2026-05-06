@@ -11,7 +11,7 @@ export async function findUserByEmail(email) {
     WHERE email = ?
     LIMIT 1
     `,
-    [email]
+    [email],
   );
 
   return rows[0];
@@ -53,7 +53,7 @@ export async function createLocalUser(
     WHERE id = ?
     LIMIT 1
     `,
-    [result.insertId]
+    [result.insertId],
   );
 
   return rows[0];
@@ -76,7 +76,7 @@ export async function createGoogleUser(fullName, email, avatarUrl) {
     )
     VALUES (?, ?, ?, ?, ?, ?, ?, NOW())
     `,
-    [email, fakePassword, fullName, avatarUrl, "customer", true, true]
+    [email, fakePassword, fullName, avatarUrl, "customer", true, true],
   );
 
   const [rows] = await db.query(
@@ -88,7 +88,7 @@ export async function createGoogleUser(fullName, email, avatarUrl) {
     WHERE id = ?
     LIMIT 1
     `,
-    [result.insertId]
+    [result.insertId],
   );
 
   return rows[0];
@@ -105,7 +105,7 @@ export async function updateGoogleUser(id, fullName, avatarUrl) {
       last_login_at = NOW()
     WHERE id = ?
     `,
-    [fullName, avatarUrl, id]
+    [fullName, avatarUrl, id],
   );
 
   const [rows] = await db.query(
@@ -117,7 +117,7 @@ export async function updateGoogleUser(id, fullName, avatarUrl) {
     WHERE id = ?
     LIMIT 1
     `,
-    [id]
+    [id],
   );
 
   return rows[0];
@@ -130,7 +130,7 @@ export async function updateLastLogin(id) {
     SET last_login_at = NOW()
     WHERE id = ?
     `,
-    [id]
+    [id],
   );
 }
 
@@ -161,5 +161,55 @@ export async function ensureDefaultAdmin() {
     VALUES (?, ?, ?, NULL, NULL, 'admin', 1, 1, NULL)
     `,
     [adminEmail, passwordHash, "TravelTour Admin"]
+  );
+}
+
+export async function getUserProfileById(id) {
+  const [rows] = await db.query(
+    `
+    SELECT id, email, full_name, phone, avatar_url, role, is_active, email_verified, created_at
+    FROM users
+    WHERE id = ?
+    LIMIT 1
+    `,
+    [id],
+  );
+
+  return rows[0] || null;
+}
+
+export async function updateUserProfileById(id, { full_name, phone }) {
+  await db.query(
+    `
+    UPDATE users
+    SET full_name = ?, phone = ?
+    WHERE id = ?
+    `,
+    [full_name, phone, id],
+  );
+}
+
+export async function getUserPasswordById(id) {
+  const [rows] = await db.query(
+    `
+    SELECT id, password_hash
+    FROM users
+    WHERE id = ?
+    LIMIT 1
+    `,
+    [id],
+  );
+
+  return rows[0] || null;
+}
+
+export async function updateUserPasswordById(id, passwordHash) {
+  await db.query(
+    `
+    UPDATE users
+    SET password_hash = ?
+    WHERE id = ?
+    `,
+    [passwordHash, id],
   );
 }

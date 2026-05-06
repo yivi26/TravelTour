@@ -190,7 +190,7 @@
           <!-- Top bar -->
           <div class="top-bar">
             <p class="page-sub">Quản lý tất cả booking trong hệ thống</p>
-            <button class="btn-export" onclick="alert('Xuất báo cáo...')">
+            <button class="btn-export" type="button" id="exportBookingExcelBtn">
               <svg
                 viewBox="0 0 24 24"
                 fill="none"
@@ -260,6 +260,7 @@
       <!-- end main -->
     </div>
     <!-- end app -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="../../assets/js/admin/logout.js"></script>
     <script src="../../assets/js/admin/thongbao.js"></script>
     <script>
@@ -314,7 +315,21 @@
           setText("statConfirmed", (s.confirmed ?? 0).toLocaleString("vi-VN"));
           setText("statCompleted", (s.completed ?? 0).toLocaleString("vi-VN"));
         }
-
+        function normalizeBookingStatus(status) {
+          const key = String(status || "").toLowerCase();
+          const map = {
+            pending_payment: { text: "Chờ thanh toán", key: "pending" },
+            pending: { text: "Chờ xử lý", key: "pending" },
+            cancel_requested: { text: "Chờ xử lý", key: "pending" },
+            confirmed: { text: "Đã xác nhận", key: "confirmed" },
+            paid: { text: "Đã xác nhận", key: "confirmed" },
+            in_progress: { text: "Đã xác nhận", key: "confirmed" },
+            completed: { text: "Đã hoàn thành", key: "completed" },
+            cancelled: { text: "Đã hủy", key: "cancelled" },
+            refunded: { text: "Đã hủy", key: "cancelled" },
+          };
+          return map[key] || { text: "Chờ xử lý", key: "pending" };
+        }
         function renderTable() {
           const tbody = document.querySelector("#bookingTable tbody");
           if (!tbody) return;
@@ -322,6 +337,9 @@
           tbody.innerHTML = (state.bookings || [])
             .map((b) => {
               const dateText = b.departureDate ? String(b.departureDate).slice(0, 10) : "—";
+              const st = normalizeBookingStatus(
+                b.rawStatus || b.statusKey || b.status,
+              );
               return `<tr>
                 <td><span class="booking-id">${b.code || ""}</span></td>
                 <td><div class="customer-cell">${customerIcon}<span>${b.customerName || ""}</span></div></td>
@@ -329,7 +347,7 @@
                 <td><div class="date-cell">${dateIcon}${dateText}</div></td>
                 <td>${Number(b.people || 0)} người</td>
                 <td><span class="money">${b.amount || "0 VND"}</span></td>
-                <td><span class="badge ${b.statusKey || "pending"}">${b.status || ""}</span></td>
+                <td><span class="badge ${st.key}">${st.text}</span></td>
                 <td>
                   <button class="action-btn" type="button" title="Xem chi tiết" data-action="view" data-booking-id="${b.id}">
                     ${eyeIcon}
@@ -429,9 +447,54 @@
           });
         }
 
+        function toIsoDateForFile() {
+          const d = new Date();
+          const yyyy = d.getFullYear();
+          const mm = String(d.getMonth() + 1).padStart(2, "0");
+          const dd = String(d.getDate()).padStart(2, "0");
+          return `${yyyy}${mm}${dd}`;
+        }
+
+        function bindExportBooking() {
+          const btn = document.getElementById("exportBookingExcelBtn");
+          if (!btn) return;
+
+          btn.addEventListener("click", () => {
+            if (!window.XLSX) {
+              alert("Thiếu thư viện xuất Excel. Vui lòng tải lại trang.");
+              return;
+            }
+
+            const rows = (state.bookings || []).map((b) => {
+              const normalized = normalizeBookingStatus(b.rawStatus || b.statusKey || b.status);
+              const departureDate = b.departureDate ? String(b.departureDate).slice(0, 10) : "";
+              return {
+                ma_booking: b.code || "",
+                khach_hang: b.customerName || "",
+                tour: b.tourTitle || "",
+                ngay_khoi_hanh: departureDate,
+                so_nguoi: Number(b.people || 0),
+                tong_tien: b.amount || "0 VND",
+                trang_thai: normalized.text,
+              };
+            });
+
+            if (rows.length === 0) {
+              alert("Không có dữ liệu booking để xuất.");
+              return;
+            }
+
+            const workbook = XLSX.utils.book_new();
+            const worksheet = XLSX.utils.json_to_sheet(rows);
+            XLSX.utils.book_append_sheet(workbook, worksheet, "Bookings");
+            XLSX.writeFile(workbook, `admin-bookings-${toIsoDateForFile()}.xlsx`);
+          });
+        }
+
         bindSearch();
         bindPaging();
         bindActions();
+        bindExportBooking();
         load();
       })();
     </script>

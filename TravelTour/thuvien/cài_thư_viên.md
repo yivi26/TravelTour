@@ -1,7 +1,6 @@
- cd TravelTour
- cd backend
- npm run dev
-
+cd TravelTour
+cd backend
+npm run dev
 
 cài các thư viện sau :
 1.npm init -y

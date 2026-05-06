@@ -7,18 +7,20 @@ function formatVnd(value) {
 
 function mapBookingStatus(status) {
   const s = String(status || "").toLowerCase();
-  if (s === "pending") return { label: "Chờ xử lý", key: "pending" };
+  if (s === "pending_payment") return { label: "Chờ thanh toán", key: "pending" };
+  if (s === "pending" || s === "cancel_requested")
+    return { label: "Chờ xử lý", key: "pending" };
   if (s === "confirmed" || s === "paid" || s === "in_progress")
     return { label: "Đã xác nhận", key: "confirmed" };
   if (s === "completed") return { label: "Đã hoàn thành", key: "completed" };
   if (s === "cancelled" || s === "refunded") return { label: "Đã hủy", key: "cancelled" };
-  return { label: s, key: "pending" };
+  return { label: "Chờ xử lý", key: "pending" };
 }
 
 export async function getBookingStats() {
   const [[totalRow]] = await db.query(`SELECT COUNT(*) AS total FROM bookings`);
   const [[pendingRow]] = await db.query(
-    `SELECT COUNT(*) AS total FROM bookings WHERE status = 'pending'`
+    `SELECT COUNT(*) AS total FROM bookings WHERE status IN ('pending','pending_payment','cancel_requested')`
   );
   const [[confirmedRow]] = await db.query(
     `SELECT COUNT(*) AS total FROM bookings WHERE status IN ('confirmed','paid','in_progress')`
@@ -59,7 +61,7 @@ export async function listBookings({ page = 1, pageSize = 7, q = "" } = {}) {
     `
     SELECT COUNT(*) AS total
     FROM bookings b
-    JOIN users u ON u.id = b.user_id
+    LEFT JOIN users u ON u.id = b.user_id
     JOIN tours t ON t.id = b.tour_id
     LEFT JOIN tour_schedules s ON s.id = b.schedule_id
     ${where}
@@ -78,6 +80,7 @@ export async function listBookings({ page = 1, pageSize = 7, q = "" } = {}) {
       b.id,
       b.booking_code,
       b.status,
+      b.contact_name,
       b.num_adults,
       b.num_children,
       b.num_infants,
@@ -87,7 +90,7 @@ export async function listBookings({ page = 1, pageSize = 7, q = "" } = {}) {
       t.title AS tour_title,
       s.departure_date
     FROM bookings b
-    JOIN users u ON u.id = b.user_id
+    LEFT JOIN users u ON u.id = b.user_id
     JOIN tours t ON t.id = b.tour_id
     LEFT JOIN tour_schedules s ON s.id = b.schedule_id
     ${where}
@@ -104,7 +107,7 @@ export async function listBookings({ page = 1, pageSize = 7, q = "" } = {}) {
     return {
       id: toNumber(r.id),
       code: r.booking_code,
-      customerName: r.customer_name || "",
+      customerName: r.customer_name || r.contact_name || "",
       tourTitle: r.tour_title || "",
       departureDate: r.departure_date || null,
       people,

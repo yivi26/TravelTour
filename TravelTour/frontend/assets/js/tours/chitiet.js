@@ -481,16 +481,89 @@
     grandTotal.textContent = formatCurrency(totalPrice);
   }
 
-  function setupDepartureDate() {
+  function toDateInputValue(value) {
+    if (!value) return "";
+    if (value instanceof Date && !Number.isNaN(value.getTime())) {
+      return value.toISOString().slice(0, 10);
+    }
+
+    const text = String(value).trim();
+    if (!text) return "";
+
+    const isoMatch = text.match(/^(\d{4}-\d{2}-\d{2})/);
+    if (isoMatch) return isoMatch[1];
+
+    const parsed = new Date(text);
+    if (Number.isNaN(parsed.getTime())) return "";
+    return parsed.toISOString().slice(0, 10);
+  }
+
+  function getAvailableSchedules(schedules = []) {
+    if (!Array.isArray(schedules)) return [];
+
+    return schedules
+      .map((item) => {
+        const departureDate = toDateInputValue(item?.departure_date);
+        const availableSlots = Number(item?.available_slots);
+        const bookedSlots = Number(item?.booked_slots);
+        const remainingSlots =
+          Number.isFinite(availableSlots) && Number.isFinite(bookedSlots)
+            ? availableSlots - bookedSlots
+            : null;
+        const status = String(item?.status || "").toLowerCase();
+        const isClosed = ["cancelled", "closed", "full", "inactive"].includes(status);
+
+        return {
+          departureDate,
+          remainingSlots,
+          isClosed,
+        };
+      })
+      .filter((item) => {
+        if (!item.departureDate || item.isClosed) return false;
+        if (item.remainingSlots == null) return true;
+        return item.remainingSlots > 0;
+      })
+      .sort((a, b) => a.departureDate.localeCompare(b.departureDate));
+  }
+
+  function setupDepartureDate(tour) {
     if (!dateInput) return;
 
     const today = new Date();
-    const localDate = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
+    const todayDate = new Date(today.getTime() - today.getTimezoneOffset() * 60000)
       .toISOString()
       .slice(0, 10);
 
-    dateInput.min = localDate;
-    dateInput.value = localDate;
+    const startDate = toDateInputValue(tour?.start_date);
+    const endDate = toDateInputValue(tour?.end_date);
+    const earliestAllowedDate =
+      startDate && startDate > todayDate ? startDate : todayDate;
+
+    const schedules = getAvailableSchedules(tour?.schedules);
+    const nextAvailable = schedules.find(
+      (item) =>
+        item.departureDate >= earliestAllowedDate &&
+        (!endDate || item.departureDate <= endDate),
+    );
+
+    if (nextAvailable?.departureDate) {
+      dateInput.min = earliestAllowedDate;
+      if (endDate) dateInput.max = endDate;
+      dateInput.value = nextAvailable.departureDate;
+      return;
+    }
+
+    if (startDate) {
+      dateInput.min = earliestAllowedDate;
+      if (endDate) dateInput.max = endDate;
+      dateInput.value = earliestAllowedDate;
+      return;
+    }
+
+    dateInput.min = todayDate;
+    if (endDate) dateInput.max = endDate;
+    dateInput.value = todayDate;
   }
 
   async function init() {
@@ -505,7 +578,8 @@
       console.log("TOUR DATA:", tour);
 
       renderTourDetail(tour);
-      setupDepartureDate();
+      setupDepartureDate(tour);
+     
     } catch (error) {
       console.error("Lỗi tải chi tiết tour:", error);
     }
@@ -519,20 +593,42 @@
     childSelect.addEventListener("change", updateBookingSummary);
   }
 
-  if (bookingForm) {
-    bookingForm.addEventListener("submit", function (event) {
-      event.preventDefault();
+ if (bookingForm) {
+  bookingForm.addEventListener("submit", function (event) {
+    event.preventDefault();
 
-      if (!currentTour) {
-        alert("Chưa có dữ liệu tour");
-        return;
-      }
+    if (!currentTour) {
+      alert("Chưa có dữ liệu tour");
+      return;
+    }
 
-      updateBookingSummary();
-      window.location.href = "./ttkhachhang.html";
+    updateBookingSummary();
+
+    // Truyền dữ liệu qua URL để bước tiếp theo có thể gọi API summary
+    const tourId = getTourIdFromURL();
+    if (!tourId) {
+      alert("Không tìm thấy id tour để đặt.");
+      return;
+    }
+
+    const departureDate = dateInput ? dateInput.value : "";
+    const adults = adultSelect ? adultSelect.value : "0";
+    const children = childSelect ? childSelect.value : "0";
+
+    if (!departureDate) {
+      alert("Vui lòng chọn ngày khởi hành.");
+      return;
+    }
+
+    const qs = new URLSearchParams({
+      tour_id: tourId,
+      departure_date: departureDate,
+      adults: adults,
+      children: children,
     });
-  }
-  
+    window.location.href = `./ttkhachhang.html?${qs.toString()}`;
+  });
+}
 
   document.addEventListener("DOMContentLoaded", init);
 })();

@@ -1,6 +1,7 @@
 import express from "express";
 import cors from "cors";
 import path from "path";
+import fs from "fs";
 import dotenv from "dotenv";
 import { fileURLToPath } from "url";
 
@@ -11,6 +12,9 @@ import providerRoutes from "./routes/provider.js";
 import { ensureDefaultAdmin } from "./models/userModel.js";
 import chatbotRoutes from "./routes/chatbot.js";
 import guideRoutes from "./routes/guide.js";
+import bookingRoutes from "./routes/booking.js";
+import customerRoutes from "./routes/customer.js";
+import paymentRoutes from "./routes/payment.js";
 
 // 👉 giữ debug của bạn
 console.log("=== ENV DEBUG ===");
@@ -28,6 +32,16 @@ const app = express();
 ========================= */
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+const uploadsDirInBackend = path.join(__dirname, "uploads");
+const uploadsDirOutsideBackend = path.join(__dirname, "../uploads");
+
+const resolvedUploadsDir = fs.existsSync(uploadsDirOutsideBackend)
+  ? uploadsDirOutsideBackend
+  : uploadsDirInBackend;
+
+if (!fs.existsSync(resolvedUploadsDir)) {
+  fs.mkdirSync(resolvedUploadsDir, { recursive: true });
+}
 
 dotenv.config({ path: path.join(__dirname, ".env") });
 
@@ -46,14 +60,14 @@ app.get("/favicon.ico", (req, res) => res.status(204).end());
 ========================= */
 app.use(
   express.static(path.join(__dirname, "../frontend"), {
-    index: false
-  })
+    index: false,
+  }),
 );
 
 /* =========================
    SERVE FILE ẢNH UPLOAD
 ========================= */
-app.use("/uploads", express.static(path.join(__dirname, "../uploads")));
+app.use("/uploads", express.static(resolvedUploadsDir));
 
 /* =========================
    ROUTE PAGE FRONTEND
@@ -64,13 +78,13 @@ app.get("/", (req, res) => {
 
 app.get("/login", (req, res) => {
   return res.sendFile(
-    path.join(__dirname, "../frontend/pages/dangnhap/login.html")
+    path.join(__dirname, "../frontend/pages/dangnhap/login.html"),
   );
 });
 
 app.get("/register", (req, res) => {
   return res.sendFile(
-    path.join(__dirname, "../frontend/pages/dangnhap/register.html")
+    path.join(__dirname, "../frontend/pages/dangnhap/register.html"),
   );
 });
 
@@ -79,8 +93,33 @@ app.get("/register", (req, res) => {
 ========================= */
 app.get("/api/test", (req, res) => {
   return res.status(200).json({
-    message: "API OK"
+    message: "API OK",
   });
+});
+
+app.get("/api/uploads/images", (req, res) => {
+  try {
+    const entries = fs.readdirSync(resolvedUploadsDir, { withFileTypes: true });
+
+    const imageFiles = entries
+      .filter((entry) => entry.isFile())
+      .map((entry) => entry.name)
+      .filter((name) => /\.(jpe?g|png|webp|gif|bmp|svg)$/i.test(name))
+      .map((name) => ({
+        name,
+        url: `/uploads/${encodeURIComponent(name)}`,
+      }));
+
+    return res.status(200).json({
+      message: "Lấy danh sách ảnh thành công",
+      data: imageFiles,
+    });
+  } catch (error) {
+    return res.status(500).json({
+      message: "Không thể đọc danh sách ảnh upload",
+      error: error?.message || "Unknown error",
+    });
+  }
 });
 
 /* =========================
@@ -90,6 +129,9 @@ app.use("/api/auth", authRoutes);
 app.use("/api/provider", providerRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/guide", guideRoutes);
+app.use("/api/bookings", bookingRoutes);
+app.use("/api/customer", customerRoutes);
+app.use("/api/payments", paymentRoutes);
 
 // 👉 thêm admin + settings
 app.use("/api/settings", settingsRoutes);
@@ -100,7 +142,7 @@ app.use("/api/admin", adminDashboardRoutes);
 ========================= */
 app.use("/api", (req, res) => {
   return res.status(404).json({
-    message: "API không tồn tại"
+    message: "API không tồn tại",
   });
 });
 
@@ -122,7 +164,7 @@ app.use((err, req, res, next) => {
 
   return res.status(500).json({
     message: "Lỗi server nội bộ",
-    error: err?.sqlMessage || err?.message || "Unknown error"
+    error: err?.sqlMessage || err?.message || "Unknown error",
   });
 });
 

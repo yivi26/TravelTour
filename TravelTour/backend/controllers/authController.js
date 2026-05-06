@@ -1,6 +1,7 @@
 import { OAuth2Client } from "google-auth-library";
 import dotenv from "dotenv";
 import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 import {
   findUserByEmail,
   createGoogleUser,
@@ -12,6 +13,19 @@ import {
 dotenv.config();
 
 const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID);
+
+function generateAccessToken(user) {
+  const secret = process.env.JWT_SECRET || "traveltour_dev_secret";
+  return jwt.sign(
+    {
+      id: user.id,
+      role: user.role || "customer",
+      email: user.email || "",
+    },
+    secret,
+    { expiresIn: "7d" },
+  );
+}
 
 export async function register(req, res) {
   const { fullName, email, password, phone } = req.body;
@@ -81,9 +95,12 @@ export async function login(req, res) {
     }
 
     await updateLastLogin(user.id);
+    const accessToken = generateAccessToken(user);
 
     return res.status(200).json({
       message: "Đăng nhập thành công",
+      accessToken,
+      token: accessToken,
       user: {
         id: user.id,
         email: user.email,
@@ -152,10 +169,22 @@ export async function googleLogin(req, res) {
     }
 
     await updateLastLogin(user.id);
+    const accessToken = generateAccessToken(user);
 
     return res.status(200).json({
       message: "Google login thành công",
-      user
+      accessToken,
+      token: accessToken,
+      user: {
+        id: user.id,
+        email: user.email,
+        full_name: user.full_name,
+        phone: user.phone,
+        avatar_url: user.avatar_url,
+        role: user.role,
+        is_active: user.is_active,
+        email_verified: user.email_verified,
+      },
     });
   } catch (error) {
     console.error("Google login error:", error);

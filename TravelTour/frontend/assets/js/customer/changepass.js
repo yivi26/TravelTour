@@ -12,6 +12,56 @@ function closeSidebar() {
   if (overlay) overlay.classList.remove("show");
 }
 
+function getStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem("traveltour_user") || "{}");
+  } catch (error) {
+    return {};
+  }
+}
+
+function setTopbarUserName(name) {
+  const userNameEl = document.querySelector(".user-name");
+  if (userNameEl && name) {
+    userNameEl.textContent = name;
+  }
+}
+
+async function syncTopbarUserName() {
+  const storedUser = getStoredUser();
+  const localName = storedUser.fullName || storedUser.full_name || "";
+
+  if (localName) {
+    setTopbarUserName(localName);
+  }
+
+  try {
+    const response = await fetch("http://localhost:3000/api/customer/profile", {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("accessToken"),
+      },
+    });
+    const result = await response.json();
+
+    if (!response.ok || !result.success || !result.data) return;
+
+    const realName = result.data.full_name || result.data.fullName || "";
+    if (!realName) return;
+
+    setTopbarUserName(realName);
+
+    localStorage.setItem(
+      "traveltour_user",
+      JSON.stringify({
+        ...storedUser,
+        fullName: realName,
+      }),
+    );
+  } catch (error) {
+    console.warn("Không đồng bộ được tên khách hàng:", error);
+  }
+}
+
 function togglePassword(inputId, button) {
   const input = document.getElementById(inputId);
   if (!input) return;
@@ -79,7 +129,7 @@ function bindEvents() {
   }
 
   if (form) {
-    form.addEventListener("submit", function (event) {
+    form.addEventListener("submit", async function (event) {
       event.preventDefault();
 
       const currentPassword = document
@@ -96,12 +146,13 @@ function bindEvents() {
         return;
       }
 
+      const passwordErrors = validatePassword(newPassword);
+
       if (!validatePassword(newPassword)) {
         message.textContent = "Mật khẩu mới chưa đúng yêu cầu bảo mật.";
         message.className = "password-message error";
         return;
       }
-
       if (newPassword !== confirmPassword) {
         message.textContent = "Xác nhận mật khẩu mới không khớp.";
         message.className = "password-message error";
@@ -115,17 +166,47 @@ function bindEvents() {
         return;
       }
 
-      message.textContent = "Cập nhật mật khẩu thành công.";
-      message.className = "password-message success";
-      form.reset();
+      try {
+        const response = await fetch(
+          "http://localhost:3000/api/customer/change-password",
+          {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: "Bearer " + localStorage.getItem("accessToken"),
+            },
+            body: JSON.stringify({
+              currentPassword,
+              newPassword,
+              confirmPassword,
+            }),
+          },
+        );
 
-      toggleButtons.forEach((btn) => {
-        btn.textContent = "👁";
-      });
+        const result = await response.json();
 
-      document.getElementById("currentPassword").type = "password";
-      document.getElementById("newPassword").type = "password";
-      document.getElementById("confirmPassword").type = "password";
+        if (!result.success) {
+          message.textContent = result.message || "Đổi mật khẩu thất bại.";
+          message.className = "password-message error";
+          return;
+        }
+
+        message.textContent = result.message || "Cập nhật mật khẩu thành công.";
+        message.className = "password-message success";
+        form.reset();
+
+        toggleButtons.forEach((btn) => {
+          btn.textContent = "👁";
+        });
+
+        document.getElementById("currentPassword").type = "password";
+        document.getElementById("newPassword").type = "password";
+        document.getElementById("confirmPassword").type = "password";
+      } catch (error) {
+        console.error("changePassword error:", error);
+        message.textContent = "Không thể kết nối server.";
+        message.className = "password-message error";
+      }
     });
   }
 
@@ -137,5 +218,6 @@ function bindEvents() {
 }
 
 document.addEventListener("DOMContentLoaded", function () {
+  syncTopbarUserName();
   bindEvents();
 });

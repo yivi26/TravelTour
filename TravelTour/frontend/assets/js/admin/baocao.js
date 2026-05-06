@@ -12,6 +12,7 @@
   let barInstance = null;
   let lineInstance = null;
   let pieInstance = null;
+  let reportSnapshot = null;
 
   const chartColors = [
     "#10b981",
@@ -229,9 +230,102 @@
     });
   }
 
+  function toIsoDateForFile() {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, "0");
+    const dd = String(d.getDate()).padStart(2, "0");
+    return `${yyyy}${mm}${dd}`;
+  }
+
+  function exportReportToExcel(snapshot) {
+    if (!window.XLSX) {
+      alert("Thiếu thư viện xuất Excel. Vui lòng tải lại trang.");
+      return;
+    }
+
+    const stats = snapshot?.stats || {};
+    const monthlyRevenue = Array.isArray(snapshot?.monthlyRevenue) ? snapshot.monthlyRevenue : [];
+    const monthlyBookings = Array.isArray(snapshot?.monthlyBookings) ? snapshot.monthlyBookings : [];
+    const topTours = Array.isArray(snapshot?.topTours) ? snapshot.topTours : [];
+
+    const workbook = XLSX.utils.book_new();
+
+    const summaryRows = [
+      { chi_so: "Tổng doanh thu (VND)", gia_tri: Number(stats.totalRevenueVnd || 0) },
+      { chi_so: "Tổng booking", gia_tri: Number(stats.totalBookings || 0) },
+      { chi_so: "Người dùng mới", gia_tri: Number(stats.newUsers || 0) },
+      { chi_so: "Tăng trưởng (%)", gia_tri: Number(stats.growthPct || 0) },
+    ];
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.json_to_sheet(summaryRows),
+      "Tong_quan",
+    );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.json_to_sheet(
+        monthlyRevenue.map((item) => ({
+          thang: item.label || "",
+          doanh_thu_ty_vnd: Number(item.value || 0),
+        })),
+      ),
+      "Doanh_thu_thang",
+    );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.json_to_sheet(
+        monthlyBookings.map((item) => ({
+          thang: item.label || "",
+          tong_booking: Number(item.value || 0),
+        })),
+      ),
+      "Booking_thang",
+    );
+
+    XLSX.utils.book_append_sheet(
+      workbook,
+      XLSX.utils.json_to_sheet(
+        topTours.map((item, idx) => ({
+          top: idx + 1,
+          ten_tour: item.name || "",
+          tong_booking: Number(item.bookings || 0),
+        })),
+      ),
+      "Top_tour",
+    );
+
+    XLSX.writeFile(workbook, `bao-cao-admin-${toIsoDateForFile()}.xlsx`);
+  }
+
+  function bindExportButtons() {
+    const excelBtn = qs("#exportExcelBtn");
+    const pdfBtn = qs("#exportPdfBtn");
+
+    if (excelBtn) {
+      excelBtn.addEventListener("click", () => {
+        if (!reportSnapshot) {
+          alert("Chưa có dữ liệu để xuất. Vui lòng thử lại sau.");
+          return;
+        }
+        exportReportToExcel(reportSnapshot);
+      });
+    }
+
+    if (pdfBtn) {
+      pdfBtn.addEventListener("click", () => {
+        window.print();
+      });
+    }
+  }
+
   async function init() {
+    bindExportButtons();
     try {
       const data = await fetchJson(API_URL);
+      reportSnapshot = data;
       renderStats(data.stats);
       renderBar(data.monthlyRevenue);
       renderLine(data.monthlyBookings);

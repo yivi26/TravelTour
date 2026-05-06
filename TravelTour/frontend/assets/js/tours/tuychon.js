@@ -1,9 +1,22 @@
 (function () {
-  var STORAGE_KEY = "traveltour-booking";
+  function getBookingStorageKey() {
+    try {
+      var rawUser = localStorage.getItem("traveltour_user");
+      var user = rawUser ? JSON.parse(rawUser) : null;
+      var userId = user && (user.id || user.email);
+      return "traveltour-booking:" + (userId || "guest");
+    } catch (error) {
+      return "traveltour-booking:guest";
+    }
+  }
+
+  var STORAGE_KEY = getBookingStorageKey();
   var BASE_PRICE = 8500000;
-  var SERVICE_FEE = 500000;
   var optionForm = document.getElementById("option-form");
-  var payTotal = document.getElementById("pay-total");
+
+  var summaryGuestLine = document.getElementById("summary-guest-line");
+  var summaryTourPrice = document.getElementById("summary-tour-price");
+  var summaryGrandTotal = document.getElementById("summary-grand-total");
   var goBackButton = document.querySelector(".js-go-back");
   var goNextButton = document.querySelector(".js-go-next");
   var toastTimer = null;
@@ -22,6 +35,30 @@
 
   function formatCurrency(value) {
     return new Intl.NumberFormat("vi-VN").format(value) + " \u20ab";
+  }
+  function getBookingMeta() {
+    var storedData = getStoredData();
+    return storedData.bookingMeta || {};
+  }
+
+  function getBasePrice() {
+    var meta = getBookingMeta();
+
+    if (Number(meta.grandTotal || 0) > 0) {
+      return Number(meta.grandTotal);
+    }
+
+    return BASE_PRICE;
+  }
+
+  function getTotalGuests() {
+    var meta = getBookingMeta();
+
+    if (Number(meta.totalGuests || 0) > 0) {
+      return Number(meta.totalGuests);
+    }
+
+    return 1;
   }
 
   function formatCurrencyMultiline(value) {
@@ -93,10 +130,81 @@
   function updateTotal() {
     var optionData = collectOptions();
 
-    if (payTotal) {
-      payTotal.innerHTML = formatCurrencyMultiline(
-        BASE_PRICE + SERVICE_FEE + optionData.extraPrice,
-      );
+    var basePrice = getBasePrice();
+    var totalGuests = getTotalGuests();
+
+    var finalTotal = basePrice + optionData.extraPrice;
+
+    if (summaryGuestLine) {
+      summaryGuestLine.innerHTML = `Giá tour ×<br />${totalGuests} khách`;
+    }
+
+    if (summaryTourPrice) {
+      summaryTourPrice.textContent = formatCurrency(basePrice);
+    }
+
+    if (summaryGrandTotal) {
+      summaryGrandTotal.textContent = formatCurrency(finalTotal);
+    }
+  }
+
+  function formatDate(dateStr) {
+    if (!dateStr) return "";
+    var d = new Date(dateStr);
+    if (Number.isNaN(d.getTime())) return String(dateStr);
+    return d.toLocaleDateString("vi-VN");
+  }
+
+  function renderTourCardFromMetaStep2() {
+    var meta = getBookingMeta();
+    var options = getStoredData().options || {};
+
+    var img = document.getElementById("step2-tour-image");
+    var title = document.getElementById("step2-tour-title");
+    var locationEl = document.getElementById("step2-tour-location");
+    var dateEl = document.getElementById("step2-tour-date");
+    var guestsEl = document.getElementById("step2-tour-guests");
+    var pricePerEl = document.getElementById("step2-tour-price-per-person");
+    var totalEl = document.getElementById("step2-tour-total-price");
+
+    var optionExtra = Number(options.extraPrice || 0);
+    // Ưu tiên extra theo trạng thái form hiện tại (để đổi lựa chọn là thấy ngay)
+    if (optionForm) {
+      try {
+        var currentOptionData = collectOptions();
+        optionExtra = Number(currentOptionData.extraPrice || 0);
+      } catch (e) {
+        // bỏ qua, dùng options.extraPrice
+      }
+    }
+
+    var pricePerPerson = Number(meta.pricePerPerson || 0) || BASE_PRICE;
+    var tourTotal = Number(meta.tourTotal || 0);
+    if (tourTotal <= 0) tourTotal = Number(meta.grandTotal || 0) || BASE_PRICE;
+
+    if (img && meta.thumbnailUrl) {
+      img.src = meta.thumbnailUrl;
+    }
+
+    if (title) {
+      title.textContent = meta.tourTitle || "Chưa có tên tour";
+    }
+    if (locationEl) {
+      locationEl.textContent = meta.location || "Chưa cập nhật";
+    }
+    if (dateEl) {
+      dateEl.textContent = meta.departureDate
+        ? formatDate(meta.departureDate)
+        : "Chưa có ngày";
+    }
+    if (guestsEl) {
+      guestsEl.textContent = `${meta.totalGuests || 0} khách`;
+    }
+    if (pricePerEl) {
+      pricePerEl.textContent = formatCurrency(pricePerPerson);
+    }
+    if (totalEl) {
+      totalEl.textContent = formatCurrency(tourTotal + optionExtra);
     }
   }
 
@@ -180,4 +288,5 @@
   hydrateOptions();
   refreshSelectedState();
   updateTotal();
+  renderTourCardFromMetaStep2();
 })();

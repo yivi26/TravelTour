@@ -313,10 +313,10 @@
               </div>
             </div>
             <div class="export-btns">
-              <button class="btn-export pdf" onclick="alert('Xuất PDF...')">
+              <button class="btn-export pdf" type="button" id="exportPdfBtn">
                 Xuất PDF
               </button>
-              <button class="btn-export excel" onclick="alert('Xuất Excel...')">
+              <button class="btn-export excel" type="button" id="exportExcelBtn">
                 Xuất Excel
               </button>
             </div>
@@ -328,6 +328,7 @@
     </div>
     <!-- end app -->
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="../../assets/js/admin/baocao.js"></script>
     <script src="../../assets/js/admin/logout.js"></script>
     <script src="../../assets/js/admin/thongbao.js"></script>

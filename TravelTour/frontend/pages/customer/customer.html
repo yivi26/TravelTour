@@ -10,24 +10,24 @@
     <div class="dashboard">
       <!-- Top Navigation -->
       <header class="topbar">
-       <div class="topbar-left">
-  <button class="menu-toggle" id="menuToggle">☰</button>
-  <a href="../../index.html" class="logo">TravelTour</a> 
-</div>
+        <div class="topbar-left">
+          <button class="menu-toggle" id="menuToggle">☰</button>
+          <a href="../../index.html" class="logo">TravelTour</a>
+        </div>
 
         <div class="topbar-right">
           <div class="user-info">
-            <p class="user-name">Nguyễn Văn An</p>
-            <p class="user-role">Khách hàng</p>
+            <p class="user-name" id="topbarUserName">Đang tải...</p>
+            <p class="user-role" id="topbarUserRole">Khách hàng</p>
           </div>
           <img
             class="user-avatar"
-            src="https://images.unsplash.com/photo-1768933294181-82778103e501?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYXBweSUyMGFzaWFuJTIwd29tYW4lMjB0cmF2ZWxlciUyMHBvcnRyYWl0fGVufDF8fHx8MTc3MzY3MjYxNXww&ixlib=rb-4.1.0&q=80&w=1080"
-            alt="User Avatar"
+            id="topbarUserAvatar"
+            src="https://via.placeholder.com/80"
+            alt="Avatar"
           />
         </div>
       </header>
-
       <div class="dashboard-body">
         <!-- Sidebar -->
         <aside class="sidebar" id="sidebar">
@@ -78,8 +78,9 @@
                 <div class="avatar-section">
                   <div class="avatar-wrapper">
                     <img
-                      src="https://images.unsplash.com/photo-1768933294181-82778103e501?crop=entropy&cs=tinysrgb&fit=max&fm=jpg&ixid=M3w3Nzg4Nzd8MHwxfHNlYXJjaHwxfHxoYXBweSUyMGFzaWFuJTIwd29tYW4lMjB0cmF2ZWxlciUyMHBvcnRyYWl0fGVufDF8fHx8MTc3MzY3MjYxNXww&ixlib=rb-4.1.0&q=80&w=1080"
-                      alt="User Avatar"
+                      id="profileAvatar"
+                      src="https://via.placeholder.com/120"
+                      alt="Avatar"
                       class="profile-avatar"
                     />
                     <button
@@ -89,6 +90,13 @@
                     >
                       📷
                     </button>
+
+                    <input
+                      type="file"
+                      id="avatarInput"
+                      accept="image/png, image/jpeg, image/webp"
+                      class="hidden"
+                    />
                   </div>
                   <p class="avatar-label">Ảnh đại diện</p>
                 </div>
@@ -99,7 +107,15 @@
                     <div class="info-group">
                       <label>Họ và tên</label>
                       <div class="info-box">
-                        <span>Nguyễn Văn An</span>
+                        <span id="profileFullName" class="profile-text"
+                          >Đang tải...</span
+                        >
+                        <input
+                          type="text"
+                          id="editInlineFullName"
+                          class="profile-input hidden"
+                          placeholder="Nhập họ và tên"
+                        />
                       </div>
                     </div>
 
@@ -107,7 +123,7 @@
                       <label>Email</label>
                       <div class="info-box">
                         <span class="info-icon">✉</span>
-                        <span>nguyenvanan@email.com</span>
+                        <span id="profileEmail">Đang tải...</span>
                       </div>
                     </div>
 
@@ -115,7 +131,15 @@
                       <label>Số điện thoại</label>
                       <div class="info-box">
                         <span class="info-icon">📞</span>
-                        <span>0912 345 678</span>
+                        <span id="profilePhone" class="profile-text"
+                          >Đang tải...</span
+                        >
+                        <input
+                          type="text"
+                          id="editInlinePhone"
+                          class="profile-input hidden"
+                          placeholder="Nhập số điện thoại"
+                        />
                       </div>
                     </div>
 
@@ -123,7 +147,15 @@
                       <label>Địa chỉ</label>
                       <div class="info-box">
                         <span class="info-icon">📍</span>
-                        <span>Hà Nội, Việt Nam</span>
+                        <span id="profileAddress" class="profile-text"
+                          >Chưa cập nhật</span
+                        >
+                        <input
+                          type="text"
+                          id="editInlineAddress"
+                          class="profile-input hidden"
+                          placeholder="Nhập địa chỉ"
+                        />
                       </div>
                     </div>
                   </div>
@@ -132,6 +164,15 @@
                     <button class="btn btn-primary" id="updateInfoBtn">
                       Cập nhật thông tin
                     </button>
+
+                    <button class="btn btn-primary hidden" id="saveInfoBtn">
+                      Lưu thay đổi
+                    </button>
+
+                    <button class="btn btn-outline hidden" id="cancelEditBtn">
+                      Hủy
+                    </button>
+
                     <button class="btn btn-outline" id="changePasswordBtn">
                       Đổi mật khẩu
                     </button>
@@ -160,6 +201,19 @@
       </div>
     </div>
 
+    <div id="toast" class="toast hidden">
+      <span id="toastMessage"></span>
+    </div>
+    <div class="modal" id="logoutModal">
+      <div class="modal-content">
+        <h3>Bạn có muốn đăng xuất không?</h3>
+
+        <div class="modal-actions">
+          <button class="btn-cancel" id="cancelLogout">Hủy</button>
+          <button class="btn-confirm" id="confirmLogout">Đăng xuất</button>
+        </div>
+      </div>
+    </div>
     <script src="../../assets/js/customer/customer.js"></script>
   </body>
 </html>

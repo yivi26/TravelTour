@@ -434,8 +434,41 @@
           settings:
             '<svg width="20" height="20" viewBox="0 0 20 20" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M10.183 1.667H9.817a1.667 1.667 0 0 0-1.667 1.667v.15a1.667 1.667 0 0 1-.833 1.442l-.358.209a1.666 1.666 0 0 1-1.7 0l-.125-.067a1.667 1.667 0 0 0-1.786.143 1.667 1.667 0 0 0-.417 2.108l.184.316a1.667 1.667 0 0 1-.3 1.974l-.125.125a1.667 1.667 0 0 0-.417 2.108 1.667 1.667 0 0 0 1.786.143l.125-.067a1.666 1.666 0 0 1 1.7 0l.358.209a1.667 1.667 0 0 1 .833 1.442v.15a1.667 1.667 0 0 0 1.667 1.667h.366a1.667 1.667 0 0 0 1.667-1.667v-.15a1.667 1.667 0 0 1 .833-1.442l.358-.209a1.666 1.666 0 0 1 1.7 0l.125.067a1.667 1.667 0 0 0 1.786-.143 1.667 1.667 0 0 0 .417-2.108l-.184-.316a1.667 1.667 0 0 1 .3-1.974l.125-.125a1.667 1.667 0 0 0 .417-2.108 1.667 1.667 0 0 0-1.786-.143l-.125.067a1.666 1.666 0 0 1-1.7 0l-.358-.209a1.667 1.667 0 0 1-.833-1.442v-.15a1.667 1.667 0 0 0-1.667-1.667Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/><path d="M10 12.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5Z" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>',
         };
+        function exportUsersToExcel() {
+  const rows = [["Tên người dùng", "Email", "Vai trò", "Trạng thái"]];
 
+  document.querySelectorAll("#userTable tbody tr").forEach((tr) => {
+    const cells = tr.querySelectorAll("td");
+    rows.push([
+      cells[0]?.innerText.trim() || "",
+      cells[1]?.innerText.trim() || "",
+      cells[2]?.innerText.trim() || "",
+      cells[3]?.innerText.trim() || "",
+    ]);
+  });
+
+  const csvContent = "\uFEFF" + rows.map(row =>
+    row.map(value => `"${String(value).replaceAll('"', '""')}"`).join(",")
+  ).join("\n");
+
+  const blob = new Blob([csvContent], {
+    type: "text/csv;charset=utf-8;",
+  });
+
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "danh-sach-nguoi-dung.csv";
+  document.body.appendChild(a);
+  a.click();
+  document.body.removeChild(a);
+  URL.revokeObjectURL(url);
+}
         bind();
+        const exportBtn = document.querySelector(".btn.primary");
+if (exportBtn) {
+  exportBtn.addEventListener("click", exportUsersToExcel);
+}
         loadAndRender().catch((err) => {
           console.error(err);
           // fallback to hard-coded data if API fails

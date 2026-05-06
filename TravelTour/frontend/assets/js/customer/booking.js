@@ -1,43 +1,129 @@
-const upcomingBookings = [
-  {
-    id: 1,
-    tourName: "Du lịch Hạ Long - 3 ngày 2 đêm",
-    destination: "Vịnh Hạ Long, Quảng Ninh",
-    travelDate: "20/04/2026",
-    endDate: "22/04/2026",
-    participants: 2,
-    status: "Đã xác nhận",
-    statusClass: "status-confirmed",
-    price: "4.500.000 VNĐ",
-    duration: "3 ngày 2 đêm",
-    imageUrl:
-      "https://images.unsplash.com/photo-1528127269322-539801943592?w=800",
-  },
-  {
-    id: 2,
-    tourName: "Phú Quốc - Thiên đường biển đảo",
-    destination: "Phú Quốc, Kiên Giang",
-    travelDate: "05/05/2026",
-    endDate: "08/05/2026",
-    participants: 4,
-    status: "Chờ thanh toán",
-    statusClass: "status-pending",
-    price: "6.200.000 VNĐ",
-    duration: "4 ngày 3 đêm",
-    imageUrl: "https://images.unsplash.com/photo-1559827260-dc66d52bef19?w=800",
-  },
-];
+let upcomingBookings = [];
+let bookingStats = {
+  upcomingCount: 0,
+  completedCount: 0,
+  totalCount: 0,
+};
+
+function getStoredUser() {
+  try {
+    return JSON.parse(localStorage.getItem("traveltour_user") || "{}");
+  } catch (error) {
+    return {};
+  }
+}
+
+function setTopbarUserName(name) {
+  const userNameEl = document.querySelector(".user-name");
+  if (userNameEl && name) {
+    userNameEl.textContent = name;
+  }
+}
+
+async function syncTopbarUserName() {
+  const storedUser = getStoredUser();
+  const localName = storedUser.fullName || storedUser.full_name || "";
+
+  if (localName) {
+    setTopbarUserName(localName);
+  }
+
+  try {
+    const response = await fetch("http://localhost:3000/api/customer/profile", {
+      headers: {
+        Authorization: "Bearer " + localStorage.getItem("accessToken"),
+      },
+    });
+    const result = await response.json();
+
+    if (!response.ok || !result.success || !result.data) return;
+
+    const realName = result.data.full_name || result.data.fullName || "";
+    if (!realName) return;
+
+    setTopbarUserName(realName);
+
+    localStorage.setItem(
+      "traveltour_user",
+      JSON.stringify({
+        ...storedUser,
+        fullName: realName,
+      }),
+    );
+  } catch (error) {
+    console.warn("Không đồng bộ được tên khách hàng:", error);
+  }
+}
+function formatDate(dateString) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString("vi-VN");
+}
+
+function formatCurrency(value) {
+  return Number(value || 0).toLocaleString("vi-VN") + " VNĐ";
+}
+async function loadMyBookings() {
+  try {
+    const response = await fetch(
+      "http://localhost:3000/api/bookings/my-bookings",
+      {
+        headers: {
+          Authorization:
+            "Bearer " + localStorage.getItem("accessToken"),
+        },
+      }
+    );
+
+    const result = await response.json();
+
+    console.log("API BOOKINGS:", result);
+
+    if (!result.success) {
+      console.error(result.message || "Không lấy được booking");
+      return;
+    }
+
+    // ===== STATS =====
+    bookingStats = result.data.stats || {
+      upcomingCount: 0,
+      completedCount: 0,
+      totalCount: 0,
+    };
+
+    // ===== BOOKINGS =====
+    upcomingBookings =
+      result.data.upcomingBookings ||
+      result.data.bookings ||
+      result.data.upcoming ||
+      [];
+
+    console.log("UPCOMING:", upcomingBookings);
+
+    renderStats();
+    renderUpcomingBookings();
+  } catch (error) {
+    console.error("Lỗi loadMyBookings:", error);
+  }
+}
 
 function renderStats() {
   const upcomingCount = document.getElementById("upcomingCount");
   const completedCount = document.getElementById("completedCount");
   const totalCount = document.getElementById("totalCount");
 
-  if (upcomingCount) upcomingCount.textContent = upcomingBookings.length;
-  if (completedCount) completedCount.textContent = "3";
-  if (totalCount) totalCount.textContent = String(upcomingBookings.length + 3);
-}
+  if (upcomingCount) {
+    upcomingCount.textContent = String(bookingStats.upcomingCount || 0);
+  }
 
+  if (completedCount) {
+    completedCount.textContent = String(bookingStats.completedCount || 0);
+  }
+
+  if (totalCount) {
+    totalCount.textContent = String(bookingStats.totalCount || 0);
+  }
+}
 function renderUpcomingBookings() {
   const list = document.getElementById("upcomingBookingList");
   if (!list) return;
@@ -78,7 +164,7 @@ function renderUpcomingBookings() {
               <p class="meta-label">Ngày đi</p>
               <div class="meta-value">
                 <span>📅</span>
-                <span>${booking.travelDate}</span>
+               <span>${formatDate(booking.travelDate)}</span>
               </div>
             </div>
 
@@ -86,7 +172,7 @@ function renderUpcomingBookings() {
               <p class="meta-label">Ngày về</p>
               <div class="meta-value">
                 <span>📅</span>
-                <span>${booking.endDate}</span>
+                <span>${booking.endDate ? formatDate(booking.endDate) : "--"}</span>
               </div>
             </div>
 
@@ -110,19 +196,30 @@ function renderUpcomingBookings() {
           <div class="booking-footer">
             <div>
               <p class="booking-price-text">Tổng tiền</p>
-              <p class="booking-price-value">${booking.price}</p>
+              <p class="booking-price-value">${formatCurrency(booking.price)}</p>
             </div>
 
             <div class="booking-action-group">
               ${
-                booking.status === "Chờ thanh toán"
+                booking.statusRaw === "pending_payment" &&
+                booking.paymentMethod === "momo"
                   ? `
-                <button class="booking-btn booking-btn-primary" data-action="pay" data-id="${booking.id}">
-                  Thanh toán ngay
-                </button>
-              `
+  <button class="booking-btn booking-btn-primary" data-action="pay" data-id="${booking.id}">
+    Thanh toán ngay
+  </button>
+`
                   : ""
               }
+
+${
+  booking.statusRaw === "pending_payment" && booking.paymentMethod === "office"
+    ? `
+  <button class="booking-btn booking-btn-primary" data-action="office" data-id="${booking.id}">
+    Thanh toán tại văn phòng
+  </button>
+`
+    : ""
+}
 
               <button class="booking-btn booking-btn-outline-primary" data-action="detail" data-id="${booking.id}">
                 Chi tiết
@@ -177,9 +274,12 @@ function bindEvents() {
     if (action === "pay") {
       alert("Thanh toán booking ID: " + id);
     }
-
+    if (action === "office") {
+      document.getElementById("officeModal").classList.remove("hidden");
+    }
     if (action === "detail") {
-      alert("Xem chi tiết booking ID: " + id);
+      window.location.href = `../tours/chitiet.html?booking_id=${id}`;
+      return;
     }
 
     if (action === "contact") {
@@ -193,19 +293,48 @@ function bindEvents() {
     }
   });
 }
+const closeBtn = document.getElementById("closeModal");
 
-document.addEventListener("DOMContentLoaded", function () {
-  renderStats();
-  renderUpcomingBookings();
-  bindEvents();
-});
-async function loadUpcoming() {
-  const res = await fetch("http://localhost:5000/api/customer/bookings/upcoming", {
-    headers: {
-      Authorization: "Bearer " + localStorage.getItem("token")
-    }
+if (closeBtn) {
+  closeBtn.addEventListener("click", function () {
+    document.getElementById("officeModal").classList.add("hidden");
   });
-
-  const data = await res.json();
-  renderUpcomingBookings(data);
 }
+function bindLogout() {
+  const logoutBtn = document.querySelector(".logout-btn");
+  if (!logoutBtn) return;
+
+  logoutBtn.addEventListener("click", function () {
+    const modal = document.getElementById("logoutModal");
+    modal.classList.remove("hidden");
+  });
+}
+
+function handleLogoutModal() {
+  const modal = document.getElementById("logoutModal");
+  const cancelBtn = document.getElementById("cancelLogout");
+  const confirmBtn = document.getElementById("confirmLogout");
+
+  if (cancelBtn) {
+    cancelBtn.addEventListener("click", () => {
+      modal.classList.add("hidden");
+    });
+  }
+
+  if (confirmBtn) {
+    confirmBtn.addEventListener("click", () => {
+      localStorage.removeItem("accessToken");
+      localStorage.removeItem("traveltour_user");
+
+      window.location.href = "../dangnhap/login.html";
+    });
+  }
+}
+document.addEventListener("DOMContentLoaded", function () {
+  syncTopbarUserName();
+  bindEvents();
+  loadMyBookings();
+
+  bindLogout();
+  handleLogoutModal();
+});
