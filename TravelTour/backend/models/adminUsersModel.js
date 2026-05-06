@@ -164,7 +164,7 @@ export async function setUserActive(userId, isActive) {
 
 export async function createPartnerUser({ full_name, email, password, role } = {}) {
   const name = String(full_name || "").trim();
-  const mail = String(email || "").trim();
+  let mail = String(email || "").trim();
   // Trim để tránh case user nhập dư khoảng trắng (login.js cũng trim)
   const pass = String(password || "").trim();
   const r = String(role || "").toLowerCase();
@@ -179,6 +179,23 @@ export async function createPartnerUser({ full_name, email, password, role } = {
     err.statusCode = 400;
     throw err;
   }
+  const lowMail = mail.toLowerCase();
+  let suffixLen = 0;
+  if (lowMail.endsWith("@traveltour.vn")) suffixLen = "@traveltour.vn".length;
+  else if (lowMail.endsWith("@gmail.com")) suffixLen = "@gmail.com".length;
+  else {
+    const err = new Error("Email / tên đăng nhập chỉ được dùng đuôi @gmail.com hoặc @traveltour.vn");
+    err.statusCode = 400;
+    throw err;
+  }
+  const localPart = lowMail.slice(0, lowMail.length - suffixLen);
+  if (!localPart || localPart.includes("@")) {
+    const err = new Error("Email / tên đăng nhập không hợp lệ");
+    err.statusCode = 400;
+    throw err;
+  }
+  mail = lowMail;
+
   if (!pass || pass.length < 4) {
     const err = new Error("Mật khẩu tối thiểu 4 ký tự");
     err.statusCode = 400;

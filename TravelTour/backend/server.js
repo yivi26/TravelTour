@@ -14,6 +14,11 @@ import guideRoutes from "./routes/guide.js";
 import settingsRoutes from "./routes/settings.js";
 import adminDashboardRoutes from "./routes/adminDashboard.js";
 
+// 👉 giữ debug của bạn
+console.log("=== ENV DEBUG ===");
+console.log("KEY EXISTS:", !!process.env.OPENROUTER_API_KEY);
+console.log("=================");
+
 const app = express();
 // Tắt ETag để tránh 304 lấy cache sai theo user
 app.set("etag", false);
@@ -97,8 +102,11 @@ app.use("/api/provider", (req, res, next) => {
 app.use("/api/provider", providerRoutes);
 app.use("/api/chatbot", chatbotRoutes);
 app.use("/api/guide", guideRoutes);
+
+// 👉 thêm admin + settings
 app.use("/api/settings", settingsRoutes);
 app.use("/api/admin", adminDashboardRoutes);
+
 /* =========================
    404 API
 ========================= */

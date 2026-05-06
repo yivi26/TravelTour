@@ -560,6 +560,7 @@
       window.location.href = "./ttkhachhang.html";
     });
   }
+  
 
   document.addEventListener("DOMContentLoaded", init);
 })();

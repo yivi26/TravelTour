@@ -304,6 +304,18 @@ document.addEventListener("DOMContentLoaded", () => {
     const passInput = document.getElementById("partnerPass");
     const submitBtn = document.getElementById("partnerSubmit");
 
+    function allowedPartnerLoginEmail(email) {
+      const s = String(email || "").trim();
+      const low = s.toLowerCase();
+      let suffixLen = 0;
+      if (low.endsWith("@traveltour.vn")) suffixLen = "@traveltour.vn".length;
+      else if (low.endsWith("@gmail.com")) suffixLen = "@gmail.com".length;
+      else return false;
+      const local = low.slice(0, low.length - suffixLen);
+      if (!local || local.includes("@")) return false;
+      return true;
+    }
+
     function closeMenu() {
       if (!menu) return;
       menu.classList.remove("open");
@@ -364,6 +376,11 @@ document.addEventListener("DOMContentLoaded", () => {
       const password = String(passInput?.value || "").trim();
       if (!full_name || !email || !password) {
         alert("Vui lòng nhập đầy đủ thông tin");
+        return;
+      }
+      if (!allowedPartnerLoginEmail(email)) {
+        alert("Email / tên đăng nhập chỉ được dùng đuôi @gmail.com hoặc @traveltour.vn");
+        emailInput?.focus();
         return;
       }
       try {

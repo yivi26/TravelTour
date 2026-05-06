@@ -89,10 +89,59 @@ function createSlug(text = "") {
     .replace(/-+/g, "-");
 }
 
+function resolvePublicTourPricing(row) {
+  const basePrice = Number(row.base_price || 0);
+  const salePrice = Number(row.sale_price || 0);
+  const appliedPrice = salePrice > 0 && salePrice < basePrice ? salePrice : basePrice;
+  const taxPercent = Math.max(0, Number(row.tax_percent ?? 0));
+  const hasVat = taxPercent > 0;
+
+  let tax = Math.max(0, Number(row.tax ?? 0));
+  let finalPrice = Math.max(0, Number(row.final_price ?? 0));
+
+  if (!hasVat) {
+    return {
+      tax_percent: 0,
+      tax: 0,
+      final_price: finalPrice > 0 ? finalPrice : appliedPrice
+    };
+  }
+
+  if (!tax) {
+    tax = Math.round(appliedPrice * (taxPercent / 100));
+  }
+
+  if (!finalPrice) {
+    finalPrice = appliedPrice + tax;
+  }
+
+  return {
+    tax_percent: taxPercent,
+    tax,
+    final_price: finalPrice
+  };
+}
+
 async function isTourCodeExists(providerId, code, excludeId = null) {
-  // Current DB schema (database_schema.sql) does not have tours.code column.
-  // Keep this helper as a no-op for backward compatibility with existing controller logic.
-  return false;
+  if (!code) return false;
+
+  let sql = `
+    SELECT id
+    FROM tours
+    WHERE provider_id = ?
+      AND code = ?
+  `;
+  const params = [providerId, code];
+
+  if (excludeId) {
+    sql += ` AND id <> ? `;
+    params.push(excludeId);
+  }
+
+  sql += ` LIMIT 1 `;
+
+  const [rows] = await db.query(sql, params);
+  return rows.length > 0;
 }
 
 async function isTourSlugExists(providerId, slug, excludeId = null) {
@@ -128,15 +177,30 @@ export async function getToursByProvider(providerId) {
     [providerId]
   );
 
-  return rows;
+  return rows.map(row => {
+    const pricing = resolvePublicTourPricing(row);
+
+    return {
+      ...row,
+      display_price: pricing.final_price,     // giá cuối cùng để hiển thị
+      applied_price:
+        row.sale_price > 0 && row.sale_price < row.base_price
+          ? Number(row.sale_price)
+          : Number(row.base_price || 0),
+      tax_resolved: pricing.tax,
+      final_price_resolved: pricing.final_price
+    };
+  });
 }
 
 export async function getTourById(providerId, id) {
   const [rows] = await db.query(
     `
     SELECT
-      t.*
+      t.*,
+      g.full_name AS guide_name
     FROM tours t
+    LEFT JOIN users g ON g.id = t.guide_id
     WHERE t.provider_id = ?
       AND t.id = ?
     LIMIT 1
@@ -177,6 +241,11 @@ export async function getTourById(providerId, id) {
     ...tour,
     category_id: categoryRows.length ? Number(categoryRows[0].category_id) : null,
     short_description: tour.description || "",
+    hotel_info: tour.hotel_info || "",
+    transport_info: tour.transport_info || "",
+    cancel_policy: tour.cancel_policy || "",
+    terms_conditions: tour.terms_conditions || "",
+    other_notes: tour.other_notes || "",
     highlights: safeJsonParse(tour.highlights, []),
     includes: safeJsonParse(tour.includes, []),
     excludes: safeJsonParse(tour.excludes, []),
@@ -193,10 +262,16 @@ export async function createTour(providerId, data) {
     description,
     short_description,
     location,
+    meeting_point,
     latitude,
     longitude,
     base_price,
+    sale_price,
+    tax_percent,
+    tax,
+    final_price,
     duration_days,
+    duration_text,
     max_capacity,
     thumbnail_url,
     includes,
@@ -205,8 +280,15 @@ export async function createTour(providerId, data) {
     category_id,
     itinerary,
     gallery_images,
+    highlights,
+    start_date,
+    end_date,
     code,
-    highlights
+    hotel_info,
+    transport_info,
+    cancel_policy,
+    terms_conditions,
+    other_notes
   } = data;
 
   const finalStatus = ["draft", "active", "paused", "archived", "full"].includes(status)
@@ -216,6 +298,10 @@ export async function createTour(providerId, data) {
   let finalSlug = slug || createSlug(title);
   if (!finalSlug) {
     finalSlug = `tour-${Date.now()}`;
+  }
+
+  if (await isTourCodeExists(providerId, code)) {
+    throw new Error("Mã tour đã tồn tại");
   }
 
   if (await isTourSlugExists(providerId, finalSlug)) {
@@ -231,6 +317,9 @@ export async function createTour(providerId, data) {
   const finalExcludes =
     Array.isArray(excludes) && excludes.length > 0 ? JSON.stringify(excludes) : null;
 
+  const finalHighlights =
+    Array.isArray(highlights) && highlights.length > 0 ? JSON.stringify(highlights) : null;
+
   const conn = await db.getConnection();
 
   try {
@@ -242,37 +331,69 @@ export async function createTour(providerId, data) {
         provider_id,
         title,
         slug,
+        code,
         description,
+        highlights,
         itinerary,
         location,
+        meeting_point,
         latitude,
         longitude,
         base_price,
+        sale_price,
+        tax_percent,
+        tax,
+        final_price,
         duration_days,
+        duration_text,
         max_capacity,
         thumbnail_url,
         includes,
         excludes,
-        status
+        start_date,
+        end_date,
+        hotel_info,
+        transport_info,
+        cancel_policy,
+        terms_conditions,
+        other_notes,
+        status,
+        guide_id
       )
-      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+      VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
       `,
       [
         providerId,
         title || null,
         finalSlug,
+        code || null,
         short_description || description || null,
+        finalHighlights,
         finalItinerary,
         location || null,
+        meeting_point || null,
         latitude ?? null,
         longitude ?? null,
         base_price || 0,
+        sale_price || 0,
+        Number(tax_percent) >= 0 ? Number(tax_percent) : 0,
+        Number(tax) >= 0 ? Number(tax) : 0,
+        Number(final_price) >= 0 ? Number(final_price) : 0,
         duration_days || 1,
+        duration_text || null,
         max_capacity || 1,
         thumbnail_url || null,
         finalIncludes,
         finalExcludes,
-        finalStatus
+        start_date || null,
+        end_date || null,
+        hotel_info || null,
+        transport_info || null,
+        cancel_policy || null,
+        terms_conditions || null,
+        other_notes || null,
+        finalStatus,
+        null
       ]
     );
 
@@ -336,10 +457,16 @@ export async function updateTour(providerId, id, data) {
     description,
     short_description,
     location,
+    meeting_point,
     latitude,
     longitude,
     base_price,
+    sale_price,
+    tax_percent,
+    tax,
+    final_price,
     duration_days,
+    duration_text,
     max_capacity,
     thumbnail_url,
     includes,
@@ -348,8 +475,15 @@ export async function updateTour(providerId, id, data) {
     category_id,
     itinerary,
     gallery_images,
+    highlights,
+    start_date,
+    end_date,
     code,
-    highlights
+    hotel_info,
+    transport_info,
+    cancel_policy,
+    terms_conditions,
+    other_notes
   } = data;
 
   const finalStatus = ["draft", "active", "paused", "archived", "full"].includes(status)
@@ -359,6 +493,10 @@ export async function updateTour(providerId, id, data) {
   let finalSlug = slug || createSlug(title);
   if (!finalSlug) {
     finalSlug = `tour-${id}`;
+  }
+
+  if (await isTourCodeExists(providerId, code, id)) {
+    throw new Error("Mã tour đã tồn tại");
   }
 
   if (await isTourSlugExists(providerId, finalSlug, id)) {
@@ -374,6 +512,9 @@ export async function updateTour(providerId, id, data) {
   const finalExcludes =
     Array.isArray(excludes) && excludes.length > 0 ? JSON.stringify(excludes) : null;
 
+  const finalHighlights =
+    Array.isArray(highlights) && highlights.length > 0 ? JSON.stringify(highlights) : null;
+
   const conn = await db.getConnection();
 
   try {
@@ -385,17 +526,32 @@ export async function updateTour(providerId, id, data) {
       SET
         title = ?,
         slug = ?,
+        code = ?,
         description = ?,
+        highlights = ?,
         itinerary = ?,
         location = ?,
+        meeting_point = ?,
         latitude = ?,
         longitude = ?,
         base_price = ?,
+        sale_price = ?,
+        tax_percent = ?,
+        tax = ?,
+        final_price = ?,
         duration_days = ?,
+        duration_text = ?,
         max_capacity = ?,
         thumbnail_url = ?,
         includes = ?,
         excludes = ?,
+        start_date = ?,
+        end_date = ?,
+        hotel_info = ?,
+        transport_info = ?,
+        cancel_policy = ?,
+        terms_conditions = ?,
+        other_notes = ?,
         status = ?
       WHERE provider_id = ?
         AND id = ?
@@ -403,17 +559,32 @@ export async function updateTour(providerId, id, data) {
       [
         title || null,
         finalSlug,
+        code || null,
         short_description || description || null,
+        finalHighlights,
         finalItinerary,
         location || null,
+        meeting_point || null,
         latitude ?? null,
         longitude ?? null,
         base_price || 0,
+        sale_price || 0,
+        Number(tax_percent) >= 0 ? Number(tax_percent) : 0,
+        Number(tax) >= 0 ? Number(tax) : 0,
+        Number(final_price) >= 0 ? Number(final_price) : 0,
         duration_days || 1,
+        duration_text || null,
         max_capacity || 1,
         thumbnail_url || null,
         finalIncludes,
         finalExcludes,
+        start_date || null,
+        end_date || null,
+        hotel_info || null,
+        transport_info || null,
+        cancel_policy || null,
+        terms_conditions || null,
+        other_notes || null,
         finalStatus,
         providerId,
         id
@@ -530,32 +701,96 @@ export async function getGuides(providerId) {
 }
 
 export async function getToursForGuideAssignment(providerId) {
-  // Current DB schema does not have tours.guide_id/start_date.
   const [rows] = await db.query(
     `
     SELECT
       t.id,
       t.title,
       t.location,
+      t.start_date,
       t.max_capacity,
-      t.status
+      t.status,
+      t.guide_id,
+      u.full_name AS guide_name
     FROM tours t
+    LEFT JOIN guides g ON g.id = t.guide_id
+    LEFT JOIN users u ON u.id = g.user_id
     WHERE t.provider_id = ?
-      AND t.status IN ('draft', 'active', 'paused', 'archived')
-    ORDER BY t.id DESC
+      AND t.status IN ('draft', 'active', 'paused', 'full')
+    ORDER BY
+      CASE WHEN t.start_date IS NULL THEN 1 ELSE 0 END,
+      t.start_date ASC,
+      t.id DESC
     `,
     [providerId]
   );
 
-  return rows.map((r) => ({ ...r, guide_id: null, guide_name: null, start_date: null }));
+  return rows;
 }
 
 export async function assignGuideToTour(providerId, tourId, guideId) {
-  // Current DB schema does not support assigning guide directly to tours.
-  // Use guide_assignments via bookings instead (future improvement).
-  throw new Error(
-    "Hệ thống hiện tại chưa hỗ trợ gán hướng dẫn viên trực tiếp cho tour (thiếu cột tours.guide_id trong DB)."
+  const [tourRows] = await db.query(
+    `
+    SELECT id
+    FROM tours
+    WHERE id = ?
+      AND provider_id = ?
+    LIMIT 1
+    `,
+    [tourId, providerId]
   );
+
+  if (!tourRows.length) {
+    throw new Error("Không tìm thấy tour");
+  }
+
+  const [guideRows] = await db.query(
+    `
+    SELECT id
+    FROM guides
+    WHERE id = ?
+      AND provider_id = ?
+    LIMIT 1
+    `,
+    [guideId, providerId]
+  );
+
+  if (!guideRows.length) {
+    throw new Error("Không tìm thấy hướng dẫn viên");
+  }
+
+  await db.query(
+    `
+    UPDATE tours
+    SET guide_id = ?
+    WHERE id = ?
+      AND provider_id = ?
+    `,
+    [guideId, tourId, providerId]
+  );
+
+  const [rows] = await db.query(
+    `
+    SELECT
+      t.id,
+      t.title,
+      t.location,
+      t.start_date,
+      t.max_capacity,
+      t.status,
+      t.guide_id,
+      u.full_name AS guide_name
+    FROM tours t
+    LEFT JOIN guides g ON g.id = t.guide_id
+    LEFT JOIN users u ON u.id = g.user_id
+    WHERE t.id = ?
+      AND t.provider_id = ?
+    LIMIT 1
+    `,
+    [tourId, providerId]
+  );
+
+  return rows[0] || null;
 }
 
 export async function getProviderProfile(providerId) {
@@ -749,6 +984,105 @@ export async function getDashboardDataByProvider(providerId) {
   };
 }
 
+function toIsoDate(value) {
+  if (!value) return "";
+  const date = new Date(value);
+  if (Number.isNaN(date.getTime())) return "";
+  return date.toISOString().slice(0, 10);
+}
+
+export async function getProviderNotifications(providerId, limit = 12) {
+  const safeLimit = Math.max(1, Math.min(50, Number(limit) || 12));
+  const notifications = [];
+
+  const [providerRows] = await db.query(
+    `
+    SELECT status, updated_at
+    FROM providers
+    WHERE id = ?
+    LIMIT 1
+    `,
+    [providerId]
+  );
+
+  if (providerRows.length > 0) {
+    const provider = providerRows[0];
+    const status = String(provider.status || "").toLowerCase();
+    let subtitle = "Tài khoản nhà cung cấp của bạn có cập nhật mới từ admin.";
+    let tone = "blue";
+
+    if (status === "active") {
+      subtitle = "Admin đã duyệt tài khoản nhà cung cấp của bạn.";
+      tone = "green";
+    } else if (status === "pending") {
+      subtitle = "Tài khoản đang chờ admin phê duyệt.";
+      tone = "orange";
+    } else if (status === "blocked" || status === "inactive") {
+      subtitle = "Tài khoản nhà cung cấp đang bị tạm khóa bởi admin.";
+      tone = "red";
+    }
+
+    notifications.push({
+      id: "provider-status",
+      type: "admin_provider_status",
+      title: "Thông báo từ Admin",
+      subtitle,
+      date: toIsoDate(provider.updated_at),
+      href: "profile.html",
+      tone
+    });
+  }
+
+  const [tourRows] = await db.query(
+    `
+    SELECT id, title, status, updated_at
+    FROM tours
+    WHERE provider_id = ?
+      AND status IN ('active', 'paused', 'archived', 'full')
+    ORDER BY updated_at DESC, id DESC
+    LIMIT ?
+    `,
+    [providerId, safeLimit]
+  );
+
+  for (const row of tourRows) {
+    const status = String(row.status || "").toLowerCase();
+    let subtitle = `${row.title || "Tour"} có cập nhật trạng thái mới.`;
+    let tone = "blue";
+
+    if (status === "active") {
+      subtitle = `Admin đã duyệt tour "${row.title || "Tour"}".`;
+      tone = "green";
+    } else if (status === "paused") {
+      subtitle = `Tour "${row.title || "Tour"}" đang bị tạm dừng bởi admin.`;
+      tone = "orange";
+    } else if (status === "archived") {
+      subtitle = `Tour "${row.title || "Tour"}" đã bị ẩn bởi admin.`;
+      tone = "red";
+    } else if (status === "full") {
+      subtitle = `Tour "${row.title || "Tour"}" đã đủ chỗ.`;
+      tone = "purple";
+    }
+
+    notifications.push({
+      id: `tour-${row.id}`,
+      type: "admin_tour_status",
+      title: "Thông báo từ Admin",
+      subtitle,
+      date: toIsoDate(row.updated_at),
+      href: "tour_management.html",
+      tone
+    });
+  }
+
+  notifications.sort((a, b) => String(b.date || "").localeCompare(String(a.date || "")));
+
+  return {
+    total: notifications.length,
+    items: notifications.slice(0, safeLimit)
+  };
+}
+
 export async function getPublicFeaturedTours(limit = 6) {
   const [rows] = await db.query(
     `
@@ -758,9 +1092,14 @@ export async function getPublicFeaturedTours(limit = 6) {
       t.slug,
       t.description,
       t.location,
+      t.meeting_point,
       t.latitude,
       t.longitude,
       t.base_price,
+      t.sale_price,
+      t.tax_percent,
+      t.tax,
+      t.final_price,
       t.duration_days,
       t.max_capacity,
       t.thumbnail_url,
@@ -775,7 +1114,11 @@ export async function getPublicFeaturedTours(limit = 6) {
     `,
     [Number(limit)]
   );
-  return rows;
+
+  return rows.map(row => {
+    const pricing = resolvePublicTourPricing(row);
+    return { ...row, ...pricing };
+  });
 }
 
 export async function getPublicTours(filters = {}) {
@@ -788,17 +1131,40 @@ export async function getPublicTours(filters = {}) {
       t.slug,
       t.description,
       t.location,
+      t.meeting_point,
       t.latitude,
       t.longitude,
+
       t.base_price,
+      t.sale_price,
+      t.tax_percent,
+      t.tax,
+      t.final_price,
+
       t.duration_days,
+      t.duration_text,
       t.max_capacity,
       t.thumbnail_url,
       t.status,
       t.created_at,
-      p.company_name AS provider_name
+      p.company_name AS provider_name,
+      tcm.category_id,
+      tr.rating_avg
     FROM tours t
     LEFT JOIN providers p ON t.provider_id = p.id
+    LEFT JOIN (
+      SELECT tour_id, MIN(category_id) AS category_id
+      FROM tour_category_map
+      GROUP BY tour_id
+    ) tcm ON tcm.tour_id = t.id
+    LEFT JOIN (
+      SELECT
+        r.tour_id,
+        AVG(r.rating) AS rating_avg
+      FROM reviews r
+      WHERE COALESCE(r.status, '') NOT IN ('hidden', 'rejected', 'pending')
+      GROUP BY r.tour_id
+    ) tr ON tr.tour_id = t.id
     WHERE t.status = 'active'
   `;
 
@@ -813,12 +1179,57 @@ export async function getPublicTours(filters = {}) {
   params.push(Number(limit));
 
   const [rows] = await db.query(sql, params);
-  return rows;
-}
 
+  return rows.map((row) => {
+    const pricing = resolvePublicTourPricing(row);
+    const avg = row.rating_avg != null ? Number(row.rating_avg) : null;
+
+    return {
+      ...row,
+      tax_percent: pricing.tax_percent,
+      tax: pricing.tax,
+      final_price: pricing.final_price,
+      display_price: pricing.final_price,
+      rating:
+        avg != null && Number.isFinite(avg) ? Math.round(avg * 10) / 10 : null
+    };
+  });
+}
 export async function getPublicDiscountedTours(limit = 6) {
-  // Current DB schema does not have sale_price; return featured tours as fallback.
-  return await getPublicFeaturedTours(limit);
+  const [rows] = await db.query(
+    `
+    SELECT
+      t.id,
+      t.title,
+      t.slug,
+      t.description,
+      t.location,
+      t.base_price,
+      t.sale_price,
+      t.tax_percent,
+      t.tax,
+      t.final_price,
+      t.thumbnail_url,
+      t.start_date,
+      t.end_date,
+      t.status,
+      t.created_at,
+      p.company_name AS provider_name
+    FROM tours t
+    LEFT JOIN providers p ON t.provider_id = p.id
+    WHERE t.status = 'active'
+      AND t.sale_price > 0
+      AND t.sale_price < t.base_price
+    ORDER BY t.created_at DESC
+    LIMIT ?
+    `,
+    [Number(limit)]
+  );
+
+  return rows.map(row => {
+    const pricing = resolvePublicTourPricing(row);
+    return { ...row, ...pricing };
+  });
 }
 
 export async function getPublicTourById(tourId) {
@@ -830,15 +1241,28 @@ export async function getPublicTourById(tourId) {
       t.slug,
       t.description,
       t.location,
+      t.meeting_point,
       t.latitude,
       t.longitude,
       t.base_price,
+      t.sale_price,
+      t.tax_percent,
+      t.tax,
+      t.final_price,
       t.duration_days,
+      t.duration_text,
       t.max_capacity,
       t.thumbnail_url,
       t.includes,
       t.excludes,
       t.itinerary,
+      t.start_date,
+      t.end_date,
+      t.hotel_info,
+      t.transport_info,
+      t.cancel_policy,
+      t.terms_conditions,
+      t.other_notes,
       t.status,
       t.created_at,
       p.company_name AS provider_name
@@ -854,6 +1278,7 @@ export async function getPublicTourById(tourId) {
   if (!rows.length) return null;
 
   const tour = rows[0];
+  const pricing = resolvePublicTourPricing(tour);
 
   const [imageRows] = await db.query(
     `
@@ -867,6 +1292,12 @@ export async function getPublicTourById(tourId) {
 
   return {
     ...tour,
+    ...pricing,
+    cancel_policy: tour.cancel_policy || "",
+    terms_conditions: tour.terms_conditions || "",
+    other_notes: tour.other_notes || "",
+    hotel_info: tour.hotel_info || "",
+    transport_info: tour.transport_info || "",
     images: imageRows || []
   };
 }
