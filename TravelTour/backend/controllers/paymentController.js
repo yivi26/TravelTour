@@ -2,6 +2,14 @@ import crypto from "crypto";
 import axios from "axios";
 import db from "../config/db.js";
 
+function getEnv(...keys) {
+  for (const key of keys) {
+    const value = process.env[key];
+    if (typeof value === "string" && value.trim()) return value.trim();
+  }
+  return "";
+}
+
 export const createMomoPayment = async (req, res) => {
   try {
     const bookingId = Number(req.params.bookingId);
@@ -33,17 +41,35 @@ export const createMomoPayment = async (req, res) => {
       });
     }
 
-    const partnerCode = process.env.MOMO_PARTNER_CODE;
-    const accessKey = process.env.MOMO_ACCESS_KEY;
-    const secretKey = process.env.MOMO_SECRET_KEY;
-    const endpoint = process.env.MOMO_ENDPOINT;
+    const partnerCode = getEnv("MOMO_PARTNER_CODE", "MOMO_PARTNERCODE");
+    const accessKey = getEnv("MOMO_ACCESS_KEY", "MOMO_ACCESSKEY");
+    const secretKey = getEnv("MOMO_SECRET_KEY", "MOMO_SECRETKEY");
+    const endpoint = getEnv("MOMO_ENDPOINT", "MOMO_API_ENDPOINT");
+    const appBaseUrl = getEnv("APP_BASE_URL", "BASE_URL") || "http://localhost:3000";
+    const redirectUrl =
+      getEnv("MOMO_REDIRECT_URL", "MOMO_RETURN_URL") ||
+      `${appBaseUrl}/api/payments/momo/return`;
+    const ipnUrl =
+      getEnv("MOMO_IPN_URL", "MOMO_NOTIFY_URL") ||
+      `${appBaseUrl}/api/payments/momo/ipn`;
+
+    const missingConfig = [];
+    if (!partnerCode) missingConfig.push("MOMO_PARTNER_CODE");
+    if (!accessKey) missingConfig.push("MOMO_ACCESS_KEY");
+    if (!secretKey) missingConfig.push("MOMO_SECRET_KEY");
+    if (!endpoint) missingConfig.push("MOMO_ENDPOINT");
+
+    if (missingConfig.length > 0) {
+      return res.status(500).json({
+        success: false,
+        message: `Thiếu cấu hình MoMo: ${missingConfig.join(", ")}`,
+      });
+    }
 
     const orderId = `TT_${booking.id}_${Date.now()}`;
     const requestId = orderId;
     const amount = String(Math.round(Number(booking.final_price)));
     const orderInfo = `Thanh toán booking ${booking.booking_code}`;
-    const redirectUrl = process.env.MOMO_REDIRECT_URL;
-    const ipnUrl = process.env.MOMO_IPN_URL;
     const extraData = "";
     const requestType = "payWithATM";
     const rawSignature =
@@ -94,7 +120,16 @@ export const createMomoPayment = async (req, res) => {
       payUrl: momoRes.data.payUrl,
     });
   } catch (error) {
-    console.error("MOMO ERROR:", error.response?.data || error.message);
+    const momoErrorData = error.response?.data || null;
+    console.error("MOMO ERROR:", momoErrorData || error.message);
+
+    if (momoErrorData) {
+      return res.status(400).json({
+        success: false,
+        message: momoErrorData.message || "Yêu cầu thanh toán MoMo không hợp lệ",
+        momo: momoErrorData,
+      });
+    }
 
     return res.status(500).json({
       success: false,
