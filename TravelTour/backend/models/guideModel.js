@@ -169,7 +169,12 @@ export async function getCurrentToursByGuide(guideId, keyword = "") {
   return rows;
 }
 
-export async function getGuideCustomers(guideId, keyword = "", tourFilter = "all") {
+export async function getGuideCustomers(
+  guideId,
+  keyword = "",
+  tourFilter = "all",
+  tourIdFilter = null
+) {
   let sql = `
     SELECT
       b.id,
@@ -186,6 +191,15 @@ export async function getGuideCustomers(guideId, keyword = "", tourFilter = "all
   `;
 
   const params = [guideId];
+
+  const tourIdNum =
+    tourIdFilter != null && String(tourIdFilter).trim() !== ""
+      ? Number(tourIdFilter)
+      : NaN;
+  if (!Number.isNaN(tourIdNum)) {
+    sql += ` AND t.id = ? `;
+    params.push(tourIdNum);
+  }
 
   if (keyword && String(keyword).trim() !== "") {
     sql += `
@@ -211,7 +225,11 @@ export async function getGuideCustomers(guideId, keyword = "", tourFilter = "all
     );
   }
 
-  if (tourFilter && tourFilter !== "all") {
+  if (
+    Number.isNaN(tourIdNum) &&
+    tourFilter &&
+    tourFilter !== "all"
+  ) {
     sql += ` AND t.title LIKE ? `;
     params.push(`%${String(tourFilter).trim()}%`);
   }

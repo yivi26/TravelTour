@@ -15,11 +15,13 @@ import {
   getProviderProfile,
   updateProviderProfile,
   getDashboardDataByProvider,
+  getProviderNotifications,
   getPublicFeaturedTours,
   getPublicTours,
   getPublicDiscountedTours,
   getPublicTourById,
 } from "../models/providerModel.js";
+import { getProviderReportOverview } from "../models/providerReportsModel.js";
 
 const PROVIDER_ID = 1;
 
@@ -260,6 +262,24 @@ export async function getDashboardData(req, res) {
   }
 }
 
+export async function getProviderNotificationsController(req, res) {
+  try {
+    const limit = Number(req.query.limit || 12);
+    const data = await getProviderNotifications(PROVIDER_ID, limit);
+
+    return res.status(200).json({
+      message: "Lấy danh sách thông báo thành công",
+      data,
+    });
+  } catch (err) {
+    console.error("❌ PROVIDER NOTIFICATIONS ERROR:", err);
+    return res.status(500).json({
+      message: "Lỗi lấy danh sách thông báo",
+      error: err.sqlMessage || err.message,
+    });
+  }
+}
+
 /* =========================
    PROVIDER PROFILE
 ========================= */
@@ -296,6 +316,30 @@ export async function updateProfile(req, res) {
     return res.status(500).json({
       message: "Lỗi cập nhật hồ sơ provider",
       error: err.sqlMessage || err.message,
+    });
+  }
+}
+
+/* =========================
+   PROVIDER REPORT
+========================= */
+export async function getProviderReportOverviewController(req, res) {
+  try {
+    const months = req.query?.months;
+    const top = req.query?.top;
+
+    const data = await getProviderReportOverview({
+      providerId: PROVIDER_ID,
+      months,
+      topLimit: top
+    });
+
+    return res.json(data);
+  } catch (err) {
+    console.error("❌ PROVIDER REPORT ERROR:", err);
+    return res.status(500).json({
+      message: "Không thể tải dữ liệu báo cáo doanh thu",
+      error: err?.sqlMessage || err?.message || "Unknown error"
     });
   }
 }

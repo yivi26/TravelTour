@@ -1,4 +1,6 @@
 let schedules = [];
+/** Từ `tourdangdan.html?tourId=` → lichtrinh: làm nổi bật đúng lịch. */
+let urlTourHighlightId = null;
 
 function formatDateVN(dateString) {
   if (!dateString) return "--/--/----";
@@ -66,8 +68,11 @@ function renderSchedules(filter = "all") {
 
   container.innerHTML = filtered
     .map(
-      (item) => `
-        <div class="schedule-card">
+      (item) => {
+        const focused =
+          urlTourHighlightId != null && Number(item.id) === urlTourHighlightId;
+        return `
+        <div class="schedule-card${focused ? " schedule-card--focused" : ""}" data-tour-id="${item.id}">
           <div class="schedule-top">
             <div>
               <div class="schedule-title">${item.tourName}</div>
@@ -90,9 +95,17 @@ function renderSchedules(filter = "all") {
             </div>
           </div>
         </div>
-      `
+      `;
+      }
     )
     .join("");
+
+  if (urlTourHighlightId != null) {
+    requestAnimationFrame(() => {
+      const el = container.querySelector(".schedule-card--focused");
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }
 }
 
 function bindEvents() {
@@ -141,6 +154,11 @@ function bindEvents() {
 
 async function initPage() {
   try {
+    const raw = new URLSearchParams(window.location.search).get("tourId");
+    const n =
+      raw != null && String(raw).trim() !== "" ? Number(raw) : NaN;
+    urlTourHighlightId = Number.isNaN(n) ? null : n;
+
     schedules = await fetchSchedules("all");
     renderSchedules("all");
     bindEvents();

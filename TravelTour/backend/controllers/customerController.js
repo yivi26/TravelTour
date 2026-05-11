@@ -6,6 +6,7 @@ import {
   getUserPasswordById,
   updateUserPasswordById,
 } from "../models/userModel.js";
+import { createTourReview, deleteOwnTourReview } from "../models/tourReviewsModel.js";
 
 export const getCustomerProfile = async (req, res, next) => {
   try {
@@ -197,6 +198,52 @@ export const changePassword = async (req, res) => {
     return res.status(500).json({
       success: false,
       message: "Lỗi server khi đổi mật khẩu.",
+    });
+  }
+};
+
+export const postCustomerTourReview = async (req, res) => {
+  try {
+    const tourId = req.params.tourId;
+    const { rating, comment } = req.body || {};
+    const created = await createTourReview({
+      userId: req.user.id,
+      tourId,
+      rating,
+      comment,
+    });
+    const message =
+      created.status === "approved"
+        ? "Đánh giá đã được đăng và hiển thị công khai."
+        : "Đã gửi đánh giá. Vui lòng chờ admin duyệt trước khi hiển thị công khai.";
+    return res.status(201).json({
+      success: true,
+      message,
+      data: created,
+    });
+  } catch (err) {
+    const code = err.statusCode || 500;
+    return res.status(code).json({
+      success: false,
+      message: err.message || "Không gửi được đánh giá",
+    });
+  }
+};
+
+export const deleteCustomerTourReview = async (req, res) => {
+  try {
+    const reviewId = req.params.reviewId;
+    const result = await deleteOwnTourReview(req.user.id, reviewId);
+    return res.status(200).json({
+      success: true,
+      message: "Đã xóa đánh giá",
+      data: result,
+    });
+  } catch (err) {
+    const code = err.statusCode || 500;
+    return res.status(code).json({
+      success: false,
+      message: err.message || "Không xóa được đánh giá",
     });
   }
 };

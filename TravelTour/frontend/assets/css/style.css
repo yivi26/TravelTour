@@ -61,6 +61,25 @@ img {
   font-size: 32px;
   font-weight: bold;
   color: var(--primary);
+  text-decoration: none;
+}
+
+a.logo {
+  display: inline-block;
+  cursor: pointer;
+  transition:
+    color 0.28s ease,
+    opacity 0.28s ease,
+    transform 0.22s ease;
+}
+
+a.logo:hover {
+  color: var(--primary-dark);
+  opacity: 0.9;
+}
+
+a.logo:active {
+  transform: scale(0.97);
 }
 
 .nav-menu {

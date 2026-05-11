@@ -453,7 +453,7 @@ export const getRecentBookings = async (req, res) => {
     const mapped = bookings.map((item) => {
       let statusLabel = "";
 
-      if (item.status === "pending_payment") statusLabel = "Chờ thanh toán";
+      if (item.status === "pending_payment") statusLabel = "Thanh toán đang chờ xử lý";
       else if (item.status === "confirmed") statusLabel = "Đã xác nhận";
       else if (item.status === "cancel_requested") statusLabel = "Chờ xác nhận hủy";
       else if (item.status === "cancelled") statusLabel = "Đã hủy";
@@ -512,7 +512,7 @@ export const getBookingDetail = async (req, res) => {
 
     let statusLabel = "Không xác định";
 
-    if (booking.status === "pending_payment") statusLabel = "Chờ thanh toán";
+    if (booking.status === "pending_payment") statusLabel = "Thanh toán đang chờ xử lý";
     else if (booking.status === "confirmed") statusLabel = "Đã xác nhận";
     else if (booking.status === "cancel_requested") statusLabel = "Chờ xác nhận hủy";
     else if (booking.status === "cancelled") statusLabel = "Đã hủy";
@@ -563,7 +563,7 @@ export const getBookingHistory = async (req, res) => {
     const bookings = await getBookingHistoryByUser(userId);
 
     const statusLabelMap = {
-      pending_payment: "Chờ thanh toán",
+      pending_payment: "Thanh toán đang chờ xử lý",
       confirmed: "Đã xác nhận",
       cancel_requested: "Chờ xác nhận hủy",
       cancelled: "Đã hủy",
@@ -629,7 +629,7 @@ export const getMyBookings = async (req, res) => {
       let statusClass = "status-default";
 
       if (item.status === "pending_payment") {
-        statusLabel = "Chờ thanh toán";
+        statusLabel = "Thanh toán đang chờ xử lý";
         statusClass = "status-pending";
       } else if (item.status === "confirmed") {
         statusLabel = "Đã xác nhận";

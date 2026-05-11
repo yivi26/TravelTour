@@ -121,7 +121,7 @@ document.addEventListener("DOMContentLoaded", () => {
   }
 
   function bindEvents() {
-    addHighlightBtn?.addEventListener("click", addHighlightRow);
+    addHighlightBtn?.addEventListener("click", () => addHighlightRow());
     addDayBtn?.addEventListener("click", addItineraryDay);
 
     coverUploadBox?.addEventListener("click", () => {

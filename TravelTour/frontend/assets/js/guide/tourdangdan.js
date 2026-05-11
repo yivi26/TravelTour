@@ -1,4 +1,6 @@
 let currentTours = [];
+/** Từ `lichtrinh.html?tourId=` → tourdangdan: làm nổi bật đúng tour. */
+let urlTourHighlightId = null;
 
 function formatDateVN(dateString) {
   if (!dateString) return "--/--/----";
@@ -60,8 +62,11 @@ function renderTours(keyword = "") {
 
   tourGrid.innerHTML = filteredTours
     .map(
-      (tour) => `
-        <div class="tour-card">
+      (tour) => {
+        const focused =
+          urlTourHighlightId != null && Number(tour.id) === urlTourHighlightId;
+        return `
+        <div class="tour-card${focused ? " tour-card--focused" : ""}" data-tour-id="${tour.id}">
           <div class="tour-card-top">
             <h4 class="tour-title">${tour.name}</h4>
             <span class="tour-status">${tour.statusText || "Đang hoạt động"}</span>
@@ -93,14 +98,22 @@ function renderTours(keyword = "") {
             <button class="btn-detail" data-action="detail" data-id="${tour.id}">
               Xem chi tiết
             </button>
-            <button class="btn-contact" data-action="contact" data-id="${tour.id}">
+            <button class="btn-contact" data-action="contact" data-id="${tour.id}" data-tour-name="${String(tour.name).replace(/"/g, "&quot;")}">
               Liên hệ khách
             </button>
           </div>
         </div>
-      `
+      `;
+      }
     )
     .join("");
+
+  if (urlTourHighlightId != null) {
+    requestAnimationFrame(() => {
+      const el = tourGrid.querySelector(".tour-card--focused");
+      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+    });
+  }
 }
 
 function bindEvents() {
@@ -141,13 +154,23 @@ function bindEvents() {
     }
 
     if (action === "contact" && id) {
-      window.location.href = `khachhang.html?tourId=${encodeURIComponent(id)}`;
+      const tourName = target.getAttribute("data-tour-name") || "";
+      const q = new URLSearchParams({
+        tourId: String(id),
+        tourName: tourName
+      });
+      window.location.href = `khachhang.html?${q.toString()}`;
     }
   });
 }
 
 async function initPage() {
   try {
+    const raw = new URLSearchParams(window.location.search).get("tourId");
+    const n =
+      raw != null && String(raw).trim() !== "" ? Number(raw) : NaN;
+    urlTourHighlightId = Number.isNaN(n) ? null : n;
+
     currentTours = await fetchCurrentTours("");
     renderTours("");
     bindEvents();

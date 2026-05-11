@@ -1,4 +1,6 @@
 let customers = [];
+/** Khi mở từ Tour đang dẫn → Liên hệ khách (?tourId=), lọc theo tour; đổi "Tất cả tour" sẽ tải lại full danh sách. */
+let urlTourIdAtInit = null;
 
 function getInitial(name) {
   return String(name || "").trim().charAt(0).toUpperCase() || "?";
@@ -17,16 +19,18 @@ function renderCustomerCount(count) {
   customerCountText.textContent = `Tổng số ${count} khách hàng`;
 }
 
-async function fetchCustomers(keyword = "", selectedTour = "all") {
-  const response = await fetch(
-    `/api/guide/customers?keyword=${encodeURIComponent(keyword)}&tour=${encodeURIComponent(selectedTour)}`,
-    {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json"
-      }
+async function fetchCustomers(keyword = "", selectedTour = "all", tourId = null) {
+  let url = `/api/guide/customers?keyword=${encodeURIComponent(keyword)}&tour=${encodeURIComponent(selectedTour)}`;
+  if (tourId != null && !Number.isNaN(Number(tourId))) {
+    url += `&tourId=${encodeURIComponent(String(tourId))}`;
+  }
+
+  const response = await fetch(url, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json"
     }
-  );
+  });
 
   const result = await response.json().catch(() => ({}));
 
@@ -37,12 +41,15 @@ async function fetchCustomers(keyword = "", selectedTour = "all") {
   return Array.isArray(result.data) ? result.data : [];
 }
 
-function fillTourFilterFromData(data, preferredTourName) {
+function fillTourFilterFromData(data, preferredTourName, ensureTourName) {
   const tourFilter = document.getElementById("tourFilter");
   if (!tourFilter) return;
 
   const currentValue = tourFilter.value || "all";
   const uniqueTours = [...new Set(data.map((item) => item.tour).filter(Boolean))];
+  if (ensureTourName && !uniqueTours.includes(ensureTourName)) {
+    uniqueTours.push(ensureTourName);
+  }
 
   tourFilter.innerHTML = `
     <option value="all">Tất cả tour</option>
@@ -154,7 +161,19 @@ function bindEvents() {
   }
 
   if (tourFilter) {
-    tourFilter.addEventListener("change", applyFilters);
+    tourFilter.addEventListener("change", async function () {
+      if (this.value === "all" && urlTourIdAtInit != null) {
+        urlTourIdAtInit = null;
+        try {
+          customers = await fetchCustomers("", "all", null);
+          fillTourFilterFromData(customers, null);
+          this.value = "all";
+        } catch (e) {
+          console.error("Lỗi tải lại khách hàng:", e);
+        }
+      }
+      applyFilters();
+    });
   }
 
   if (logoutBtn) {
@@ -178,19 +197,28 @@ async function initPage() {
   try {
     const params = new URLSearchParams(window.location.search);
     const tourIdRaw = params.get("tourId");
+    const tourNameHint = params.get("tourName");
     const tourIdNum =
       tourIdRaw != null && String(tourIdRaw).trim() !== ""
         ? Number(tourIdRaw)
         : NaN;
 
-    customers = await fetchCustomers("", "all");
+    urlTourIdAtInit = Number.isNaN(tourIdNum) ? null : tourIdNum;
+
+    customers = await fetchCustomers("", "all", urlTourIdAtInit);
 
     let preferredTourName;
-    if (!Number.isNaN(tourIdNum)) {
-      preferredTourName = customers.find((c) => c.tourId === tourIdNum)?.tour;
+    let ensureTourName;
+    if (urlTourIdAtInit != null) {
+      if (customers.length) {
+        preferredTourName = customers[0].tour;
+      } else if (tourNameHint && String(tourNameHint).trim() !== "") {
+        preferredTourName = String(tourNameHint).trim();
+        ensureTourName = preferredTourName;
+      }
     }
 
-    fillTourFilterFromData(customers, preferredTourName);
+    fillTourFilterFromData(customers, preferredTourName, ensureTourName);
     const tourFilterEl = document.getElementById("tourFilter");
     const initialTour = tourFilterEl?.value || "all";
     renderCustomers("", initialTour);

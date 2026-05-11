@@ -1,4 +1,5 @@
 import db from "../config/db.js";
+import { getProviderReportOverview } from "./providerReportsModel.js";
 
 function safeJsonParse(value, fallback = []) {
   if (!value) return fallback;
@@ -871,6 +872,29 @@ export async function updateProviderProfile(providerId, data) {
   return getProviderProfile(providerId);
 }
 
+function mapProviderDashboardBookingStatus(status) {
+  const s = String(status || "").toLowerCase();
+  if (["confirmed", "paid", "in_progress"].includes(s)) {
+    return { label: "Đã xác nhận", statusClass: "confirmed" };
+  }
+  if (s === "completed") {
+    return { label: "Hoàn thành", statusClass: "confirmed" };
+  }
+  if (s === "cancelled" || s === "canceled") {
+    return { label: "Đã hủy", statusClass: "pending" };
+  }
+  if (s === "pending_payment") {
+    return { label: "Thanh toán đang chờ xử lý", statusClass: "pending" };
+  }
+  if (s === "pending") {
+    return { label: "Chờ xử lý", statusClass: "pending" };
+  }
+  if (s === "refunded") {
+    return { label: "Đã hoàn tiền", statusClass: "pending" };
+  }
+  return { label: status || "Không xác định", statusClass: "pending" };
+}
+
 export async function getDashboardDataByProvider(providerId) {
   const [[totalToursRow]] = await db.query(
     `SELECT COUNT(*) AS totalTours FROM tours WHERE provider_id = ?`,
@@ -895,16 +919,99 @@ export async function getDashboardDataByProvider(providerId) {
 
   const [[revenueMonthRow]] = await db.query(
     `
-    SELECT COALESCE(SUM(t.base_price), 0) AS revenueMonth
+    SELECT COALESCE(SUM(COALESCE(b.final_price, 0)), 0) AS revenueMonth
     FROM bookings b
     JOIN tours t ON b.tour_id = t.id
     WHERE t.provider_id = ?
-      AND b.status IN ('confirmed', 'completed')
+      AND b.status IN ('confirmed', 'paid', 'in_progress', 'completed')
       AND MONTH(b.booked_at) = MONTH(CURDATE())
       AND YEAR(b.booked_at) = YEAR(CURDATE())
     `,
     [providerId]
   );
+
+  const defaultCharts = {
+    labels: ["T1", "T2", "T3", "T4", "T5", "T6"],
+    revenue: [0, 0, 0, 0, 0, 0],
+    bookings: [0, 0, 0, 0, 0, 0]
+  };
+
+  let charts = { ...defaultCharts };
+  try {
+    const overview = await getProviderReportOverview({ providerId, months: 6, topLimit: 5 });
+    if (overview?.monthlyBookings?.length) {
+      charts = {
+        labels: overview.monthlyBookings.map((m) => m.label),
+        revenue: overview.monthlyRevenue.map((m) => Number(m.value) || 0),
+        bookings: overview.monthlyBookings.map((m) => Number(m.value) || 0)
+      };
+    }
+  } catch {
+    /* giữ defaultCharts */
+  }
+
+  let recentBookings = [];
+  try {
+    const [rows] = await db.query(
+      `
+      SELECT
+        b.status,
+        b.booked_at,
+        u.full_name AS customer_name,
+        t.title AS tour_title
+      FROM bookings b
+      JOIN tours t ON t.id = b.tour_id
+      LEFT JOIN users u ON u.id = b.user_id
+      WHERE t.provider_id = ?
+      ORDER BY b.booked_at DESC, b.id DESC
+      LIMIT 8
+      `,
+      [providerId]
+    );
+    recentBookings = (rows || []).map((b) => {
+      const m = mapProviderDashboardBookingStatus(b.status);
+      return {
+        customer: b.customer_name || "Khách hàng",
+        tour: b.tour_title || "Tour",
+        date: b.booked_at,
+        status: m.label,
+        statusClass: m.statusClass
+      };
+    });
+  } catch {
+    recentBookings = [];
+  }
+
+  let upcomingTours = [];
+  try {
+    const [rows] = await db.query(
+      `
+      SELECT
+        t.title,
+        t.start_date,
+        t.max_capacity,
+        COALESCE(u.full_name, 'Chưa phân công') AS guide_name
+      FROM tours t
+      LEFT JOIN guides g ON g.id = t.guide_id
+      LEFT JOIN users u ON u.id = g.user_id
+      WHERE t.provider_id = ?
+        AND t.start_date IS NOT NULL
+        AND DATE(t.start_date) >= CURDATE()
+        AND t.status IN ('active', 'paused', 'full')
+      ORDER BY t.start_date ASC
+      LIMIT 8
+      `,
+      [providerId]
+    );
+    upcomingTours = (rows || []).map((t) => ({
+      name: t.title || "Tour",
+      guide: `HDV: ${t.guide_name || "Chưa phân công"}`,
+      date: t.start_date,
+      guests: t.max_capacity != null ? `${Number(t.max_capacity)} chỗ` : "—"
+    }));
+  } catch {
+    upcomingTours = [];
+  }
 
   return {
     stats: {
@@ -912,7 +1019,10 @@ export async function getDashboardDataByProvider(providerId) {
       bookingsToday: Number(bookingsTodayRow?.bookingsToday || 0),
       activeTours: Number(activeToursRow?.activeTours || 0),
       revenueMonth: Number(revenueMonthRow?.revenueMonth || 0)
-    }
+    },
+    charts,
+    recentBookings,
+    upcomingTours
   };
 }
 
@@ -972,9 +1082,9 @@ export async function getProviderNotifications(providerId, limit = 12) {
     WHERE provider_id = ?
       AND status IN ('active', 'paused', 'archived', 'full')
     ORDER BY updated_at DESC, id DESC
-    LIMIT ?
+    LIMIT 20
     `,
-    [providerId, safeLimit]
+    [providerId]
   );
 
   for (const row of tourRows) {
@@ -1004,6 +1114,36 @@ export async function getProviderNotifications(providerId, limit = 12) {
       date: toIsoDate(row.updated_at),
       href: "tour_management.html",
       tone
+    });
+  }
+
+  const [bookingRows] = await db.query(
+    `
+    SELECT
+      b.id,
+      b.booked_at,
+      b.status,
+      t.title AS tour_title,
+      u.full_name AS customer_name
+    FROM bookings b
+    JOIN tours t ON t.id = b.tour_id
+    LEFT JOIN users u ON u.id = b.user_id
+    WHERE t.provider_id = ?
+    ORDER BY b.booked_at DESC, b.id DESC
+    LIMIT 12
+    `,
+    [providerId]
+  );
+
+  for (const row of bookingRows || []) {
+    notifications.push({
+      id: `booking-${row.id}`,
+      type: "booking",
+      title: "Hoạt động booking",
+      subtitle: `${row.customer_name || "Khách hàng"} · ${row.tour_title || "Tour"}`,
+      date: toIsoDate(row.booked_at),
+      href: "booking_management.html",
+      tone: "blue"
     });
   }
 

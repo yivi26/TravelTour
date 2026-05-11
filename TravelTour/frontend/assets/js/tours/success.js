@@ -54,7 +54,7 @@
   }
   if (data.payment_method === "office") {
     if (successTitle) {
-      successTitle.textContent = "Đặt tour thành công - Chờ thanh toán!";
+      successTitle.textContent = "Đặt tour thành công - Thanh toán đang chờ xử lý!";
     }
 
     if (successDesc) {

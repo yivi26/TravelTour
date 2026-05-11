@@ -745,3 +745,39 @@ li {
   background: #fee2e2;
   color: #dc2626;
 }
+.remove-row-btn {
+  padding: 10px 16px;
+  border: none;
+  border-radius: 10px;
+  background: #ff4d4f;
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 70px;
+}
+
+.remove-row-btn:hover {
+  background: #d9363e;
+  transform: translateY(-1px);
+}
+
+.remove-row-btn:active {
+  transform: scale(0.96);
+}
+
+.remove-row-btn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}
+.dynamic-row {
+  display: flex;
+  gap: 10px;
+  align-items: center;
+  margin-bottom: 10px;
+}
+
+.dynamic-row input {
+  flex: 1;
+}

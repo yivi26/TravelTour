@@ -176,8 +176,19 @@ export async function getGuideCustomersController(req, res) {
   try {
     const keyword = String(req.query.keyword || "").trim();
     const tourFilter = String(req.query.tour || "all").trim();
+    const tourIdRaw = req.query.tourId;
+    const tourIdParsed =
+      tourIdRaw != null && String(tourIdRaw).trim() !== ""
+        ? Number(tourIdRaw)
+        : NaN;
+    const tourIdFilter = Number.isNaN(tourIdParsed) ? null : tourIdParsed;
 
-    const customers = await getGuideCustomers(GUIDE_ID, keyword, tourFilter);
+    const customers = await getGuideCustomers(
+      GUIDE_ID,
+      keyword,
+      tourFilter,
+      tourIdFilter
+    );
 
     const data = customers.map((customer) => {
       const phoneTrim =

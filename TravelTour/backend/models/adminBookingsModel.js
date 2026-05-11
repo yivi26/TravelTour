@@ -7,11 +7,12 @@ function formatVnd(value) {
 
 function mapBookingStatus(status) {
   const s = String(status || "").toLowerCase();
-  if (s === "pending_payment") return { label: "Chờ thanh toán", key: "pending" };
+  if (s === "pending_payment") return { label: "Thanh toán đang chờ xử lý", key: "pending" };
   if (s === "pending" || s === "cancel_requested")
     return { label: "Chờ xử lý", key: "pending" };
-  if (s === "confirmed" || s === "paid" || s === "in_progress")
-    return { label: "Đã xác nhận", key: "confirmed" };
+  if (s === "confirmed" || s === "paid")
+    return { label: "Thành công", key: "confirmed" };
+  if (s === "in_progress") return { label: "Đang thực hiện", key: "confirmed" };
   if (s === "completed") return { label: "Đã hoàn thành", key: "completed" };
   if (s === "cancelled" || s === "refunded") return { label: "Đã hủy", key: "cancelled" };
   return { label: "Chờ xử lý", key: "pending" };

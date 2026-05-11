@@ -1,4 +1,6 @@
 import express from "express";
+import optionalAuthMiddleware from "../middleware/optionalAuthMiddleware.js";
+import { getPublicTourReviewsController } from "../controllers/tourReviewsController.js";
 import {
   getDashboardData,
   getTours,
@@ -17,7 +19,9 @@ import {
   getPublicDiscountedToursController,
   getPublicTourDetailController,
   getProfile,
-  updateProfile
+  updateProfile,
+  getProviderReportOverviewController,
+  getProviderNotificationsController,
 } from "../controllers/providerController.js";
 
 const router = express.Router();
@@ -28,6 +32,11 @@ const router = express.Router();
 router.get("/public/featured-tours", getPublicFeaturedToursController);
 router.get("/public/tours", getPublicToursController);
 router.get("/public/discounted-tours", getPublicDiscountedToursController);
+router.get(
+  "/public/tours/:tourId/reviews",
+  optionalAuthMiddleware,
+  getPublicTourReviewsController
+);
 router.get("/public/tours/:id", getPublicTourDetailController);
 
 /* =========================
@@ -40,6 +49,12 @@ router.put("/profile", updateProfile);
    PROVIDER DASHBOARD
 ========================= */
 router.get("/dashboard", getDashboardData);
+router.get("/notifications", getProviderNotificationsController);
+
+/* =========================
+   PROVIDER REPORT
+========================= */
+router.get("/report", getProviderReportOverviewController);
 
 /* =========================
    PROVIDER TOURS

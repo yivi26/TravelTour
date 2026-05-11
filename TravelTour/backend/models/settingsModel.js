@@ -13,6 +13,8 @@ const DEFAULT_SETTINGS = Object.freeze({
 
   notify_new_booking: true,
   notify_new_review: true,
+  /** Bật: đánh giá mới từ khách = approved ngay; Tắt: chờ admin duyệt (pending). */
+  auto_approve_reviews: true,
   notify_new_provider: true,
   notify_pending_tour: true,
 
@@ -133,6 +135,8 @@ export async function updateSettings(partial = {}) {
     "notify_new_booking" in updates ? normalizeBool(updates.notify_new_booking) : undefined;
   normalized.notify_new_review =
     "notify_new_review" in updates ? normalizeBool(updates.notify_new_review) : undefined;
+  normalized.auto_approve_reviews =
+    "auto_approve_reviews" in updates ? normalizeBool(updates.auto_approve_reviews) : undefined;
   normalized.notify_new_provider =
     "notify_new_provider" in updates ? normalizeBool(updates.notify_new_provider) : undefined;
   normalized.notify_pending_tour =

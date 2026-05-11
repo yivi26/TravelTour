@@ -16,7 +16,12 @@
   <body class="booking-page has-public-navbar">
     <nav class="navbar">
       <div class="container nav-container">
-        <div class="logo">TravelTour</div>
+        <a
+          href="../../index.html"
+          class="logo"
+          aria-label="TravelTour — về trang chủ"
+          >TravelTour</a
+        >
 
         <ul class="nav-menu">
           <li><a href="../../index.html">Trang chủ</a></li>
@@ -114,7 +119,10 @@
                     id="booker-name"
                     name="booker-name"
                     type="text"
-                    placeholder="Nhập họ và tên đầy đủ"
+                    maxlength="80"
+                    autocomplete="name"
+                    placeholder="Ví dụ: Nguyễn Văn A (2–80 ký tự, chỉ chữ và khoảng trắng)"
+                    title="2–80 ký tự, chỉ chữ Latin/tiếng Việt và khoảng trắng"
                     required
                   />
                 </div>
@@ -138,7 +146,10 @@
                       id="booker-phone"
                       name="booker-phone"
                       type="tel"
-                      placeholder="+84 xxx xxx xxx"
+                      maxlength="13"
+                      pattern="(?:0|\+84)(?:3|5|7|8|9)\d{8}"
+                      title="0912345678 hoặc +84912345678"
+                      placeholder="0912345678 hoặc +84912345678"
                       required
                     />
                   </div>
@@ -190,7 +201,9 @@
                       id="guest-name-1"
                       name="guest-name-1"
                       type="text"
-                      placeholder="Nhập họ và tên"
+                      maxlength="80"
+                      placeholder="Ví dụ: Nguyễn Văn A"
+                      title="2–80 ký tự, chỉ chữ Latin/tiếng Việt và khoảng trắng"
                       required
                       form="booking-form"
                     />
@@ -205,7 +218,10 @@
                         id="guest-birthday-1"
                         name="guest-birthday-1"
                         type="text"
-                        placeholder="dd/mm/yyyy"
+                        maxlength="10"
+                        inputmode="numeric"
+                        placeholder="15/08/1998"
+                        title="Định dạng dd/mm/yyyy; không quá hôm nay; tuổi 0–120"
                         required
                         form="booking-form"
                       />
@@ -256,12 +272,49 @@
                       inputmode="numeric"
                       maxlength="12"
                       pattern="\d{12}"
-                      placeholder="Nhập 12 số CCCD"
+                      title="Đúng 12 chữ số"
+                      placeholder="012345678901"
                       required
                       form="booking-form"
                     />
                   </div>
                 </article>
+              </div>
+
+              <div class="guest-import-box" aria-label="Biểu mẫu và import Excel">
+                <p class="guest-import-box__text">
+                  Mẫu danh sách khách (Google Sheet):
+                  <a
+                    href="https://docs.google.com/spreadsheets/d/1R8-UWNKpt26NCGEb5ZNGbgw5XwZtV0Tq/edit?gid=1095513870#gid=1095513870"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    class="guest-import-box__link"
+                    >https://docs.google.com/spreadsheets/d/1R8-UWNKpt26NCGEb5ZNGbgw5XwZtV0Tq/edit?gid=1095513870#gid=1095513870</a
+                  >
+                </p>
+                <div class="guest-import-box__actions">
+                  <input
+                    type="file"
+                    id="guest-excel-input"
+                    class="guest-excel-input"
+                    accept=".xlsx,.xls,.xlsm,.csv,.tsv,text/csv,application/vnd.ms-excel,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,application/octet-stream"
+                    hidden
+                  />
+                  <button
+                    type="button"
+                    class="add-guest-button js-import-guest-excel"
+                  >
+                    <span>↑</span>
+                    <span>Import file Excel</span>
+                  </button>
+                </div>
+                <p class="guest-import-box__note">
+                  Tải từ Google Sheet: mở bảng → <strong>Tệp</strong> →
+                  <strong>Tải xuống</strong> → <strong>Microsoft Excel (.xlsx)</strong>
+                  (không chọn PDF/HTML; file shortcut trên Drive không dùng được).
+                  Cột: Họ và tên, Ngày sinh (dd/mm/yyyy), Giới tính (Nam/Nữ/Khác), Số
+                  điện thoại (0… hoặc +84…), Số CCCD (12 số).
+                </p>
               </div>
             </section>
 
@@ -373,7 +426,9 @@
           <label>Họ và tên <span>*</span></label>
           <input
             type="text"
-            placeholder="Nhập họ và tên"
+            maxlength="80"
+            placeholder="Ví dụ: Nguyễn Văn A"
+            title="2–80 ký tự, chỉ chữ Latin/tiếng Việt và khoảng trắng"
             required
             form="booking-form"
           />
@@ -383,7 +438,10 @@
             <label>Ngày sinh <span>*</span></label>
             <input
               type="text"
-              placeholder="dd/mm/yyyy"
+              maxlength="10"
+              inputmode="numeric"
+              placeholder="15/08/1998"
+              title="Định dạng dd/mm/yyyy; tuổi 0–120"
               required
               form="booking-form"
             />
@@ -426,6 +484,7 @@
       </article>
     </template>
 
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="../../assets/js/tours/ttkhachhang.js"></script>
   </body>
 </html>

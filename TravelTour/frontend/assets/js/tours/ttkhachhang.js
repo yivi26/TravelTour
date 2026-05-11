@@ -223,7 +223,7 @@ async function fetchBookingSummary(params) {
       guestPhoneInput.value = guest.phone || "";
     }
     if (guestDocumentInput) {
-      guestDocumentInput.value = guest.documentId || "";
+      guestDocumentInput.value = normalizeDocumentId(guest.documentId || "");
     }
   }
 
@@ -319,40 +319,101 @@ async function fetchBookingSummary(params) {
     return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
   }
 
+  /** Chuẩn hóa SĐT VN: thiếu số 0 đầu (9 số 3x–9x) → thêm 0; 849… → +849… */
+  function normalizeVietnamPhone(phone) {
+    if (phone == null || phone === "") {
+      return "";
+    }
+    var raw = String(phone).replace(/\s/g, "").trim();
+    if (!raw) {
+      return "";
+    }
+    if (raw.startsWith("+84")) {
+      var rest = raw.slice(3).replace(/\D/g, "").slice(0, 9);
+      return "+84" + rest;
+    }
+    var d = raw.replace(/\D/g, "");
+    if (/^84(3|5|7|8|9)\d{8}$/.test(d)) {
+      return "+84" + d.slice(2);
+    }
+    if (/^(3|5|7|8|9)\d{8}$/.test(d)) {
+      return "0" + d;
+    }
+    if (/^0(3|5|7|8|9)\d{0,8}$/.test(d)) {
+      return d.slice(0, 10);
+    }
+    if (d.startsWith("84")) {
+      return d.slice(0, 12);
+    }
+    return d.slice(0, 11);
+  }
+
   function isValidVietnamPhone(phone) {
-    return /^(0|\+84)(3|5|7|8|9)\d{8}$/.test(phone);
+    return /^(0|\+84)(3|5|7|8|9)\d{8}$/.test(normalizeVietnamPhone(phone));
   }
 
   function isValidFullName(name) {
     if (!name) return false;
 
-    const normalized = name.trim().replace(/\s+/g, " ");
+    var normalized = name.trim().replace(/\s+/g, " ");
 
-    if (normalized.length < 2) return false;
+    if (normalized.length < 2 || normalized.length > 80) {
+      return false;
+    }
 
-    // Không cho toàn số / ký tự lạ
-    if (!/^[a-zA-ZÀ-ỹ\s]+$/.test(normalized)) return false;
+    try {
+      if (!/^[\p{L}\s]+$/u.test(normalized)) {
+        return false;
+      }
+    } catch (e) {
+      if (!/^[a-zA-ZÀ-ỹĐđ\s]+$/.test(normalized)) {
+        return false;
+      }
+    }
 
     return true;
+  }
+
+  /** Chỉ giữ số; 9–11 số (Excel hay mất số 0 đầu) → pad trái thành đủ 12 số */
+  function normalizeDocumentId(raw) {
+    if (raw == null || raw === "") {
+      return "";
+    }
+    var s;
+    if (typeof raw === "number" && Number.isFinite(raw)) {
+      s = String(Math.trunc(raw));
+      if (s === "NaN" || s === "Infinity") {
+        return "";
+      }
+    } else {
+      s = String(raw).replace(/\D/g, "");
+    }
+    if (s.length > 12) {
+      s = s.slice(0, 12);
+    }
+    if (/^\d{9,11}$/.test(s)) {
+      s = s.padStart(12, "0");
+    }
+    return s.slice(0, 12);
   }
 
   function isValidDocumentId(value) {
     if (!value) return false;
 
-    return /^\d{12}$/.test(value.trim());
+    return /^\d{12}$/.test(normalizeDocumentId(value));
   }
 
   function parseDateDDMMYYYY(dateStr) {
     if (!dateStr) return null;
 
-    const match = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(dateStr.trim());
+    var match = /^(\d{2})\/(\d{2})\/(\d{4})$/.exec(dateStr.trim());
     if (!match) return null;
 
-    const day = Number(match[1]);
-    const month = Number(match[2]);
-    const year = Number(match[3]);
+    var day = Number(match[1]);
+    var month = Number(match[2]);
+    var year = Number(match[3]);
 
-    const date = new Date(year, month - 1, day);
+    var date = new Date(year, month - 1, day);
 
     if (
       date.getFullYear() !== year ||
@@ -363,6 +424,22 @@ async function fetchBookingSummary(params) {
     }
 
     return date;
+  }
+
+  function getAgeYearsFromBirthDate(birthDate) {
+    if (!(birthDate instanceof Date) || isNaN(birthDate.getTime())) {
+      return null;
+    }
+    var today = new Date();
+    today.setHours(0, 0, 0, 0);
+    var b = new Date(birthDate);
+    b.setHours(0, 0, 0, 0);
+    var age = today.getFullYear() - b.getFullYear();
+    var m = today.getMonth() - b.getMonth();
+    if (m < 0 || (m === 0 && today.getDate() < b.getDate())) {
+      age -= 1;
+    }
+    return age;
   }
 
   function isFutureDate(date) {
@@ -395,6 +472,11 @@ async function fetchBookingSummary(params) {
     var phoneValue = bookerPhone ? bookerPhone.value.trim() : "";
     var countryValue = bookerCountry ? bookerCountry.value.trim() : "";
 
+    if (bookerPhone) {
+      phoneValue = normalizeVietnamPhone(phoneValue);
+      bookerPhone.value = phoneValue;
+    }
+
     if (!nameValue) {
       focusAndToast(bookerName, "Vui lòng nhập họ và tên người đặt tour.");
       return false;
@@ -403,7 +485,7 @@ async function fetchBookingSummary(params) {
     if (!isValidFullName(nameValue)) {
       focusAndToast(
         bookerName,
-        "Họ và tên không hợp lệ. Chỉ được chứa chữ cái và khoảng trắng.",
+        "Họ và tên: 2–80 ký tự, chỉ chữ Latin/tiếng Việt và khoảng trắng, không số hay ký tự đặc biệt (vd: Nguyễn Văn A).",
       );
       return false;
     }
@@ -426,7 +508,7 @@ async function fetchBookingSummary(params) {
     if (!isValidVietnamPhone(phoneValue)) {
       focusAndToast(
         bookerPhone,
-        "Số điện thoại không hợp lệ. Vui lòng nhập đúng số điện thoại Việt Nam.",
+        "Số điện thoại: 10 số bắt đầu bằng 0, hoặc +84 và 9 số tiếp theo; không khoảng trắng (vd: 0912345678 hoặc +84912345678).",
       );
       return false;
     }
@@ -470,6 +552,10 @@ async function fetchBookingSummary(params) {
         ? guestDocumentInput.value.trim()
         : "";
       var guestPhone = guestPhoneInput ? guestPhoneInput.value.trim() : "";
+      if (guestPhoneInput) {
+        guestPhone = normalizeVietnamPhone(guestPhone);
+        guestPhoneInput.value = guestPhone;
+      }
 
       if (!guestName) {
         focusAndToast(
@@ -482,7 +568,7 @@ async function fetchBookingSummary(params) {
       if (!isValidFullName(guestName)) {
         focusAndToast(
           guestNameInput,
-          `Họ và tên của khách #${guestIndex} không hợp lệ.`,
+          `Khách #${guestIndex}: họ tên 2–80 ký tự, chỉ chữ và khoảng trắng, không số/ký tự đặc biệt (vd: Nguyễn Văn A).`,
         );
         return false;
       }
@@ -500,7 +586,7 @@ async function fetchBookingSummary(params) {
       if (!parsedBirthday) {
         focusAndToast(
           guestBirthdayInput,
-          `Ngày sinh của khách #${guestIndex} không đúng định dạng dd/mm/yyyy.`,
+          `Khách #${guestIndex}: ngày sinh đúng định dạng dd/mm/yyyy (2 chữ số ngày, 2 chữ số tháng, 4 chữ số năm), vd: 15/08/1998.`,
         );
         return false;
       }
@@ -508,15 +594,24 @@ async function fetchBookingSummary(params) {
       if (isFutureDate(parsedBirthday)) {
         focusAndToast(
           guestBirthdayInput,
-          `Ngày sinh của khách #${guestIndex} không được ở tương lai.`,
+          `Khách #${guestIndex}: ngày sinh không được lớn hơn ngày hiện tại.`,
         );
         return false;
       }
 
-      if (!guestGender) {
+      var guestAge = getAgeYearsFromBirthDate(parsedBirthday);
+      if (guestAge == null || guestAge < 0 || guestAge > 120) {
+        focusAndToast(
+          guestBirthdayInput,
+          `Khách #${guestIndex}: tuổi phải từ 0 đến 120 (theo ngày sinh đã nhập).`,
+        );
+        return false;
+      }
+
+      if (!/^(male|female|other)$/.test(guestGender)) {
         focusAndToast(
           genderSelect,
-          `Vui lòng chọn giới tính cho khách #${guestIndex}.`,
+          `Khách #${guestIndex}: chọn một trong Nam, Nữ hoặc Khác.`,
         );
         return false;
       }
@@ -532,9 +627,14 @@ async function fetchBookingSummary(params) {
       if (!isValidVietnamPhone(guestPhone)) {
         focusAndToast(
           guestPhoneInput,
-          `Số điện thoại của khách #${guestIndex} không hợp lệ.`,
+          `Khách #${guestIndex}: SĐT 10 số bắt đầu 0 hoặc +84 và 9 số tiếp; không khoảng trắng (vd: 0912345678 hoặc +84912345678).`,
         );
         return false;
+      }
+
+      if (guestDocumentInput) {
+        guestDocument = normalizeDocumentId(guestDocument);
+        guestDocumentInput.value = guestDocument;
       }
 
       if (!guestDocument) {
@@ -548,7 +648,7 @@ async function fetchBookingSummary(params) {
       if (!isValidDocumentId(guestDocument)) {
         focusAndToast(
           guestDocumentInput,
-          `Số CCCD của khách #${guestIndex} phải gồm đúng 12 chữ số.`,
+          `Khách #${guestIndex}: số CCCD đúng 12 chữ số, không chữ hay ký tự khác (vd: 012345678901).`,
         );
         return false;
       }
@@ -647,6 +747,520 @@ async function fetchBookingSummary(params) {
       addGuestButton.title = "Thêm khách";
     }
   }
+
+  var guestExcelInput = document.getElementById("guest-excel-input");
+  var importGuestExcelBtn = document.querySelector(".js-import-guest-excel");
+
+  function normalizeGuestExcelHeader(value) {
+    if (value == null || value === "") return "";
+    var s = String(value)
+      .trim()
+      .toLowerCase()
+      .replace(/\*/g, "")
+      .trim()
+      .replace(/đ/g, "d");
+    try {
+      s = s
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .replace(/\s+/g, " ");
+    } catch (e) {
+      s = s.replace(/\s+/g, " ");
+    }
+    return s;
+  }
+
+  function mapGenderFromExcel(raw) {
+    if (raw == null) return "";
+    var g = String(raw).trim().toLowerCase();
+    if (g === "nam" || g === "male") return "male";
+    if (g === "nữ" || g === "nu" || g === "female") return "female";
+    if (g === "khác" || g === "khac" || g === "other") return "other";
+    return "";
+  }
+
+  function normalizePhoneFromExcel(value) {
+    if (value == null || value === "") return "";
+    if (typeof value === "number" && Number.isFinite(value)) {
+      var s = String(Math.round(value));
+      if (s.length === 9 && /^[35789]/.test(s)) {
+        s = "0" + s;
+      }
+      return normalizeVietnamPhone(s);
+    }
+    return normalizeVietnamPhone(
+      String(value).replace(/\s/g, "").trim(),
+    );
+  }
+
+  function pad2(n) {
+    return String(Math.floor(n)).padStart(2, "0");
+  }
+
+  function isValidCalendarDay(day, month, year) {
+    if (
+      !Number.isFinite(day) ||
+      !Number.isFinite(month) ||
+      !Number.isFinite(year)
+    ) {
+      return false;
+    }
+    if (month < 1 || month > 12 || day < 1 || day > 31) {
+      return false;
+    }
+    var dt = new Date(year, month - 1, day);
+    return (
+      dt.getFullYear() === year &&
+      dt.getMonth() === month - 1 &&
+      dt.getDate() === day
+    );
+  }
+
+  function formatDateAsDDMMYYYY(dt) {
+    if (!(dt instanceof Date) || isNaN(dt.getTime())) {
+      return "";
+    }
+    return (
+      pad2(dt.getDate()) +
+      "/" +
+      pad2(dt.getMonth() + 1) +
+      "/" +
+      dt.getFullYear()
+    );
+  }
+
+  /** Chuỗi / Date / serial Excel → luôn dd/mm/yyyy (VN), tránh M/D/YY của locale US */
+  function formatBirthdayFromExcelCell(value) {
+    if (value == null || value === "") {
+      return "";
+    }
+
+    if (typeof value === "number" && window.XLSX && XLSX.SSF) {
+      var parsed = XLSX.SSF.parse_date_code(value);
+      if (parsed && parsed.y) {
+        var dNum = Math.floor(parsed.d || 0);
+        var mNum = Math.floor(parsed.m || 0);
+        var yNum = parsed.y;
+        if (mNum >= 1 && mNum <= 12 && dNum >= 1 && dNum <= 31) {
+          return pad2(dNum) + "/" + pad2(mNum) + "/" + yNum;
+        }
+      }
+    }
+
+    if (value instanceof Date && !isNaN(value.getTime())) {
+      return formatDateAsDDMMYYYY(value);
+    }
+
+    var s = String(value).trim();
+    if (!s) {
+      return "";
+    }
+
+    var iso = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(s);
+    if (iso) {
+      var yIso = +iso[1];
+      var moIso = +iso[2];
+      var dIso = +iso[3];
+      if (isValidCalendarDay(dIso, moIso, yIso)) {
+        return pad2(dIso) + "/" + pad2(moIso) + "/" + yIso;
+      }
+    }
+
+    var slash = /^(\d{1,2})\/(\d{1,2})\/(\d{2}|\d{4})$/.exec(s);
+    if (slash) {
+      var a = +slash[1];
+      var b = +slash[2];
+      var ys = slash[3];
+      var y =
+        ys.length === 2
+          ? +ys <= 29
+            ? 2000 + +ys
+            : 1900 + +ys
+          : +ys;
+      var asDayFirst = isValidCalendarDay(a, b, y);
+      var asMonthFirst = isValidCalendarDay(b, a, y);
+      if (asDayFirst && !asMonthFirst) {
+        return pad2(a) + "/" + pad2(b) + "/" + y;
+      }
+      if (!asDayFirst && asMonthFirst) {
+        return pad2(b) + "/" + pad2(a) + "/" + y;
+      }
+      if (asDayFirst && asMonthFirst) {
+        return pad2(a) + "/" + pad2(b) + "/" + y;
+      }
+    }
+
+    return s;
+  }
+
+  function rowToGuest(row) {
+    var norm = {};
+    Object.keys(row).forEach(function (key) {
+      var nk = normalizeGuestExcelHeader(
+        String(key).replace(/\u00a0/g, " ").trim(),
+      );
+      if (nk) {
+        norm[nk] = row[key];
+      }
+    });
+
+    function pickExact(keys) {
+      for (var i = 0; i < keys.length; i += 1) {
+        var k = keys[i];
+        if (Object.prototype.hasOwnProperty.call(norm, k)) {
+          var v = norm[k];
+          if (v !== undefined && v !== null && String(v).trim() !== "") {
+            return v;
+          }
+        }
+      }
+      return "";
+    }
+
+    function pickFuzzy(substrings) {
+      var keys = Object.keys(norm);
+      for (var s = 0; s < substrings.length; s += 1) {
+        var sub = substrings[s];
+        for (var ki = 0; ki < keys.length; ki += 1) {
+          if (keys[ki] === sub || keys[ki].indexOf(sub) !== -1) {
+            var v2 = norm[keys[ki]];
+            if (
+              v2 !== undefined &&
+              v2 !== null &&
+              String(v2).trim() !== ""
+            ) {
+              return v2;
+            }
+          }
+        }
+      }
+      return "";
+    }
+
+    var nameRaw =
+      pickExact(["ho va ten", "ho ten", "ten"]) ||
+      pickFuzzy(["ho va ten", "ho ten"]);
+    var birthRaw =
+      pickExact(["ngay sinh", "sinh nhat"]) || pickFuzzy(["ngay sinh"]);
+    var genderRaw =
+      pickExact(["gioi tinh"]) || pickFuzzy(["gioi tinh"]);
+    var phoneRaw =
+      pickExact(["so dien thoai", "dien thoai", "sdt"]) ||
+      pickFuzzy(["dien thoai", "so dien thoai"]);
+    var docRaw =
+      pickExact(["so cccd", "cccd", "cmnd"]) ||
+      pickFuzzy(["so cccd", "cccd"]);
+
+    return {
+      name: String(nameRaw).trim().slice(0, 80),
+      birthday: formatBirthdayFromExcelCell(birthRaw),
+      gender: mapGenderFromExcel(genderRaw),
+      phone: normalizePhoneFromExcel(phoneRaw),
+      documentId: normalizeDocumentId(docRaw),
+    };
+  }
+
+  function parseGuestSheet(ws) {
+    var matrix = XLSX.utils.sheet_to_json(ws, {
+      header: 1,
+      defval: "",
+      raw: false,
+    });
+    if (!matrix || !matrix.length) {
+      return [];
+    }
+
+    var headerRowIdx = -1;
+    var scanRows = Math.min(matrix.length, 30);
+    var r;
+    var c;
+    for (r = 0; r < scanRows; r += 1) {
+      var row = matrix[r];
+      if (!row || !row.length) {
+        continue;
+      }
+      for (c = 0; c < row.length; c += 1) {
+        var cellNorm = normalizeGuestExcelHeader(
+          String(row[c]).replace(/\u00a0/g, " "),
+        );
+        if (
+          cellNorm === "ho va ten" ||
+          cellNorm.indexOf("ho va ten") !== -1 ||
+          cellNorm === "ho ten"
+        ) {
+          headerRowIdx = r;
+          break;
+        }
+      }
+      if (headerRowIdx !== -1) {
+        break;
+      }
+    }
+
+    if (headerRowIdx === -1) {
+      return [];
+    }
+
+    var headers = matrix[headerRowIdx].map(function (h) {
+      return String(h == null ? "" : h)
+        .replace(/\u00a0/g, " ")
+        .trim();
+    });
+
+    var guests = [];
+    var i;
+    for (i = headerRowIdx + 1; i < matrix.length; i += 1) {
+      var dataRow = matrix[i];
+      if (!dataRow) {
+        continue;
+      }
+      var obj = {};
+      var j;
+      for (j = 0; j < headers.length; j += 1) {
+        if (headers[j] !== "") {
+          obj[headers[j]] = dataRow[j] != null ? dataRow[j] : "";
+        }
+      }
+      var g = rowToGuest(obj);
+      if (g.name) {
+        guests.push(g);
+      }
+    }
+    return guests;
+  }
+
+  function parseGuestRowsFromWorkbook(workbook) {
+    var si;
+    for (si = 0; si < workbook.SheetNames.length; si += 1) {
+      var ws = workbook.Sheets[workbook.SheetNames[si]];
+      var guests = parseGuestSheet(ws);
+      if (guests.length) {
+        return guests;
+      }
+    }
+    return [];
+  }
+
+  function ensureGuestCardCount(target) {
+    if (!guestList) return;
+    while (guestList.querySelectorAll(".guest-card").length < target) {
+      addGuestCard();
+    }
+    while (guestList.querySelectorAll(".guest-card").length > target) {
+      var last = guestList.querySelector(".guest-card:last-of-type");
+      if (last) {
+        last.remove();
+      } else {
+        break;
+      }
+    }
+    updateGuestIndexes();
+    updateAddGuestButtonState();
+  }
+
+  function applyImportedGuests(rows) {
+    var required = getRequiredGuestCount();
+    var usedGuestCountFallback = false;
+    if (required <= 0 && rows.length > 0) {
+      var sd = getStoredData();
+      var meta = sd.bookingMeta || {};
+      meta.totalGuests = rows.length;
+      sd.bookingMeta = meta;
+      setStoredData(sd);
+      required = rows.length;
+      usedGuestCountFallback = true;
+      var totalGuestsEl = document.getElementById("tour-total-guests");
+      if (totalGuestsEl) {
+        totalGuestsEl.textContent = required + " khách";
+      }
+      var summaryGuestLineEl = document.getElementById("summary-guest-line");
+      if (summaryGuestLineEl) {
+        summaryGuestLineEl.innerHTML =
+          "Giá tour ×<br />" + required + " khách";
+      }
+    }
+
+    if (required <= 0) {
+      showToast(
+        "Không đọc được dữ liệu khách trong file. Kiểm tra sheet có cột Họ và tên.",
+      );
+      return;
+    }
+
+    ensureGuestCardCount(required);
+
+    var cards = guestList.querySelectorAll(".guest-card");
+    var n = Math.min(required, rows.length);
+    var i;
+    for (i = 0; i < n; i += 1) {
+      fillGuestCard(cards[i], rows[i]);
+    }
+    for (; i < cards.length; i += 1) {
+      fillGuestCard(cards[i], {
+        name: "",
+        birthday: "",
+        gender: "",
+        phone: "",
+        documentId: "",
+      });
+    }
+
+    persistBookingData();
+
+    if (rows.length < required) {
+      showToast(
+        "Đã đổ " +
+          rows.length +
+          "/" +
+          required +
+          " khách từ file. Vui lòng kiểm tra và bổ sung.",
+      );
+    } else if (rows.length > required) {
+      showToast(
+        "File có " +
+          rows.length +
+          " dòng; chỉ đổ " +
+          required +
+          " khách theo số tour đã chọn.",
+      );
+    } else if (usedGuestCountFallback) {
+      showToast(
+        "Đã đổ đủ " +
+          required +
+          " khách lên form (số khách lấy theo file). Nên quay lại chọn tour nếu cần khớp đặt chỗ.",
+      );
+    } else {
+      showToast("Đã import và hiển thị đủ " + required + " khách trên form.");
+    }
+  }
+
+  function isZipXlsxMagic(bytes) {
+    return (
+      bytes &&
+      bytes.length >= 4 &&
+      bytes[0] === 0x50 &&
+      bytes[1] === 0x4b &&
+      (bytes[2] === 0x03 || bytes[2] === 0x05 || bytes[2] === 0x07) &&
+      (bytes[3] === 0x04 || bytes[3] === 0x06 || bytes[3] === 0x08)
+    );
+  }
+
+  function looksLikeHtmlDownload(bytes) {
+    var head = new TextDecoder("utf-8", { fatal: false }).decode(
+      bytes.subarray(0, Math.min(256, bytes.length)),
+    );
+    var t = head.trim().toLowerCase();
+    return t.startsWith("<!doctype") || t.startsWith("<html");
+  }
+
+  function decodeCsvText(u8) {
+    var t = new TextDecoder("utf-8", { fatal: false }).decode(u8);
+    if (t.charCodeAt(0) === 0xfeff) {
+      t = t.slice(1);
+    }
+    if (/[\u0000-\u0008]/.test(t.slice(0, 4000))) {
+      try {
+        t = new TextDecoder("utf-16le", { fatal: false }).decode(u8);
+      } catch (e) {
+        /* keep utf-8 */
+      }
+    }
+    return t;
+  }
+
+  function handleGuestExcelFile(file) {
+    if (!file) return;
+    if (typeof window.XLSX === "undefined") {
+      showToast("Chưa tải được thư viện đọc Excel. Tải lại trang và thử lại.");
+      return;
+    }
+    if (!file.size) {
+      showToast(
+        "File rỗng hoặc chưa tải xong. Hãy tải lại: Google Sheet → Tệp → Tải xuống → Microsoft Excel (.xlsx).",
+      );
+      return;
+    }
+    var reader = new FileReader();
+    reader.onerror = function () {
+      showToast("Không đọc được file trên máy (quyền truy cập hoặc file đang mở chỗ khác).");
+    };
+    reader.onload = function (e) {
+      try {
+        var buf = e.target.result;
+        var u8 = new Uint8Array(buf);
+        var fname = (file.name || "").toLowerCase();
+        var workbook;
+        var isCsvName =
+          fname.endsWith(".csv") ||
+          fname.endsWith(".tsv") ||
+          (file.type && file.type.indexOf("csv") !== -1);
+
+        if (isCsvName) {
+          workbook = XLSX.read(decodeCsvText(u8), { type: "string" });
+        } else if (isZipXlsxMagic(u8)) {
+          workbook = XLSX.read(u8, { type: "array", cellDates: true });
+        } else if (looksLikeHtmlDownload(u8)) {
+          showToast(
+            "File bạn chọn là trang web (.html), không phải Excel. Trong Google Sheet: Tệp → Tải xuống → Microsoft Excel (.xlsx), rồi chọn đúng file .xlsx vừa lưu.",
+          );
+          return;
+        } else if (fname.endsWith(".xls")) {
+          workbook = XLSX.read(u8, { type: "array", cellDates: true });
+        } else {
+          var asText = decodeCsvText(u8);
+          if (
+            asText.indexOf(",") !== -1 &&
+            (/họ\s+và\s+tên|ho\s*va\s*ten|stt/i.test(asText) ||
+              /ngày\s*sinh|gioi\s*tinh|cccd/i.test(asText))
+          ) {
+            try {
+              workbook = XLSX.read(asText, { type: "string" });
+            } catch (e2) {
+              workbook = null;
+            }
+          }
+          if (!workbook) {
+            showToast(
+              "File không phải Excel .xlsx hợp lệ (thường do tải nhầm hoặc file shortcut). Mở Google Sheet → Tệp → Tải xuống → Microsoft Excel (.xlsx).",
+            );
+            return;
+          }
+        }
+
+        var guests = parseGuestRowsFromWorkbook(workbook);
+        if (!guests.length) {
+          showToast(
+            "Không tìm thấy dữ liệu: cần sheet có hàng tiêu đề gồm cột Họ và tên (giống mẫu Google Sheet).",
+          );
+          return;
+        }
+        applyImportedGuests(guests);
+      } catch (err) {
+        console.error(err);
+        showToast(
+          (err && err.message
+            ? "Lỗi đọc file: " + err.message + ". "
+            : "") +
+            "Thử tải lại .xlsx từ Google Sheet (Tệp → Tải xuống → Microsoft Excel).",
+        );
+      }
+    };
+    reader.readAsArrayBuffer(file);
+  }
+
+  if (importGuestExcelBtn && guestExcelInput) {
+    importGuestExcelBtn.addEventListener("click", function () {
+      guestExcelInput.click();
+    });
+    guestExcelInput.addEventListener("change", function (ev) {
+      var file = ev.target.files && ev.target.files[0];
+      if (file) {
+        handleGuestExcelFile(file);
+      }
+      guestExcelInput.value = "";
+    });
+  }
+
   if (addGuestButton) {
     addGuestButton.addEventListener("click", function () {
       var requiredGuests = getRequiredGuestCount();
@@ -692,11 +1306,10 @@ async function fetchBookingSummary(params) {
     bookerPhoneInput.addEventListener("input", function () {
       this.value = this.value.replace(/[^\d+]/g, "");
 
-      // nếu bắt đầu không phải 0 hoặc + thì vẫn cho nhập, nhưng chỉ giữ ký tự hợp lệ
       if (this.value.startsWith("+84")) {
-        this.value = "+84" + this.value.slice(3).replace(/\D/g, "");
+        this.value = "+84" + this.value.slice(3).replace(/\D/g, "").slice(0, 9);
       } else {
-        this.value = this.value.replace(/\D/g, "");
+        this.value = normalizeVietnamPhone(this.value.replace(/\D/g, ""));
       }
     });
   }
@@ -708,16 +1321,20 @@ async function fetchBookingSummary(params) {
       }
 
       if (target.id.startsWith("guest-id-")) {
-        target.value = target.value.replace(/\D/g, "").slice(0, 12);
+        var idDigits = target.value.replace(/\D/g, "");
+        target.value = normalizeDocumentId(idDigits);
         return;
       }
 
       if (target.id.startsWith("guest-phone-")) {
         target.value = target.value.replace(/[^\d+]/g, "");
         if (target.value.startsWith("+84")) {
-          target.value = "+84" + target.value.slice(3).replace(/\D/g, "");
+          target.value =
+            "+84" + target.value.slice(3).replace(/\D/g, "").slice(0, 9);
         } else {
-          target.value = target.value.replace(/\D/g, "");
+          target.value = normalizeVietnamPhone(
+            target.value.replace(/\D/g, ""),
+          );
         }
       }
     });

@@ -1,6 +1,7 @@
 import crypto from "crypto";
 import axios from "axios";
 import db from "../config/db.js";
+import { sendMomoPaymentSuccessEmail } from "../utils/momoPaymentSuccessMail.js";
 
 export const createMomoPayment = async (req, res) => {
   try {
@@ -29,7 +30,7 @@ export const createMomoPayment = async (req, res) => {
     if (booking.status !== "pending_payment") {
       return res.status(400).json({
         success: false,
-        message: "Booking không ở trạng thái chờ thanh toán",
+        message: "Booking không ở trạng thái thanh toán đang chờ xử lý",
       });
     }
 
@@ -42,7 +43,13 @@ export const createMomoPayment = async (req, res) => {
     const requestId = orderId;
     const amount = String(Math.round(Number(booking.final_price)));
     const orderInfo = `Thanh toán booking ${booking.booking_code}`;
-    const redirectUrl = process.env.MOMO_REDIRECT_URL;
+    const fallbackBaseUrl = `${req.protocol}://${req.get("host")}`;
+    const preferredRedirectUrl = process.env.MOMO_REDIRECT_URL;
+    // MoMo IPN thường không gọi được localhost, nên cần redirect về server để update DB.
+    const redirectUrl =
+      preferredRedirectUrl && preferredRedirectUrl.includes("/api/payments/momo/return")
+        ? preferredRedirectUrl
+        : `${fallbackBaseUrl}/api/payments/momo/return`;
     const ipnUrl = process.env.MOMO_IPN_URL;
     const extraData = "";
     const requestType = "payWithATM";
@@ -103,12 +110,38 @@ export const createMomoPayment = async (req, res) => {
   }
 };
 
+function parseBookingIdFromMomoOrderId(orderId) {
+  const raw = String(orderId || "").trim();
+  if (!raw) return 0;
+  const m = raw.match(/^TT_(\d+)_/i);
+  if (m) return Number(m[1]);
+  const parts = raw.split("_");
+  const n = Number(parts[1]);
+  return Number.isFinite(n) && n > 0 ? n : 0;
+}
+
+/** Chỉ đổi trạng thái khi còn pending_payment — tránh gửi mail trùng (IPN + return). */
+async function confirmBookingIfPendingPayment(bookingId) {
+  const [result] = await db.execute(
+    `
+    UPDATE bookings
+    SET status = 'confirmed',
+        updated_at = NOW()
+    WHERE id = ?
+      AND status = 'pending_payment'
+    `,
+    [bookingId],
+  );
+  return Number(result?.affectedRows || 0) === 1;
+}
+
 export const momoReturn = async (req, res) => {
   try {
     console.log("MOMO RETURN QUERY:", req.query);
 
-    const { orderId, resultCode } = req.query;
-    const bookingId = Number(String(orderId || "").split("_")[1]);
+    const { orderId } = req.query;
+    const resultCode = req.query.resultCode ?? req.query.resultcode;
+    const bookingId = parseBookingIdFromMomoOrderId(orderId);
 
     if (!bookingId) {
       return res.redirect(
@@ -117,17 +150,12 @@ export const momoReturn = async (req, res) => {
     }
 
     if (Number(resultCode) === 0) {
-      const [result] = await db.execute(
-        `
-        UPDATE bookings
-        SET status = 'confirmed',
-            updated_at = NOW()
-        WHERE id = ?
-        `,
-        [bookingId],
-      );
-
-      console.log("UPDATE BOOKING RESULT:", result);
+      const firstConfirm = await confirmBookingIfPendingPayment(bookingId);
+      if (firstConfirm) {
+        void sendMomoPaymentSuccessEmail(bookingId).catch((err) =>
+          console.error("sendMomoPaymentSuccessEmail:", err),
+        );
+      }
 
       return res.redirect(`/pages/tours/success.html?bookingId=${bookingId}`);
     }
@@ -141,20 +169,17 @@ export const momoReturn = async (req, res) => {
 
 export const momoIpn = async (req, res) => {
   try {
-    const { orderId, resultCode } = req.body;
+    const { orderId, resultCode } = req.body || {};
 
-    const bookingId = Number(String(orderId).split("_")[1]);
+    const bookingId = parseBookingIdFromMomoOrderId(orderId);
 
     if (Number(resultCode) === 0 && bookingId) {
-      await db.execute(
-        `
-        UPDATE bookings
-        SET status = 'confirmed',
-            updated_at = NOW()
-        WHERE id = ?
-        `,
-        [bookingId],
-      );
+      const firstConfirm = await confirmBookingIfPendingPayment(bookingId);
+      if (firstConfirm) {
+        void sendMomoPaymentSuccessEmail(bookingId).catch((err) =>
+          console.error("sendMomoPaymentSuccessEmail (ipn):", err),
+        );
+      }
     }
 
     return res.json({

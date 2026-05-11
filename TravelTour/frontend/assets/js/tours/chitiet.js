@@ -1,8 +1,10 @@
 (function () {
+  const API_BASE = "http://localhost:3000";
   let TOUR_PRICE = 0;
   let currentTour = null;
   let meetingMap = null;
   let meetingMarker = null;
+  let reviewsTourId = null;
 
   const bookingForm = document.getElementById("booking-form");
   const dateInput = document.getElementById("departure-date");
@@ -147,8 +149,28 @@
     return getAppliedPrice(tour) + getTaxAmount(tour);
   }
 
+  function getAuthHeaders(includeJson) {
+    const headers = { Accept: "application/json" };
+    if (includeJson) headers["Content-Type"] = "application/json";
+    const token = localStorage.getItem("accessToken");
+    if (token) headers.Authorization = `Bearer ${token}`;
+    return headers;
+  }
+
+  function renderStarChars(n) {
+    const r = Math.max(0, Math.min(5, Math.round(Number(n) || 0)));
+    return "★".repeat(r) + "☆".repeat(5 - r);
+  }
+
+  function reviewerInitials(name) {
+    const parts = String(name || "").trim().split(/\s+/).filter(Boolean);
+    if (!parts.length) return "?";
+    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+  }
+
   async function fetchTourDetail(id) {
-    const response = await fetch(`http://localhost:3000/api/provider/public/tours/${id}`);
+    const response = await fetch(`${API_BASE}/api/provider/public/tours/${id}`);
 
     if (!response.ok) {
       const errorData = await response.json().catch(() => ({}));
@@ -178,21 +200,55 @@
     if (!container) return;
 
     if (!Array.isArray(itinerary) || itinerary.length === 0) {
-      container.innerHTML = "<p>Chưa có lịch trình.</p>";
+      container.innerHTML = '<p class="detail-itinerary-empty">Chưa có lịch trình.</p>';
       return;
     }
 
-    container.innerHTML = itinerary
-      .map(
-        (day) => `
-          <div class="itinerary-day">
-            <h3>Ngày ${escapeHtml(day.day || "")}</h3>
-            <h4>${escapeHtml(day.title || "Chưa có tiêu đề")}</h4>
-            <p>${escapeHtml(day.description || "Chưa có mô tả cho ngày này.")}</p>
-          </div>
-        `
-      )
+    const daysHtml = itinerary
+      .map((day, idx) => {
+        const dayNum = escapeHtml(
+          day.day !== undefined && day.day !== null && String(day.day).trim() !== ""
+            ? String(day.day)
+            : String(idx + 1)
+        );
+        const title = escapeHtml(day.title || "Chưa có tiêu đề");
+        const raw = (day.description || "").trim();
+        const lines = raw
+          ? raw.split(/\r?\n/).map((l) => l.trim()).filter(Boolean)
+          : [];
+        const slots = lines.length ? lines : [raw || "Chưa có mô tả cho ngày này."];
+
+        const slotsHtml = slots
+          .map((line) => {
+            const m = line.match(/^(\d{1,2}:\d{2})\s*-\s*(.*)$/);
+            const body = m
+              ? `<span class="detail-itinerary-slot__time">${escapeHtml(m[1])}</span><span class="detail-itinerary-slot__dash"> - </span><span class="detail-itinerary-slot__text">${escapeHtml(m[2])}</span>`
+              : `<span class="detail-itinerary-slot__text">${escapeHtml(line)}</span>`;
+            return `<li class="detail-itinerary-slot"><span class="detail-itinerary-slot__pin ui-icon ui-icon--pin" aria-hidden="true"></span><div class="detail-itinerary-slot__line">${body}</div></li>`;
+          })
+          .join("");
+
+        return `
+          <article class="detail-itinerary-day">
+            <div class="detail-itinerary-day__track" aria-hidden="true">
+              <span class="detail-itinerary-day__badge">${dayNum}</span>
+              <span class="detail-itinerary-day__vline"></span>
+            </div>
+            <div class="detail-itinerary-day__panel">
+              <header class="detail-itinerary-day__head">
+                <span class="detail-itinerary-day__cal ui-icon ui-icon--calendar" aria-hidden="true"></span>
+                <div class="detail-itinerary-day__head-text">
+                  <h3 class="detail-itinerary-day__name">Ngày ${dayNum}</h3>
+                  <p class="detail-itinerary-day__route">${title}</p>
+                </div>
+              </header>
+              <ul class="detail-itinerary-slots">${slotsHtml}</ul>
+            </div>
+          </article>`;
+      })
       .join("");
+
+    container.innerHTML = `<div class="detail-itinerary">${daysHtml}</div>`;
   }
 
   function renderGallery(tour) {
@@ -487,6 +543,213 @@
     updateBookingSummary();
   }
 
+  function setReviewsMessage(el, text, ok) {
+    if (!el) return;
+    el.textContent = text || "";
+    el.classList.toggle("reviews-compose-msg--ok", Boolean(ok));
+  }
+
+  async function loadAndRenderReviews(tourId) {
+    reviewsTourId = tourId;
+    const root = document.getElementById("reviews-summary-root");
+    const listEl = document.getElementById("reviews-list");
+    const hintEl = document.getElementById("reviews-viewer-hint");
+    const compose = document.getElementById("reviews-compose");
+    const msgEl = document.getElementById("reviews-compose-msg");
+    const delBtn = document.getElementById("review-delete-btn");
+
+    if (!root || !listEl) return;
+
+    root.innerHTML = "<p class=\"meeting-point-empty\">Đang tải đánh giá...</p>";
+    listEl.innerHTML = "";
+    if (hintEl) {
+      hintEl.hidden = true;
+      hintEl.textContent = "";
+    }
+    if (compose) compose.style.display = "none";
+    if (delBtn) delBtn.style.display = "none";
+    setReviewsMessage(msgEl, "", false);
+
+    try {
+      const res = await fetch(`${API_BASE}/api/provider/public/tours/${encodeURIComponent(tourId)}/reviews`, {
+        headers: getAuthHeaders(false),
+      });
+      const payload = await res.json().catch(() => ({}));
+      if (!res.ok) throw new Error(payload.message || "Không tải được đánh giá");
+
+      const data = payload.data || {};
+      const summary = data.summary || { average: 0, total: 0, distribution: [] };
+      const reviews = data.reviews || [];
+      const viewer = data.viewer || { role: "guest" };
+      const role = String(viewer.role || "guest");
+
+      const total = Number(summary.total || 0);
+      const avg = total > 0 ? Number(summary.average || 0) : null;
+      const avgText = avg != null ? avg.toFixed(1) : "—";
+
+      const distHtml = (summary.distribution || [])
+        .map(
+          (row) => `
+          <div class="rating-row">
+            <span>${row.stars} sao</span>
+            <div class="rating-row__bar"><span style="width:${Math.min(100, Number(row.percent) || 0)}%"></span></div>
+            <span>${row.count}</span>
+          </div>
+        `
+        )
+        .join("");
+
+      root.innerHTML = `
+        <div class="reviews-summary">
+          <div class="score-card">
+            <div class="score-card__value">${escapeHtml(avgText)}</div>
+            <div class="score-card__stars" aria-hidden="true">${renderStarChars(avg != null ? Math.round(avg) : 0)}</div>
+            <span>${total} đánh giá</span>
+          </div>
+          <div class="rating-breakdown">${distHtml}</div>
+        </div>
+      `;
+
+      if (!reviews.length) {
+        listEl.innerHTML = "<p class=\"meeting-point-empty\">Chưa có đánh giá đã duyệt nào.</p>";
+      } else {
+        listEl.innerHTML = reviews
+          .map((r) => {
+            const avatarUrl = normalizeImageUrl(r.userAvatarUrl);
+            const useImg = r.userAvatarUrl && String(r.userAvatarUrl).trim() !== "";
+            const avatarBlock = useImg
+              ? `<img class="review-card__avatar review-card__avatar--img" src="${escapeHtml(avatarUrl)}" alt="" />`
+              : `<div class="review-card__avatar">${escapeHtml(reviewerInitials(r.userName))}</div>`;
+            return `
+              <article class="review-card">
+                ${avatarBlock}
+                <div class="review-card__content">
+                  <div class="review-card__header">
+                    <div>
+                      <h3>${escapeHtml(r.userName)}</h3>
+                      <time>${escapeHtml(r.dateText)}</time>
+                    </div>
+                    <div class="review-card__stars" aria-label="${r.rating} sao">${renderStarChars(r.rating)}</div>
+                  </div>
+                  <p>${formatMultilineText(r.comment)}</p>
+                </div>
+              </article>
+            `;
+          })
+          .join("");
+      }
+
+      if (hintEl) {
+        if (role === "guest" && viewer.postBlockedReason) {
+          hintEl.hidden = false;
+          hintEl.textContent = viewer.postBlockedReason;
+        } else if (role !== "customer" && role !== "guest") {
+          hintEl.hidden = false;
+          hintEl.textContent =
+            viewer.postBlockedReason ||
+            "Bạn đang đăng nhập với vai trò nhà cung cấp / quản trị / HDV — chỉ xem đánh giá; không gửi đánh giá tại trang công khai này.";
+        } else if (role === "customer" && viewer.postBlockedReason && !viewer.canPost) {
+          hintEl.hidden = false;
+          hintEl.textContent = viewer.postBlockedReason;
+        } else {
+          hintEl.hidden = true;
+        }
+      }
+
+      const user = getCurrentUser();
+      const showCompose = role === "customer" && viewer.canPost;
+      if (compose) {
+        compose.style.display = showCompose ? "block" : "none";
+        if (showCompose) {
+          const ta = document.getElementById("review-comment-input");
+          const sel = document.getElementById("review-rating-input");
+          if (ta) ta.value = "";
+          if (sel) sel.value = "5";
+          setReviewsMessage(msgEl, "", false);
+        }
+      }
+
+      if (delBtn && user && String(user.role || "").toLowerCase() === "customer") {
+        const st = viewer.myReview && String(viewer.myReview.status || "").toLowerCase();
+        delBtn.style.display = st === "pending" ? "inline-block" : "none";
+      }
+    } catch (e) {
+      console.error(e);
+      root.innerHTML = `<p class="meeting-point-empty">${escapeHtml(e.message || "Lỗi tải đánh giá")}</p>`;
+    }
+  }
+
+  function bindReviewActionsOnce() {
+    const submitBtn = document.getElementById("review-submit-btn");
+    const delBtn = document.getElementById("review-delete-btn");
+    const msgEl = document.getElementById("reviews-compose-msg");
+
+    if (submitBtn && !submitBtn.dataset.bound) {
+      submitBtn.dataset.bound = "1";
+      submitBtn.addEventListener("click", async () => {
+        if (!reviewsTourId) return;
+        const user = getCurrentUser();
+        if (!user || String(user.role || "").toLowerCase() !== "customer") {
+          alert("Chỉ khách hàng đã đăng nhập mới gửi được đánh giá.");
+          return;
+        }
+        const token = localStorage.getItem("accessToken");
+        if (!token) {
+          alert("Phiên đăng nhập hết hạn.");
+          return;
+        }
+        const rating = Number(document.getElementById("review-rating-input")?.value || 5);
+        const comment = String(document.getElementById("review-comment-input")?.value || "").trim();
+        setReviewsMessage(msgEl, "Đang gửi...", false);
+        try {
+          const res = await fetch(`${API_BASE}/api/customer/tours/${encodeURIComponent(reviewsTourId)}/reviews`, {
+            method: "POST",
+            headers: getAuthHeaders(true),
+            body: JSON.stringify({ rating, comment }),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.message || "Gửi thất bại");
+          setReviewsMessage(msgEl, data.message || "Đã gửi.", true);
+          await loadAndRenderReviews(reviewsTourId);
+        } catch (err) {
+          setReviewsMessage(msgEl, err.message || "Lỗi", false);
+        }
+      });
+    }
+
+    if (delBtn && !delBtn.dataset.bound) {
+      delBtn.dataset.bound = "1";
+      delBtn.addEventListener("click", async () => {
+        if (!reviewsTourId) return;
+        const user = getCurrentUser();
+        if (!user || String(user.role || "").toLowerCase() !== "customer") return;
+        const token = localStorage.getItem("accessToken");
+        if (!token) return;
+        const resList = await fetch(`${API_BASE}/api/provider/public/tours/${encodeURIComponent(reviewsTourId)}/reviews`, {
+          headers: getAuthHeaders(false),
+        });
+        const payload = await resList.json().catch(() => ({}));
+        const myId = payload.data?.viewer?.myReview?.id;
+        if (!myId) {
+          alert("Không tìm thấy đánh giá chờ duyệt.");
+          return;
+        }
+        if (!confirm("Xóa đánh giá đang chờ duyệt?")) return;
+        try {
+          const res = await fetch(`${API_BASE}/api/customer/reviews/${encodeURIComponent(myId)}`, {
+            method: "DELETE",
+            headers: getAuthHeaders(false),
+          });
+          const data = await res.json().catch(() => ({}));
+          if (!res.ok) throw new Error(data.message || "Xóa thất bại");
+          await loadAndRenderReviews(reviewsTourId);
+        } catch (err) {
+          alert(err.message || "Lỗi");
+        }
+      });
+    }
+  }
+
   function updateBookingSummary() {
     if (!adultSelect || !childSelect || !lineLabel || !lineTotal || !grandTotal) return;
 
@@ -580,7 +843,8 @@
 
       renderTourDetail(tour);
       setupDepartureDate(tour);
-     
+      bindReviewActionsOnce();
+      await loadAndRenderReviews(tourId);
     } catch (error) {
       console.error("Lỗi tải chi tiết tour:", error);
     }

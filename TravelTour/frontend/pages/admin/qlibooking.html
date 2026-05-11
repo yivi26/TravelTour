@@ -318,12 +318,12 @@
         function normalizeBookingStatus(status) {
           const key = String(status || "").toLowerCase();
           const map = {
-            pending_payment: { text: "Chờ thanh toán", key: "pending" },
+            pending_payment: { text: "Thanh toán đang chờ xử lý", key: "pending" },
             pending: { text: "Chờ xử lý", key: "pending" },
             cancel_requested: { text: "Chờ xử lý", key: "pending" },
-            confirmed: { text: "Đã xác nhận", key: "confirmed" },
-            paid: { text: "Đã xác nhận", key: "confirmed" },
-            in_progress: { text: "Đã xác nhận", key: "confirmed" },
+            confirmed: { text: "Thành công", key: "confirmed" },
+            paid: { text: "Thành công", key: "confirmed" },
+            in_progress: { text: "Đang thực hiện", key: "confirmed" },
             completed: { text: "Đã hoàn thành", key: "completed" },
             cancelled: { text: "Đã hủy", key: "cancelled" },
             refunded: { text: "Đã hủy", key: "cancelled" },

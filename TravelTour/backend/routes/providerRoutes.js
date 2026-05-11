@@ -16,7 +16,9 @@ import {
   getPublicDiscountedToursController,
   getPublicTourDetailController,
   getProfile,
-  updateProfile
+  updateProfile,
+  getProviderReportOverviewController,
+  getProviderNotificationsController,
 } from "../controllers/providerController.js";
 
 const router = express.Router();
@@ -39,6 +41,12 @@ router.put("/profile", updateProfile);
    PROVIDER DASHBOARD
 ========================= */
 router.get("/dashboard", getDashboardData);
+router.get("/notifications", getProviderNotificationsController);
+
+/* =========================
+   PROVIDER REPORT
+========================= */
+router.get("/report", getProviderReportOverviewController);
 
 /* =========================
    PROVIDER TOURS

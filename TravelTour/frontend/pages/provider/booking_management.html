@@ -164,7 +164,73 @@
       </section>
     </main>
 
+    <!-- Modal chi tiết booking -->
+    <div id="bookingDetailModal" class="modal-overlay" style="display:none">
+      <div class="modal-box">
+        <div class="modal-header">
+          <div class="modal-title">
+            <i class="fa-solid fa-receipt"></i>
+            Chi tiết booking
+          </div>
+          <button class="modal-close" onclick="closeModal()">
+            <i class="fa-solid fa-xmark"></i>
+          </button>
+        </div>
+
+        <div class="modal-body">
+          <!-- Mã & trạng thái -->
+          <div class="modal-badge-row">
+            <span class="modal-code" id="mdCode">—</span>
+            <span id="mdBadge"></span>
+          </div>
+
+          <!-- Thông tin 2 cột -->
+          <div class="modal-grid">
+            <div class="modal-section">
+              <div class="modal-section-title">
+                <i class="fa-solid fa-user"></i> Khách hàng
+              </div>
+              <div class="modal-field"><span class="mf-label">Họ tên</span><span id="mdName">—</span></div>
+              <div class="modal-field"><span class="mf-label">Email</span><span id="mdEmail">—</span></div>
+              <div class="modal-field"><span class="mf-label">Điện thoại</span><span id="mdPhone">—</span></div>
+            </div>
+
+            <div class="modal-section">
+              <div class="modal-section-title">
+                <i class="fa-solid fa-map"></i> Tour
+              </div>
+              <div class="modal-field"><span class="mf-label">Tên tour</span><span id="mdTour">—</span></div>
+              <div class="modal-field"><span class="mf-label">Khởi hành</span><span id="mdDepart">—</span></div>
+              <div class="modal-field"><span class="mf-label">Kết thúc</span><span id="mdReturn">—</span></div>
+            </div>
+
+            <div class="modal-section">
+              <div class="modal-section-title">
+                <i class="fa-solid fa-users"></i> Đặt chỗ
+              </div>
+              <div class="modal-field"><span class="mf-label">Số khách</span><span id="mdPax">—</span></div>
+              <div class="modal-field"><span class="mf-label">Tổng tiền</span><span id="mdPrice" class="mf-price">—</span></div>
+              <div class="modal-field"><span class="mf-label">Ngày đặt</span><span id="mdBookedAt">—</span></div>
+            </div>
+
+            <div class="modal-section">
+              <div class="modal-section-title">
+                <i class="fa-solid fa-credit-card"></i> Thanh toán
+              </div>
+              <div class="modal-field"><span class="mf-label">Số tiền</span><span id="mdPayAmount" class="mf-price">—</span></div>
+              <div class="modal-field"><span class="mf-label">Trạng thái</span><span id="mdPayStatus">—</span></div>
+              <div class="modal-field"><span class="mf-label">Phương thức</span><span id="mdPayMethod">—</span></div>
+              <div class="modal-field"><span class="mf-label">Thanh toán lúc</span><span id="mdPaidAt">—</span></div>
+            </div>
+          </div>
+        </div>
+
+        <div class="modal-footer" id="mdFooter"></div>
+      </div>
+    </div>
+
     <script src="../../assets/js/provider/booking_management.js"></script>
+    <script src="../../assets/js/provider/provider-notifications.js"></script>
     <script src="../../assets/js/provider/provider-logout.js"></script>
   </body>
 </html>

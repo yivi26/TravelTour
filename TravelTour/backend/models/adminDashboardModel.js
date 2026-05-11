@@ -38,15 +38,12 @@ export async function getAdminDashboardData({ limitBookings = 8, limitPopular = 
     0
   );
 
-  const activeProviders = await safeScalarQuery(
-    `SELECT COUNT(*) AS total FROM providers WHERE status = 'active'`,
+  // Khớp qlinhacungcap / adminProvidersModel: NCC "đã phê duyệt" lưu approved (active được normalize -> approved)
+  const providersCount = await safeScalarQuery(
+    `SELECT COUNT(*) AS total FROM providers WHERE LOWER(TRIM(status)) IN ('active','approved')`,
     [],
-    null
+    0
   );
-  const providersCount =
-    activeProviders === null
-      ? await safeScalarQuery(`SELECT COUNT(*) AS total FROM providers`, [], 0)
-      : activeProviders;
 
   const guidesCount = await safeScalarQuery(`SELECT COUNT(*) AS total FROM guides`, [], 0);
 

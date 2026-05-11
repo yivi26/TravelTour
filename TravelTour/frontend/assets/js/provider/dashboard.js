@@ -191,27 +191,38 @@ function renderCharts(charts) {
             label: "Booking",
             data: bookingData,
             borderColor: "#3b82f6",
-            backgroundColor: "#ffffff",
+            backgroundColor: "rgba(59, 130, 246, 0.14)",
             borderWidth: 2,
             pointBackgroundColor: "#ffffff",
             pointBorderColor: "#3b82f6",
             pointBorderWidth: 2,
             pointRadius: 4,
-            tension: 0.4
+            tension: 0.35,
+            fill: true
           }
         ]
       },
       options: {
         responsive: true,
         maintainAspectRatio: false,
+        interaction: { intersect: false, mode: "index" },
         plugins: {
-          legend: { display: false }
+          legend: { display: false },
+          tooltip: {
+            callbacks: {
+              label(ctx) {
+                const n = Number(ctx.parsed.y) || 0;
+                return `${n} booking`;
+              }
+            }
+          }
         },
         scales: {
           y: {
             beginAtZero: true,
             ticks: {
-              stepSize: 1
+              precision: 0,
+              callback: (v) => (Number.isFinite(v) ? String(Math.round(v)) : v)
             },
             border: { display: false },
             grid: {
